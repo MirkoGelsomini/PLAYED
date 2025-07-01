@@ -17,10 +17,7 @@ const Home = () => {
 
   return (
     <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h1>PLAYED</h1>
-      <p>Benvenuto nella piattaforma di giochi didattici modulari e adattivi!</p>
-      <p>Scegli un gioco dal menu per iniziare a giocare e imparare.</p>
-      <h2>Giochi disponibili</h2>
+      <h1>Giochi disponibili</h1>
       {loading ? (
         <p>Caricamento giochi...</p>
       ) : (

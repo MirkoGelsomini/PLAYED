@@ -1,4 +1,9 @@
 const userService = require('../services/userService');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
+const bcrypt = require('bcrypt');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'supersegreto';
 
 // Crea un nuovo utente
 async function createUser(req, res) {
@@ -53,10 +58,26 @@ async function deleteUser(req, res) {
   }
 }
 
+// Login
+async function login(req, res) {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ error: 'Email o password non validi' });
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(401).json({ error: 'Email o password non validi' });
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '4h' });
+    res.json({ token, user: { id: user._id, name: user.name, role: user.role } });
+  } catch (err) {
+    res.status(500).json({ error: 'Errore nel login' });
+  }
+}
+
 module.exports = {
   createUser,
   getUserById,
   getAllUsers,
   updateUser,
   deleteUser,
+  login,
 }; 

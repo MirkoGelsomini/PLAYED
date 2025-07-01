@@ -10,4 +10,7 @@ router.get('/:id', userController.getUserById); // Ottieni utente per ID
 router.put('/:id', userController.updateUser); // Aggiorna utente
 router.delete('/:id', userController.deleteUser); // Elimina utente
 
+// Login
+router.post('/auth/login', userController.login);
+
 module.exports = router; 

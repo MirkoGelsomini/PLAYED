@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const mongoose = require('mongoose');
 
 // Middlewares
 app.use(cors());
@@ -17,6 +18,17 @@ app.use('/api/users', userRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/questions', questionRoutes);
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/played';
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('Connesso a MongoDB'))
+  .catch(err => {
+    console.error('Errore di connessione a MongoDB:', err.message);
+    process.exit(1);
+  });
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

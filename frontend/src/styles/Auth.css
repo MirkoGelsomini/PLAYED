@@ -1,0 +1,104 @@
+.auth-container {
+  max-width: 370px;
+  margin: 3rem auto;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px 0 rgba(74,144,226,0.10);
+  padding: 2.5rem 2rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.auth-logo {
+  width: 80px;
+  margin-bottom: 1rem;
+}
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.auth-form input {
+  font-size: 1.1rem;
+  padding: 0.8rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  outline: none;
+  transition: border 0.2s;
+  background: #f7f9fa;
+}
+.auth-form input:focus {
+  border: 2px solid #4A90E2;
+  background: #fff;
+}
+.auth-form button {
+  background: linear-gradient(90deg, #4A90E2 60%, #F5A623 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  padding: 0.9rem 0;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px 0 rgba(74,144,226,0.10);
+  transition: background 0.2s, transform 0.1s;
+}
+.auth-form button:hover {
+  background: linear-gradient(90deg, #357ABD 60%, #F5A623 100%);
+  transform: translateY(-2px) scale(1.03);
+}
+.role-switch {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0 0.5rem 0;
+}
+.role-switch button {
+  background: #f7f9fa;
+  color: #4A90E2;
+  border: 2px solid #4A90E2;
+  border-radius: 20px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.role-switch button.active, .role-switch button:focus {
+  background: #4A90E2;
+  color: #fff;
+  outline: none;
+}
+.auth-link {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  color: #222;
+}
+.auth-link a {
+  color: #4A90E2;
+  text-decoration: underline;
+  font-weight: bold;
+}
+.auth-error {
+  color: #d32f2f;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  text-align: center;
+}
+.auth-success {
+  color: #388e3c;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .auth-container {
+    max-width: 98vw;
+    padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+  }
+  .auth-logo {
+    width: 60px;
+  }
+} 
