@@ -1,0 +1,20 @@
+{
+  "name": "played",
+  "version": "1.0.0",
+  "description": "Piattaforma di giochi didattici modulari e adattivi per bambini.",
+  "main": "backend/src/app.js",
+  "scripts": {
+    "start:backend": "node backend/src/app.js",
+    "start:frontend": "react-scripts start"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "phaser": "^3.90.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.3"
+  }
+}

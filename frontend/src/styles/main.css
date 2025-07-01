@@ -1,0 +1,7 @@
+/* Stili globali dell'applicazione */ 
+body {
+  font-family: var(--font-family);
+  background: #f9f9f9;
+  margin: 0;
+  padding: 0;
+} 

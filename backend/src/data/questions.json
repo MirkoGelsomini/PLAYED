@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "type": "memory",
+    "category": "animali",
+    "question": "Abbina l'animale al suo verso",
+    "pairs": [
+      { "front": "Cane", "back": "Bau" },
+      { "front": "Gatto", "back": "Miao" },
+      { "front": "Mucca", "back": "Muu" },
+      { "front": "Pecora", "back": "Bee" }
+    ]
+  },
+  {
+    "id": 2,
+    "type": "quiz",
+    "category": "scienze",
+    "question": "Qual è il pianeta più vicino al Sole?",
+    "options": ["Venere", "Terra", "Mercurio", "Marte"],
+    "answer": "Mercurio"
+  },
+  {
+    "id": 3,
+    "type": "matching",
+    "category": "lingua",
+    "question": "Abbina la parola al suo sinonimo",
+    "pairs": [
+      { "left": "Allegro", "right": "Felice" },
+      { "left": "Grande", "right": "Enorme" }
+    ]
+  }
+] 
