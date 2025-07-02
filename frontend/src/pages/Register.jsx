@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import logo from '../logo.svg';
+import logo from '../logo.png';
 import '../styles/Auth.css';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../core/AuthContext';
 
 const initialState = {
   name: '',
@@ -22,6 +24,8 @@ export default function Register() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login: loginContext } = useAuth();
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -51,9 +55,11 @@ export default function Register() {
         delete data.teachingLevel;
       }
       await axios.post('/api/users', data);
-      setSuccess('Registrazione avvenuta con successo!');
-      alert('Registrazione avvenuta con successo! Ora puoi effettuare il login.');
+      const res = await axios.post('/api/users/auth/login', { email: data.email, password: form.password, role: form.role });
+      loginContext(res.data.user, res.data.token);
+      setSuccess('Registrazione e login avvenuti con successo!');
       setForm(initialState);
+      setTimeout(() => navigate('/'), 500);
     } catch (err) {
       setError(err.response?.data?.error || 'Errore nella registrazione');
     } finally {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../core/AuthContext';
 import axios from 'axios';
-import logo from '../logo.svg';
+import logo from '../logo.png';
 import '../styles/Auth.css';
 
 export default function Profile() {
@@ -79,7 +79,6 @@ export default function Profile() {
       <h2>Modifica il tuo profilo</h2>
       <form className="auth-form" onSubmit={handleSubmit}>
         <input name="name" placeholder="Nome" value={form.name || ''} onChange={handleChange} required />
-        <input name="email" type="email" placeholder="Email" value={form.email || ''} onChange={handleChange} required />
         {form.role === 'allievo' && <>
           <input name="age" type="number" placeholder="Età" value={form.age || ''} onChange={handleChange} min={3} max={100} />
           <input name="schoolLevel" placeholder="Livello scolastico" value={form.schoolLevel || ''} onChange={handleChange} />

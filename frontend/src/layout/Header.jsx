@@ -2,9 +2,10 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/AuthContext';
 import { FaUserCircle } from 'react-icons/fa';
+import logo from '../logo.png';
 
 const headerStyle = {
-  background: '#4A90E2',
+  background: '#83B3E9',
   color: '#fff',
   padding: '1rem 0',
   fontFamily: 'Nunito, Arial, sans-serif',
@@ -18,12 +19,10 @@ const containerStyle = {
   justifyContent: 'space-between',
   padding: '0 2rem',
 };
-const logoStyle = {
-  fontWeight: 900,
-  fontSize: '2rem',
-  letterSpacing: '2px',
-  color: '#fff',
-  textDecoration: 'none',
+const logoImgStyle = {
+  height: '80px',
+  width: 'auto',
+  display: 'block',
 };
 const rightStyle = {
   display: 'flex',
@@ -64,7 +63,9 @@ const Header = () => {
   return (
     <header style={headerStyle}>
       <div style={containerStyle}>
-        <Link to="/" style={logoStyle}>PLAYED</Link>
+        <Link to="/">
+          <img src={logo} alt="Logo PLAYED" style={logoImgStyle} />
+        </Link>
         <div style={rightStyle}>
           {isAuthenticated ? (
             <>
