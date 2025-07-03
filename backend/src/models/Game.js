@@ -14,7 +14,7 @@ const memoryGameExample = {
   },
   assets: [
     // Qui potresti avere riferimenti a immagini, suoni, ecc.
-    { id: 1, image: 'lion.png', label: 'Leone' },
+    { id: 1, image: 'lion.png', label: 'Pecora' },
     { id: 2, image: 'elephant.png', label: 'Elefante' },
     // ...
   ],

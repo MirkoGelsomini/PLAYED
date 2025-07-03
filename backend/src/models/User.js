@@ -8,12 +8,12 @@ const userSchema = new mongoose.Schema({
   // Campi specifici per Allievo
   age: { type: Number },
   schoolLevel: { type: String }, // es: primaria, secondaria di primo grado, ecc.
-  learningProfile: { type: String }, // es: preferenze, BES, ecc.
   class: { type: String }, // es: 3A, 2B, ecc.
   // Campi specifici per Docente
   subjects: [{ type: String }], // es: ['Matematica', 'Scienze']
   school: { type: String },
   teachingLevel: { type: String }, // es: primaria, secondaria di primo grado, ecc.
+  avatar: { type: String, default: '' }, // URL o nome file dell'avatar
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema); 

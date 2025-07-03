@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersegreto';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Crea un nuovo utente
 async function createUser(req, res) {
@@ -11,6 +11,10 @@ async function createUser(req, res) {
     const user = await userService.createUser(req.body);
     res.status(201).json(user);
   } catch (err) {
+    // Gestione errore email duplicata
+    if (err.code === 11000 && err.keyPattern && err.keyPattern.email) {
+      return res.status(400).json({ error: 'Esiste già un account associato a questa email.' });
+    }
     res.status(400).json({ error: err.message });
   }
 }

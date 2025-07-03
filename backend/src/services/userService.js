@@ -9,6 +9,7 @@ const userValidationSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
   role: Joi.string().valid('allievo', 'docente').required(),
+  avatar: Joi.string().allow('').optional(),
   age: Joi.when('role', {
     is: 'allievo',
     then: Joi.number().integer().min(3).max(100).required(),

@@ -39,8 +39,8 @@ export default function Login() {
       <img src={logo} alt="Logo PLAYED" className="auth-logo" />
       <h2>Accedi a PLAYED</h2>
       <form className="auth-form" onSubmit={handleSubmit}>
-        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required className="form-input" />
+        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required className="form-input" />
         <button type="submit" disabled={loading}>{loading ? 'Accesso...' : 'Accedi'}</button>
         {error && <div className="auth-error">{error}</div>}
         {success && <div className="auth-success">{success}</div>}
