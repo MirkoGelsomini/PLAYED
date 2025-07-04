@@ -12,8 +12,12 @@ export function AuthProvider({ children }) {
     fetch('/api/users/me', {
       credentials: 'include',
     })
-      .then(res => res.ok ? res.json() : Promise.reject())
-      .then(data => {
+      .then(async res => {
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+        const data = await res.json();
         if (data.user) setUser(data.user);
         else setUser(null);
       })

@@ -17,7 +17,20 @@ const MemoryGame = ({ config, pairs }) => {
 
   return (
     <div>
-      <div ref={phaserContainer} style={{ width: 600, height: 400, margin: '0 auto', background: '#eee', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+      <div
+        ref={phaserContainer}
+        style={{
+          width: 'min(98vw, 900px)',
+          height: 'min(70vw, 600px)',
+          margin: '0 auto',
+          background: '#eee',
+          borderRadius: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 24px 0 rgba(74,144,226,0.10)',
+        }}
+      />
     </div>
   );
 };

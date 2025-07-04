@@ -1,6 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { fetchGames, fetchQuestions } from '../core/api';
 import { Link } from 'react-router-dom';
+import GameBadge from '../components/GameBadge';
+import '../styles/main.css';
+
+const heroStyle = {
+  background: 'linear-gradient(90deg, #83B3E9 0%, #F7C873 100%)',
+  color: '#fff',
+  padding: '2.5rem 1rem 2rem 1rem',
+  borderRadius: '18px',
+  margin: '2rem auto 2.5rem auto',
+  maxWidth: '900px',
+  boxShadow: '0 4px 24px 0 rgba(74,144,226,0.10)',
+};
+
+const gamesSectionStyle = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '2rem',
+  justifyContent: 'center',
+  margin: '2rem 0',
+};
 
 const Home = () => {
   const [games, setGames] = useState([]);
@@ -16,26 +36,34 @@ const Home = () => {
   }, []);
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h1>Giochi disponibili</h1>
+    <div>
+      <section style={heroStyle}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>Benvenuto su Played!</h1>
+        <p style={{ fontSize: '1.3rem', maxWidth: 600, margin: '0 auto' }}>
+          Scopri giochi didattici, metti alla prova la tua memoria e le tue abilità, e segui i tuoi progressi. Scegli un gioco qui sotto per iniziare a divertirti!
+        </p>
+      </section>
+      <h2 style={{ textAlign: 'center', margin: '2rem 0 1rem 0', fontWeight: 700 }}>Giochi disponibili</h2>
       {loading ? (
-        <p>Caricamento giochi...</p>
+        <p style={{ textAlign: 'center' }}>Caricamento giochi...</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <div style={gamesSectionStyle}>
           {games.length === 0 ? (
-            <li>Nessun gioco disponibile.</li>
+            <div style={{ color: '#888', fontSize: '1.2rem' }}>Nessun gioco disponibile.</div>
           ) : (
             games.map((game, idx) => (
-              <li key={idx} style={{ margin: '0.5em 0' }}>
-                <Link to={`/game/${game.id}`} style={{ textDecoration: 'none', color: '#4A90E2', fontWeight: 'bold' }}>
-                  {game.name || 'Gioco senza nome'}
-                </Link>
-              </li>
+              <GameBadge
+                key={game.id || idx}
+                name={game.name || 'Gioco senza nome'}
+                description={game.description || 'Descrizione non disponibile.'}
+                to={`/game/${game.id}`}
+                icon={game.icon || undefined}
+                soon={game.soon}
+              />
             ))
           )}
-        </ul>
+        </div>
       )}
-      <h2>Domande didattiche disponibili: {questions.length}</h2>
     </div>
   );
 };
