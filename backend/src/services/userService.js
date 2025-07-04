@@ -20,11 +20,6 @@ const userValidationSchema = Joi.object({
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
-  learningProfile: Joi.when('role', {
-    is: 'allievo',
-    then: Joi.string().allow('').required(),
-    otherwise: Joi.forbidden()
-  }),
   class: Joi.when('role', {
     is: 'allievo',
     then: Joi.string().required(),

@@ -71,10 +71,29 @@ async function login(req, res) {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: 'Email o password non validi' });
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '4h' });
-    res.json({ token, user: { id: user._id, name: user.name, role: user.role } });
+    // Imposta il token in un cookie httpOnly e secure
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 4 * 60 * 60 * 1000, // 4 ore
+      path: '/',
+    });
+    res.json({ user: { id: user._id, name: user.name, role: user.role } });
   } catch (err) {
     res.status(500).json({ error: 'Errore nel login' });
   }
+}
+
+// Logout: cancella il cookie JWT
+function logout(req, res) {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+  });
+  res.json({ message: 'Logout effettuato' });
 }
 
 module.exports = {
@@ -84,4 +103,5 @@ module.exports = {
   updateUser,
   deleteUser,
   login,
+  logout,
 }; 
