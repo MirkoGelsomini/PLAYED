@@ -19,5 +19,3 @@ export const deleteUser = async (id, token) => {
   if (!res.ok) throw new Error('Errore durante l\'eliminazione dell\'utente');
   return res.json();
 };
-
-// Aggiungi altre funzioni per utenti, progressi, ecc. 

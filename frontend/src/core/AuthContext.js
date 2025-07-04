@@ -5,48 +5,29 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
-    // Recupera token e user dal localStorage all'avvio
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
+    // Recupera lo stato autenticazione dal backend tramite cookie
+    fetch('/api/users/me', {
+      credentials: 'include',
+    })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => {
+        if (data.user) setUser(data.user);
+        else setUser(null);
+      })
+      .catch(() => setUser(null));
   }, []);
 
-  // Controllo scadenza token ogni volta che cambia la pagina
-  useEffect(() => {
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp && Date.now() >= payload.exp * 1000) {
-          logout();
-          window.location.href = '/login';
-        }
-      } catch (e) {
-        // Token malformato, logout di sicurezza
-        logout();
-        window.location.href = '/login';
-      }
-    }
-  }, [token, location]);
-
-  const login = (userData, jwt) => {
+  const login = (userData) => {
     setUser(userData);
-    setToken(jwt);
-    localStorage.setItem('token', jwt);
-    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Effettua logout anche lato backend (opzionale: crea endpoint /logout per cancellare il cookie)
+    fetch('/api/users/auth/logout', { method: 'POST', credentials: 'include' });
   };
 
   // Utility per gestire errori 401 (token scaduto)
@@ -56,7 +37,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, handle401, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, login, logout, handle401, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

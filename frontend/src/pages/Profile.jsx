@@ -46,7 +46,6 @@ export default function Profile() {
       }
     };
     fetchUser();
-    // eslint-disable-next-line
   }, [user]);
 
   if (fetching || !form) return <div className="auth-container"><h2>Caricamento profilo...</h2></div>;
@@ -74,7 +73,6 @@ export default function Profile() {
         }
         delete data.age;
         delete data.schoolLevel;
-        delete data.learningProfile;
         delete data.class;
       } else {
         delete data.subjects;

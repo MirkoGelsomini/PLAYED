@@ -21,9 +21,9 @@ export default function Login() {
     setSuccess('');
     setLoading(true);
     try {
-      const res = await axios.post('/api/users/auth/login', { email, password, role });
+      const res = await axios.post('/api/users/auth/login', { email, password, role }, { withCredentials: true });
       setSuccess('Login effettuato!');
-      loginContext(res.data.user, res.data.token);
+      loginContext(res.data.user);
       setEmail('');
       setPassword('');
       setTimeout(() => navigate('/'), 500);

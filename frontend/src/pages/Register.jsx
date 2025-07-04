@@ -13,7 +13,6 @@ const initialState = {
   role: 'allievo',
   age: '',
   schoolLevel: '',
-  learningProfile: '',
   class: '',
   subjects: '',
   school: '',
@@ -31,7 +30,7 @@ export default function Register() {
   const { login: loginContext } = useAuth();
   const steps = [
     'Dati base',
-    'Dati ruolo',
+    'Dati personali',
     'Conferma',
   ];
   const [step, setStep] = useState(0);
@@ -77,7 +76,6 @@ export default function Register() {
         data.subjects = form.subjects.split(',').map(s => s.trim()).filter(Boolean);
         delete data.age;
         delete data.schoolLevel;
-        delete data.learningProfile;
         delete data.class;
       } else {
         delete data.subjects;
@@ -85,8 +83,8 @@ export default function Register() {
         delete data.teachingLevel;
       }
       await axios.post('/api/users', data);
-      const res = await axios.post('/api/users/auth/login', { email: data.email, password: form.password, role: form.role });
-      loginContext(res.data.user, res.data.token);
+      const res = await axios.post('/api/users/auth/login', { email: data.email, password: form.password, role: form.role }, { withCredentials: true });
+      loginContext(res.data.user);
       setSuccess('Registrazione e login avvenuti con successo!');
       setForm(initialState);
       setTimeout(() => navigate('/'), 500);
@@ -97,7 +95,16 @@ export default function Register() {
     }
   };
 
-  const nextStep = () => setStep(s => Math.min(s + 1, steps.length - 1));
+  const nextStep = () => {
+    if (step === 0) {
+      if (!form.password || form.password.length < 6) {
+        setError('La password deve essere di almeno 6 caratteri.');
+        return;
+      }
+      setError('');
+    }
+    setStep(s => Math.min(s + 1, steps.length - 1));
+  };
   const prevStep = () => setStep(s => Math.max(s - 1, 0));
 
   return (

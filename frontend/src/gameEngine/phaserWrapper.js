@@ -1,5 +1,4 @@
 // Wrapper per integrare Phaser.js nei giochi React
-// Da implementare: logica di mounting e comunicazione tra React e Phaser 
 
 import Phaser from 'phaser';
 
