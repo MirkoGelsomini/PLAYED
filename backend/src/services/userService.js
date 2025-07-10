@@ -42,6 +42,45 @@ const userValidationSchema = Joi.object({
   }),
 });
 
+// Schema di validazione per l'update utente (password opzionale)
+const userUpdateValidationSchema = Joi.object({
+  name: Joi.string().required(),
+  email: Joi.string().email().required(),
+  password: Joi.string().min(6).optional(),
+  role: Joi.string().valid('allievo', 'docente').required(),
+  avatar: Joi.string().allow('').optional(),
+  age: Joi.when('role', {
+    is: 'allievo',
+    then: Joi.number().integer().min(3).max(100).required(),
+    otherwise: Joi.forbidden()
+  }),
+  schoolLevel: Joi.when('role', {
+    is: 'allievo',
+    then: Joi.string().required(),
+    otherwise: Joi.forbidden()
+  }),
+  class: Joi.when('role', {
+    is: 'allievo',
+    then: Joi.string().required(),
+    otherwise: Joi.forbidden()
+  }),
+  subjects: Joi.when('role', {
+    is: 'docente',
+    then: Joi.array().items(Joi.string()).required(),
+    otherwise: Joi.forbidden()
+  }),
+  school: Joi.when('role', {
+    is: 'docente',
+    then: Joi.string().required(),
+    otherwise: Joi.forbidden()
+  }),
+  teachingLevel: Joi.when('role', {
+    is: 'docente',
+    then: Joi.string().required(),
+    otherwise: Joi.forbidden()
+  }),
+});
+
 async function createUser(data) {
   const { error } = userValidationSchema.validate(data);
   if (error) throw new Error(error.details[0].message);
@@ -60,10 +99,13 @@ async function getAllUsers() {
 }
 
 async function updateUser(id, data) {
-  const { error } = userValidationSchema.validate(data);
+  const { error } = userUpdateValidationSchema.validate(data);
   if (error) throw new Error(error.details[0].message);
+  // Se la password è presente e non vuota, hashala; altrimenti non modificarla
   if (data.password) {
     data.password = await bcrypt.hash(data.password, 10);
+  } else {
+    delete data.password;
   }
   return await User.findByIdAndUpdate(id, data, { new: true });
 }
@@ -79,4 +121,5 @@ module.exports = {
   updateUser,
   deleteUser,
   userValidationSchema,
+  userUpdateValidationSchema,
 }; 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/AuthContext';
 import { FaUserCircle } from 'react-icons/fa';
@@ -104,14 +104,72 @@ const profileBtnStyle = {
   transition: 'background 0.15s',
 };
 
+const dropdownStyle = {
+  position: 'relative',
+  display: 'inline-block',
+};
+const dropdownBtnStyle = {
+  ...navLinkStyle,
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.3em',
+  cursor: 'pointer',
+  userSelect: 'none',
+};
+const dropdownMenuStyle = {
+  position: 'absolute',
+  top: 'calc(100% + 6px)',
+  left: 0,
+  minWidth: '160px',
+  background: '#fff',
+  border: '2px solid #83B3E9',
+  borderRadius: '12px',
+  boxShadow: '0 8px 32px 0 rgba(74,144,226,0.18)',
+  zIndex: 100,
+  padding: '0.5em 0',
+  marginTop: '2px',
+  backdropFilter: 'blur(10px)',
+  animation: 'dropdownFadeIn 0.2s ease-out',
+};
+const dropdownItemStyle = {
+  color: '#2560A8',
+  background: 'none',
+  textDecoration: 'none',
+  fontWeight: 700,
+  fontSize: '1.05rem',
+  padding: '0.6em 1.2em',
+  border: 'none',
+  borderRadius: '8px',
+  display: 'block',
+  width: '100%',
+  textAlign: 'left',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  margin: '0.1em 0.3em',
+  position: 'relative',
+};
+
 const Header = () => {
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef();
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+
+  // Chiudi la tendina se clicchi fuori
+  React.useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <header style={headerStyle}>
@@ -121,17 +179,34 @@ const Header = () => {
             <img src={logo} alt="Logo PLAYED" style={logoImgStyle} />
           </Link>
           <nav style={navStyle}>
-            <Link to="/" style={navLinkStyle}>Home</Link>
+            <Link to="/" className="nav-link">Home</Link>
             <span style={navSeparatorStyle}></span>
-            <Link to="/" style={navLinkStyle}>Giochi</Link>
+            <div style={dropdownStyle} ref={dropdownRef}>
+              <button
+                className="dropdown-btn"
+                aria-haspopup="true"
+                aria-expanded={dropdownOpen}
+                onClick={() => setDropdownOpen((open) => !open)}
+                onBlur={e => setTimeout(() => setDropdownOpen(false), 120)}
+              >
+                Giochi <span style={{fontSize: '1.1em'}}>▼</span>
+              </button>
+              {dropdownOpen && (
+                <div style={dropdownMenuStyle} role="menu">
+                  <Link to="/memory-selection" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Memory</Link>
+                  <Link to="/quiz-selection" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Quiz</Link>
+                  <Link to="/matching-selection" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Matching</Link>
+                </div>
+              )}
+            </div>
             <span style={navSeparatorStyle}></span>
-            <Link to="/results" style={navLinkStyle}>Risultati</Link>
+            <Link to="/results" className="nav-link">Risultati</Link>
           </nav>
         </div>
         <div style={rightStyle}>
           {isAuthenticated ? (
             <>
-              <button style={profileBtnStyle} onClick={() => navigate('/profile')} title="Profilo">
+              <button className="profile-btn" style={profileBtnStyle} onClick={() => navigate('/profile')} title="Profilo">
                 {user?.avatar ? (
                   <img src={user.avatar} alt="Avatar" style={avatarStyle} />
                 ) : (
@@ -140,7 +215,7 @@ const Header = () => {
                 <span>{user?.name?.split(' ')[0] || 'Profilo'}</span>
               </button>
               <span style={buttonSeparatorStyle}></span>
-              <button className="logout-btn" onClick={handleLogout}>Logout</button>
+              <button className="logout-btn main-btn" onClick={handleLogout}>Logout</button>
             </>
           ) : (
             <>

@@ -24,7 +24,9 @@ async function getUserById(req, res) {
   try {
     const user = await userService.getUserById(req.params.id);
     if (!user) return res.status(404).json({ error: 'Utente non trovato' });
-    res.json(user);
+    const userObj = user.toObject();
+    delete userObj.password;
+    res.json(userObj);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -45,7 +47,9 @@ async function updateUser(req, res) {
   try {
     const user = await userService.updateUser(req.params.id, req.body);
     if (!user) return res.status(404).json({ error: 'Utente non trovato' });
-    res.json(user);
+    const userObj = user.toObject();
+    delete userObj.password;
+    res.json(userObj);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

@@ -28,5 +28,299 @@
       { "left": "Allegro", "right": "Felice" },
       { "left": "Grande", "right": "Enorme" }
     ]
+  },
+  {
+    "id": 4,
+    "type": "quiz",
+    "category": "scienze",
+    "question": "Quale elemento chimico ha il simbolo 'O'?",
+    "options": ["Oro", "Ossigeno", "Osmio", "Oganesson"],
+    "answer": "Ossigeno"
+  },
+  {
+    "id": 5,
+    "type": "quiz",
+    "category": "geografia",
+    "question": "Qual è la capitale dell'Italia?",
+    "options": ["Milano", "Roma", "Firenze", "Venezia"],
+    "answer": "Roma"
+  },
+  {
+    "id": 6,
+    "type": "quiz",
+    "category": "storia",
+    "question": "In che anno è iniziata la Prima Guerra Mondiale?",
+    "options": ["1914", "1915", "1916", "1917"],
+    "answer": "1914"
+  },
+  {
+    "id": 7,
+    "type": "quiz",
+    "category": "matematica",
+    "question": "Quanto fa 7 x 8?",
+    "options": ["54", "56", "58", "60"],
+    "answer": "56"
+  },
+  {
+    "id": 8,
+    "type": "quiz",
+    "category": "scienze",
+    "question": "Quale organo pompa il sangue nel corpo umano?",
+    "options": ["Polmoni", "Cuore", "Fegato", "Cervello"],
+    "answer": "Cuore"
+  },
+  {
+    "id": 9,
+    "type": "quiz",
+    "category": "scienze",
+    "question": "Qual è il gas più abbondante nell'atmosfera terrestre?",
+    "options": ["Ossigeno", "Azoto", "Anidride carbonica", "Idrogeno"],
+    "answer": "Azoto"
+  },
+  {
+    "id": 10,
+    "type": "quiz",
+    "category": "geografia",
+    "question": "Qual è il fiume più lungo d'Europa?",
+    "options": ["Danubio", "Reno", "Volga", "Tamigi"],
+    "answer": "Volga"
+  },
+  {
+    "id": 11,
+    "type": "quiz",
+    "category": "geografia",
+    "question": "In quale continente si trova l'Egitto?",
+    "options": ["Europa", "Asia", "Africa", "America"],
+    "answer": "Africa"
+  },
+  {
+    "id": 12,
+    "type": "quiz",
+    "category": "storia",
+    "question": "Chi ha dipinto la Gioconda?",
+    "options": ["Michelangelo", "Leonardo da Vinci", "Raffaello", "Botticelli"],
+    "answer": "Leonardo da Vinci"
+  },
+  {
+    "id": 13,
+    "type": "quiz",
+    "category": "storia",
+    "question": "In che anno è caduto l'Impero Romano d'Occidente?",
+    "options": ["476 d.C.", "410 d.C.", "1453 d.C.", "800 d.C."],
+    "answer": "476 d.C."
+  },
+  {
+    "id": 14,
+    "type": "quiz",
+    "category": "matematica",
+    "question": "Quanto fa la radice quadrata di 64?",
+    "options": ["6", "7", "8", "9"],
+    "answer": "8"
+  },
+  {
+    "id": 15,
+    "type": "quiz",
+    "category": "matematica",
+    "question": "Quanto fa 15 + 27?",
+    "options": ["40", "41", "42", "43"],
+    "answer": "42"
+  },
+  {
+    "id": 16,
+    "type": "quiz",
+    "category": "lingua",
+    "question": "Qual è il plurale di 'città'?",
+    "options": ["città", "cittàs", "città", "città"],
+    "answer": "città"
+  },
+  {
+    "id": 17,
+    "type": "quiz",
+    "category": "lingua",
+    "question": "Quale di queste parole è un aggettivo?",
+    "options": ["Correre", "Bello", "Rapidamente", "Casa"],
+    "answer": "Bello"
+  },
+  {
+    "id": 18,
+    "type": "quiz",
+    "category": "arte",
+    "question": "Quale movimento artistico è associato a Van Gogh?",
+    "options": ["Impressionismo", "Post-impressionismo", "Cubismo", "Surrealismo"],
+    "answer": "Post-impressionismo"
+  },
+  {
+    "id": 19,
+    "type": "quiz",
+    "category": "arte",
+    "question": "Chi ha scolpito il David di Michelangelo?",
+    "options": ["Leonardo da Vinci", "Michelangelo", "Donatello", "Raffaello"],
+    "answer": "Michelangelo"
+  },
+  {
+    "id": 20,
+    "type": "quiz",
+    "category": "musica",
+    "question": "Quante corde ha una chitarra classica?",
+    "options": ["4", "5", "6", "7"],
+    "answer": "6"
+  },
+  {
+    "id": 21,
+    "type": "quiz",
+    "category": "musica",
+    "question": "Quale compositore ha scritto la Nona Sinfonia?",
+    "options": ["Mozart", "Beethoven", "Bach", "Chopin"],
+    "answer": "Beethoven"
+  },
+  {
+    "id": 22,
+    "type": "quiz",
+    "category": "sport",
+    "question": "Quanti giocatori ci sono in una squadra di calcio?",
+    "options": ["9", "10", "11", "12"],
+    "answer": "11"
+  },
+  {
+    "id": 23,
+    "type": "quiz",
+    "category": "sport",
+    "question": "Quale sport si gioca con una palla ovale?",
+    "options": ["Calcio", "Rugby", "Basket", "Tennis"],
+    "answer": "Rugby"
+  },
+  {
+    "id": 24,
+    "type": "memory",
+    "category": "colori",
+    "question": "Abbina il colore al suo nome in inglese",
+    "pairs": [
+      { "front": "Rosso", "back": "Red" },
+      { "front": "Blu", "back": "Blue" },
+      { "front": "Verde", "back": "Green" },
+      { "front": "Giallo", "back": "Yellow" }
+    ]
+  },
+  {
+    "id": 25,
+    "type": "memory",
+    "category": "numeri",
+    "question": "Abbina il numero alla sua parola",
+    "pairs": [
+      { "front": "1", "back": "Uno" },
+      { "front": "2", "back": "Due" },
+      { "front": "3", "back": "Tre" },
+      { "front": "4", "back": "Quattro" },
+      { "front": "5", "back": "Cinque" },
+      { "front": "6", "back": "Sei" }
+    ]
+  },
+  {
+    "id": 26,
+    "type": "memory",
+    "category": "frutta",
+    "question": "Abbina la frutta al suo colore",
+    "pairs": [
+      { "front": "Mela", "back": "Rossa" },
+      { "front": "Banana", "back": "Gialla" },
+      { "front": "Uva", "back": "Viola" },
+      { "front": "Arancia", "back": "Arancione" }
+    ]
+  },
+  {
+    "id": 27,
+    "type": "memory",
+    "category": "forme",
+    "question": "Abbina la forma al suo nome",
+    "pairs": [
+      { "front": "Cerchio", "back": "○" },
+      { "front": "Quadrato", "back": "□" },
+      { "front": "Triangolo", "back": "△" },
+      { "front": "Rettangolo", "back": "▭" }
+    ]
+  },
+  {
+    "id": 28,
+    "type": "memory",
+    "category": "professioni",
+    "question": "Abbina la professione al suo strumento",
+    "pairs": [
+      { "front": "Medico", "back": "Stetoscopio" },
+      { "front": "Insegnante", "back": "Gesso" },
+      { "front": "Cuoco", "back": "Padella" },
+      { "front": "Pompiere", "back": "Idrante" }
+    ]
+  },
+  {
+    "id": 29,
+    "type": "memory",
+    "category": "mezzi",
+    "question": "Abbina il mezzo di trasporto al suo suono",
+    "pairs": [
+      { "front": "Auto", "back": "Brum brum" },
+      { "front": "Treno", "back": "Ciu ciu" },
+      { "front": "Aereo", "back": "Vrooom" },
+      { "front": "Barca", "back": "Splash" }
+    ]
+  },
+  {
+    "id": 30,
+    "type": "memory",
+    "category": "emozioni",
+    "question": "Abbina l'emozione alla sua espressione",
+    "pairs": [
+      { "front": "Felicità", "back": "😊" },
+      { "front": "Tristezza", "back": "😢" },
+      { "front": "Sorpresa", "back": "😲" },
+      { "front": "Rabbia", "back": "😠" }
+    ]
+  },
+  {
+    "id": 31,
+    "type": "matching",
+    "category": "lingua",
+    "question": "Abbina la parola al suo sinonimo",
+    "pairs": [
+      { "left": "Allegro", "right": "Felice" },
+      { "left": "Grande", "right": "Enorme" },
+      { "left": "Veloce", "right": "Rapido" },
+      { "left": "Piccolo", "right": "Minuscolo" }
+    ]
+  },
+  {
+    "id": 32,
+    "type": "matching",
+    "category": "animali",
+    "question": "Abbina l'animale al suo cibo preferito",
+    "pairs": [
+      { "left": "Coniglio", "right": "Carota" },
+      { "left": "Gatto", "right": "Pesce" },
+      { "left": "Mucca", "right": "Erba" },
+      { "left": "Orso", "right": "Miele" }
+    ]
+  },
+  {
+    "id": 33,
+    "type": "matching",
+    "category": "strumenti",
+    "question": "Abbina il mestiere al suo strumento",
+    "pairs": [
+      { "left": "Dottore", "right": "Stetoscopio" },
+      { "left": "Pittore", "right": "Pennello" },
+      { "left": "Cuoco", "right": "Padella" },
+      { "left": "Falegname", "right": "Martello" }
+    ]
+  },
+  {
+    "id": 34,
+    "type": "matching",
+    "category": "colori",
+    "question": "Abbina il colore all'oggetto",
+    "pairs": [
+      { "left": "Rosso", "right": "Pomodoro" },
+      { "left": "Giallo", "right": "Banana" },
+      { "left": "Verde", "right": "Erba" },
+      { "left": "Blu", "right": "Mare" }
+    ]
   }
 ] 

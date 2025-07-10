@@ -5,3 +5,153 @@ body {
   margin: 0;
   padding: 0;
 } 
+
+.back-home-btn {
+  background: none;
+  color: #4A90E2;
+  border: 2px solid #4A90E2;
+  border-radius: 999px;
+  padding: 0.35em 1.1em;
+  font-weight: 700;
+  font-size: 0.98rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 2rem;
+  margin-top: 1.5rem;
+  transition: background 0.18s, color 0.18s, border 0.18s;
+  outline: none;
+}
+.back-home-btn:hover,
+.back-home-btn:focus {
+  background: #EAF4FB;
+  color: #2560A8;
+  border-color: #2560A8;
+} 
+
+.dropdown-btn {
+  background: none;
+  border: none;
+  outline: none;
+  color: #2560A8;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 0.2em 0.7em;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  position: relative;
+  overflow: hidden;
+}
+.dropdown-btn:hover,
+.dropdown-btn:focus {
+  background: linear-gradient(135deg, #EAF3FB, #D4E7F7);
+  color: #4A90E2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+} 
+
+/* Stile base per i link di navigazione (Home, Risultati) */
+.nav-link {
+  color: #2560A8;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 0.2em 0.7em;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Uniforme per link e bottoni header */
+.nav-link,
+.main-btn,
+.profile-btn,
+.dropdown-btn {
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.nav-link:focus, .nav-link:hover,
+.main-btn:focus, .main-btn:hover,
+.profile-btn:focus, .profile-btn:hover,
+.dropdown-btn:focus, .dropdown-btn:hover {
+  background: #e6f0fa;
+  color: #2176c1;
+  box-shadow: 0 0 0 2px #b3d4fc;
+  text-decoration: none;
+}
+
+/* Dropdown menu link hover effects */
+[role="menu"] .nav-link {
+  color: #2560A8;
+  background: none;
+  border: none;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+[role="menu"] .nav-link:focus,
+[role="menu"] .nav-link:hover {
+  background: linear-gradient(135deg, #F0F8FF, #E6F3FF);
+  color: #4A90E2;
+  box-shadow: none;
+  cursor: pointer;
+  border: none;
+  transform: translateX(4px);
+  font-weight: 800;
+}
+
+/* Rimuovo bordo nero focus dal vecchio .dropdown-btn se presente */
+.dropdown-btn:focus {
+  border: none;
+}
+
+/* Dropdown animations */
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced dropdown menu styling */
+[role="menu"] {
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+/* Additional hover effects for dropdown items */
+[role="menu"] .nav-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #4A90E2, #83B3E9);
+  transition: width 0.2s ease;
+  z-index: -1;
+  border-radius: 8px;
+}
+
+[role="menu"] .nav-link:hover::before {
+  width: 100%;
+}
+
+[role="menu"] .nav-link:hover {
+  color: #fff !important;
+  background: none !important;
+  transform: translateX(4px);
+  font-weight: 800;
+} 

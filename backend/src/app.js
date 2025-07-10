@@ -8,7 +8,7 @@ require('dotenv').config();
 
 // Middlewares
 app.use(cors({
-  origin: 'http://localhost:3000', // Cambia con l'URL del frontend in produzione
+  origin: 'http://localhost:3000', 
   credentials: true
 }));
 app.use(express.json());
