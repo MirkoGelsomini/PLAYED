@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Matching.css';
+import axios from 'axios';
+import { useAuth } from '../../core/AuthContext';
 
 function shuffle(array) {
   const arr = [...array];
@@ -18,6 +20,8 @@ const MatchingGame = ({ pairs = [], config = {} }) => {
   const [matched, setMatched] = useState([]); // [{left, right}]
   const [completed, setCompleted] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [progressSaved, setProgressSaved] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     setLeftItems(shuffle(pairs.map(p => p.left)));
@@ -26,7 +30,25 @@ const MatchingGame = ({ pairs = [], config = {} }) => {
     setCompleted(false);
     setSelectedLeft(null);
     setAttempts(0);
+    setProgressSaved(false);
   }, [pairs]);
+
+  useEffect(() => {
+    if (completed && !progressSaved && user) {
+      axios.post('/api/progress', {
+        game: 'Matching',
+        sessionId: `${user._id}-matching-${Date.now()}`,
+        score: pairs.length,
+        level: config.difficulty || 1,
+        completed: true,
+        details: { attempts }
+      }, { withCredentials: true })
+      .catch(error => {
+        console.error('Matching: Errore nel salvataggio progressi', error.response?.data || error.message);
+      });
+      setProgressSaved(true);
+    }
+  }, [completed, progressSaved, user, pairs.length, config.difficulty, attempts]);
 
   const handleLeftClick = (item) => {
     if (matched.find(m => m.left === item)) return;
@@ -42,11 +64,34 @@ const MatchingGame = ({ pairs = [], config = {} }) => {
       setMatched(m => [...m, { left: selectedLeft, right: item }]);
       setSelectedLeft(null);
       setTimeout(() => {
-        if (matched.length + 1 === pairs.length) setCompleted(true);
+        if (matched.length + 1 === pairs.length) {
+          setCompleted(true);
+          if (!progressSaved && user) {
+            axios.post('/api/progress', {
+              game: 'Matching',
+              sessionId: `${user._id}-matching-${Date.now()}`,
+              score: pairs.length,
+              level: config.difficulty || 1,
+              completed: true,
+              details: { attempts }
+            }, { withCredentials: true }).catch(() => {});
+            setProgressSaved(true);
+          }
+        }
       }, 300);
     } else {
       setSelectedLeft(null);
     }
+  };
+
+  const resetGame = () => {
+    setLeftItems(shuffle(pairs.map(p => p.left)));
+    setRightItems(shuffle(pairs.map(p => p.right)));
+    setMatched([]);
+    setCompleted(false);
+    setSelectedLeft(null);
+    setAttempts(0);
+    setProgressSaved(false);
   };
 
   return (
@@ -82,24 +127,25 @@ const MatchingGame = ({ pairs = [], config = {} }) => {
         </div>
       </div>
       {completed && (
-        <div className="matching-completed">
-          <div className="matching-celebration">🎉</div>
-          <h2>Complimenti!</h2>
-          <p>Hai completato tutti gli abbinamenti in <b>{attempts}</b> tentativi!</p>
-          <button className="matching-restart" onClick={() => {
-            setLeftItems(shuffle(pairs.map(p => p.left)));
-            setRightItems(shuffle(pairs.map(p => p.right)));
-            setMatched([]);
-            setCompleted(false);
-            setSelectedLeft(null);
-            setAttempts(0);
-          }}>
-            Rigioca
-          </button>
-        </div>
+        <MatchingResults attempts={attempts} user={user} pairs={pairs} config={config} resetGame={resetGame} />
       )}
     </div>
   );
 };
 
-export default MatchingGame; 
+export default MatchingGame;
+
+function MatchingResults({ attempts, user, pairs, config, resetGame }) {
+  return (
+    <>
+      <div className="matching-completed">
+        <div className="matching-celebration">🎉</div>
+        <h2>Complimenti!</h2>
+        <p>Hai completato tutti gli abbinamenti in <b>{attempts}</b> tentativi!</p>
+        <button className="matching-restart" onClick={resetGame}>
+          Rigioca
+        </button>
+      </div>
+    </>
+  );
+} 

@@ -18,10 +18,15 @@ export function AuthProvider({ children }) {
           return;
         }
         const data = await res.json();
-        if (data.user) setUser(data.user);
-        else setUser(null);
+        if (data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
       })
-      .catch(() => setUser(null));
+      .catch(() => {
+        setUser(null);
+      });
   }, []);
 
   const login = (userData) => {

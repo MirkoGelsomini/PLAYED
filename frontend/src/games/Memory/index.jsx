@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Memory.css';
+import axios from 'axios';
+import { useAuth } from '../../core/AuthContext';
 
 function shuffle(array) {
   const arr = [...array];
@@ -30,11 +32,30 @@ const MemoryGame = ({ config = {}, pairs: propPairs }) => {
   const [attempts, setAttempts] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [lock, setLock] = useState(false);
+  const [progressSaved, setProgressSaved] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     resetGame();
     // eslint-disable-next-line
   }, [JSON.stringify(pairs)]);
+
+  useEffect(() => {
+    if (completed && !progressSaved && user) {
+      axios.post('/api/progress', {
+        game: 'Memory',
+        sessionId: `${user._id}-memory-${Date.now()}`,
+        score: pairs.length,
+        level: config.difficulty || 1,
+        completed: true,
+        details: { attempts }
+      }, { withCredentials: true })
+      .catch(error => {
+        console.error('Memory: Errore nel salvataggio progressi', error.response?.data || error.message);
+      });
+      setProgressSaved(true);
+    }
+  }, [completed, progressSaved, user, pairs.length, config.difficulty, attempts]);
 
   const resetGame = () => {
     const newCards = generateCards(pairs);
@@ -44,6 +65,7 @@ const MemoryGame = ({ config = {}, pairs: propPairs }) => {
     setAttempts(0);
     setCompleted(false);
     setLock(false);
+    setProgressSaved(false);
   };
 
   const handleCardClick = (idx) => {
@@ -64,6 +86,17 @@ const MemoryGame = ({ config = {}, pairs: propPairs }) => {
           setMatched(m => [...m, flipped[0], idx]);
           if (matched.length + 2 === cards.length) {
             setCompleted(true);
+            if (!progressSaved && user) {
+              axios.post('/api/progress', {
+                game: 'Memory',
+                sessionId: `${user._id}-memory-${Date.now()}`,
+                score: pairs.length,
+                level: config.difficulty || 1,
+                completed: true,
+                details: { attempts }
+              }, { withCredentials: true }).catch(() => {});
+              setProgressSaved(true);
+            }
           }
         }
         setFlipped([]);
@@ -100,17 +133,26 @@ const MemoryGame = ({ config = {}, pairs: propPairs }) => {
         </div>
       </div>
       {completed && (
-        <div className="memory-completed">
-          <div className="memory-celebration">🎉</div>
-          <h2>Complimenti!</h2>
-          <p>Hai completato il Memory in <b>{attempts}</b> tentativi!</p>
-          <button className="memory-restart" onClick={resetGame}>
-            Rigioca
-          </button>
-        </div>
+        <MemoryResults attempts={attempts} user={user} pairs={pairs} config={config} resetGame={resetGame} />
       )}
     </div>
   );
 };
 
-export default MemoryGame; 
+export default MemoryGame;
+
+// Aggiungo componente MemoryResults
+function MemoryResults({ attempts, user, pairs, config, resetGame }) {
+  return (
+    <>
+      <div className="memory-completed">
+        <div className="memory-celebration">🎉</div>
+        <h2>Complimenti!</h2>
+        <p>Hai completato il Memory in <b>{attempts}</b> tentativi!</p>
+        <button className="memory-restart" onClick={resetGame}>
+          Rigioca
+        </button>
+      </div>
+    </>
+  );
+} 

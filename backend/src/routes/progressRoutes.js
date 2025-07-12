@@ -1,10 +1,13 @@
 // Definizione delle rotte per i progressi
 const express = require('express');
 const router = express.Router();
+const progressController = require('../controllers/progressController');
+const auth = require('../utils/authMiddleware');
 
-// Rotta di esempio
-router.get('/', (req, res) => {
-  res.json([]); // Da sostituire con la logica reale
-});
+// Salva o aggiorna i progressi di una sessione di gioco
+router.post('/', auth.authenticateToken, progressController.saveProgress);
+
+// Recupera tutti i progressi dell'utente
+router.get('/', auth.authenticateToken, progressController.getProgress);
 
 module.exports = router; 

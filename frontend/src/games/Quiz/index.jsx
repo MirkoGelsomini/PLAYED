@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Quiz.css';
+import axios from 'axios';
+import { useAuth } from '../../core/AuthContext';
 
 const QuizGame = ({ config, questionIds }) => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -12,7 +14,9 @@ const QuizGame = ({ config, questionIds }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState([]);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [progressSaved, setProgressSaved] = useState(false);
   const timerRef = useRef(null);
+  const { user, isAuthenticated } = useAuth();
 
   // Carica le domande specifiche del quiz
   useEffect(() => {
@@ -74,6 +78,27 @@ const QuizGame = ({ config, questionIds }) => {
     };
   }, [timeLeft, isAnswered, config.showTimer, questions.length]);
 
+  useEffect(() => {
+    if (gameCompleted && !progressSaved && user) {
+      const percentage = Math.round((score / questions.length) * 100);
+      axios.post('/api/progress', {
+        game: 'Quiz',
+        sessionId: `${user._id}-quiz-${Date.now()}`,
+        score,
+        level: config.difficulty || 1,
+        completed: true,
+        details: { totalQuestions: questions.length, percentage }
+      }, { withCredentials: true })
+      .then(response => {
+        console.log('Quiz: Progressi salvati con successo', response.data);
+      })
+      .catch(error => {
+        console.error('Quiz: Errore nel salvataggio progressi', error.response?.data || error.message);
+      });
+      setProgressSaved(true);
+    }
+  }, [gameCompleted, progressSaved, user, score, questions.length, config.difficulty]);
+
   const handleTimeout = () => {
     setIsAnswered(true);
     setIsCorrect(false);
@@ -119,6 +144,7 @@ const QuizGame = ({ config, questionIds }) => {
     setShowResult(false);
     setTimeLeft(config.timeLimit || 30);
     setGameCompleted(false);
+    setProgressSaved(false);
   };
 
   if (questions.length === 0) {
@@ -244,4 +270,4 @@ const QuizGame = ({ config, questionIds }) => {
   );
 };
 
-export default QuizGame; 
+export default QuizGame;

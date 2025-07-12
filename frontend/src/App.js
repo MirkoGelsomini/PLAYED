@@ -10,7 +10,17 @@ import MatchingSelectionPage from './pages/MatchingSelectionPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
-import { AuthProvider } from './core/AuthContext';
+import Results from './pages/Results';
+import { AuthProvider, useAuth } from './core/AuthContext';
+
+function ProtectedRoute({ element }) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    window.location.href = '/login';
+    return null;
+  }
+  return element;
+}
 
 function App() {
   return (
@@ -26,6 +36,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/results" element={<ProtectedRoute element={<Results />} />} />
         </Routes>
         <Footer />
       </AuthProvider>
