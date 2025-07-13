@@ -51,6 +51,7 @@ async function updateUser(req, res) {
     delete userObj.password;
     res.json(userObj);
   } catch (err) {
+    console.error('Update user - Errore:', err);
     res.status(400).json({ error: err.message });
   }
 }

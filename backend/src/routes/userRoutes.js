@@ -22,4 +22,21 @@ router.get('/me', authenticateToken, (req, res) => {
   res.json({ user: req.user });
 });
 
+// Endpoint per verificare lo stato dell'autenticazione senza errore 401
+router.get('/auth/status', (req, res) => {
+  const token = req.cookies && req.cookies.token;
+  if (!token) {
+    return res.json({ isAuthenticated: false, user: null });
+  }
+  
+  try {
+    const jwt = require('jsonwebtoken');
+    const JWT_SECRET = process.env.JWT_SECRET;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    res.json({ isAuthenticated: true, user: decoded });
+  } catch (error) {
+    res.json({ isAuthenticated: false, user: null });
+  }
+});
+
 module.exports = router; 

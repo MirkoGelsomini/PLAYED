@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/AuthContext';
 import { FaUserCircle } from 'react-icons/fa';
+import Avatar from '../components/Avatar';
 import logo from '../logo.png';
 import '../styles/Auth.css';
 
@@ -207,11 +208,12 @@ const Header = () => {
           {isAuthenticated ? (
             <>
               <button className="profile-btn" style={profileBtnStyle} onClick={() => navigate('/profile')} title="Profilo">
-                {user?.avatar ? (
-                  <img src={user.avatar} alt="Avatar" style={avatarStyle} />
-                ) : (
-                  <FaUserCircle size={32} style={{ marginRight: '0.5rem', color: '#83B3E9' }} />
-                )}
+                <Avatar 
+                  avatar={user?.avatar} 
+                  alt="Avatar" 
+                  size="small"
+                  className="header-avatar"
+                />
                 <span>{user?.name?.split(' ')[0] || 'Profilo'}</span>
               </button>
               <span style={buttonSeparatorStyle}></span>

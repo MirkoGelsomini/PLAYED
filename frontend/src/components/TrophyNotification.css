@@ -1,0 +1,225 @@
+.trophy-notification-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.trophy-notification-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.trophy-notification-card {
+  background: white;
+  border: 3px solid;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  animation: trophySlideIn 0.5s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+@keyframes trophySlideIn {
+  0% {
+    transform: translateY(-100px) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(20px) scale(1.05);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.trophy-notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.trophy-notification-icon {
+  font-size: 2em;
+  margin-right: 10px;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.trophy-notification-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5em;
+  font-weight: 700;
+}
+
+.trophy-notification-close {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 2em;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.3s ease;
+}
+
+.trophy-notification-close:hover {
+  color: #333;
+}
+
+.trophy-notification-content {
+  margin-bottom: 20px;
+}
+
+.trophy-notification-trophy {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 15px;
+}
+
+.trophy-icon {
+  font-size: 3em;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  animation: trophyGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes trophyGlow {
+  from {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  }
+  to {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+  }
+}
+
+.trophy-info {
+  flex: 1;
+  text-align: left;
+}
+
+.trophy-info h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.trophy-info p {
+  margin: 0 0 15px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.trophy-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.trophy-rarity {
+  font-size: 0.9em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.trophy-points {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.trophy-notification-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ddd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator.active {
+  background: #667eea;
+  transform: scale(1.2);
+}
+
+.indicator:hover {
+  background: #667eea;
+  transform: scale(1.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .trophy-notification-card {
+    padding: 20px;
+    margin: 20px;
+  }
+  
+  .trophy-notification-trophy {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+  
+  .trophy-info {
+    text-align: center;
+  }
+  
+  .trophy-meta {
+    justify-content: center;
+    gap: 15px;
+  }
+  
+  .trophy-notification-header h3 {
+    font-size: 1.2em;
+  }
+  
+  .trophy-icon {
+    font-size: 2.5em;
+  }
+} 

@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Recupera lo stato autenticazione dal backend tramite cookie
-    fetch('/api/users/me', {
+    fetch('/api/users/auth/status', {
       credentials: 'include',
     })
       .then(async res => {
@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
           return;
         }
         const data = await res.json();
-        if (data.user) {
+        if (data.isAuthenticated && data.user) {
           setUser(data.user);
         } else {
           setUser(null);

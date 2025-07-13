@@ -5,6 +5,8 @@ import logo from '../logo.png';
 import '../styles/Auth.css';
 import { deleteUser as deleteUserApi } from '../core/api';
 import Button from '../components/Button';
+import Avatar from '../components/Avatar';
+import { defaultAvatars } from '../utils/avatarUtils';
 
 export default function Profile() {
   const { user, token, login, logout } = useAuth();
@@ -17,13 +19,7 @@ export default function Profile() {
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  const defaultAvatars = [
-    '/avatar/cat.png',
-    '/avatar/dog.png',
-    '/avatar/lion.png',
-    '/avatar/panda.png',
-    '/avatar/fox.png',
-  ];
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -62,6 +58,7 @@ export default function Profile() {
     setSuccess('');
     try {
       let data = { ...form };
+      console.log('Dati da inviare:', data);
       delete data._id;
       delete data.id;
       delete data.createdAt;
@@ -82,8 +79,9 @@ export default function Profile() {
       const res = await axios.put(`/api/users/${form.id || form._id}`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('Risposta dal server:', res.data);
       setSuccess('Profilo aggiornato!');
-      login(res.data, token); // aggiorna context
+      login(res.data); // aggiorna context
     } catch (err) {
       if (err.response?.status === 401) {
         logout();
@@ -112,7 +110,9 @@ export default function Profile() {
   };
 
   const handleAvatarSelect = (url) => {
-    setForm(f => ({ ...f, avatar: url }));
+    // url è tipo "/avatar/dog.png", estrai solo il nome file
+    const fileName = url.split('/').pop();
+    setForm(f => ({ ...f, avatar: fileName }));
   };
 
   const handleAvatarUpload = e => {
@@ -143,7 +143,12 @@ export default function Profile() {
         </>}
         <div className="avatar-section">
           <div className="avatar-preview">
-            <img src={form.avatar || '/avatar/cat.png'} alt="Avatar" className="avatar-img" />
+            <Avatar 
+              avatar={form.avatar} 
+              alt="Avatar" 
+              size="xlarge"
+              className="avatar-img"
+            />
           </div>
           <div className="avatar-gallery">
             {defaultAvatars.map(url => (
@@ -153,6 +158,7 @@ export default function Profile() {
                 alt="Avatar cartoon"
                 className={`avatar-thumb${form.avatar === url ? ' selected' : ''}`}
                 onClick={() => handleAvatarSelect(url)}
+                style={{ cursor: 'pointer' }}
               />
             ))}
           </div>

@@ -49,6 +49,7 @@ const userUpdateValidationSchema = Joi.object({
   password: Joi.string().min(6).optional(),
   role: Joi.string().valid('allievo', 'docente').required(),
   avatar: Joi.string().allow('').optional(),
+  // Campi specifici per Allievo
   age: Joi.when('role', {
     is: 'allievo',
     then: Joi.number().integer().min(3).max(100).required(),
@@ -64,6 +65,7 @@ const userUpdateValidationSchema = Joi.object({
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
+  // Campi specifici per Docente
   subjects: Joi.when('role', {
     is: 'docente',
     then: Joi.array().items(Joi.string()).required(),
@@ -79,6 +81,15 @@ const userUpdateValidationSchema = Joi.object({
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
+  // Campi del sistema di trofei e statistiche (opzionali per l'update)
+  totalPoints: Joi.number().default(0).optional(),
+  gamesCompleted: Joi.number().default(0).optional(),
+  dailyStreak: Joi.number().default(0).optional(),
+  lastPlayedDate: Joi.date().optional(),
+  trophyCount: Joi.number().default(0).optional(),
+  level: Joi.number().default(1).optional(),
+  experience: Joi.number().default(0).optional(),
+  experienceToNextLevel: Joi.number().default(100).optional(),
 });
 
 async function createUser(data) {

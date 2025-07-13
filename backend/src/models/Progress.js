@@ -9,6 +9,7 @@ const progressSchema = new Schema({
   level: { type: Number, required: true }, // livello o difficoltà
   completed: { type: Boolean, default: false },
   date: { type: Date, default: Date.now },
+  details: { type: Schema.Types.Mixed }, // dettagli specifici del gioco
 });
 
 module.exports = mongoose.model('Progress', progressSchema); 
