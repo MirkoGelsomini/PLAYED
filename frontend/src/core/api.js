@@ -1,6 +1,8 @@
 // Funzioni di utilità per chiamate API al backend
 export const fetchGames = async () => {
-  const res = await fetch('/api/games');
+  const res = await fetch('/api/games', {
+    credentials: 'include'
+  });
   return res.json();
 };
 

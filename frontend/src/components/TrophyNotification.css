@@ -11,7 +11,7 @@
   z-index: 9999;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: var(--transition-medium);
 }
 
 .trophy-notification-overlay.visible {
@@ -20,16 +20,17 @@
 }
 
 .trophy-notification-card {
-  background: white;
-  border: 3px solid;
-  border-radius: 20px;
-  padding: 30px;
+  background: var(--white-cloud);
+  border: 3px solid var(--green-leaf);
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-xxl);
   max-width: 500px;
   width: 90%;
   text-align: center;
   position: relative;
   animation: trophySlideIn 0.5s ease-out;
   backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-strong);
 }
 
 @keyframes trophySlideIn {
@@ -50,13 +51,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
   position: relative;
 }
 
 .trophy-notification-icon {
   font-size: 2em;
-  margin-right: 10px;
+  margin-right: var(--spacing-m);
   animation: bounce 1s infinite;
 }
 
@@ -74,9 +75,10 @@
 
 .trophy-notification-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--primary-color);
   font-size: 1.5em;
   font-weight: 700;
+  font-family: var(--font-family);
 }
 
 .trophy-notification-close {
@@ -88,25 +90,26 @@
   border: none;
   font-size: 2em;
   cursor: pointer;
-  color: #999;
-  transition: color 0.3s ease;
+  color: var(--gray-charcoal);
+  transition: var(--transition-fast);
 }
 
 .trophy-notification-close:hover {
-  color: #333;
+  color: var(--primary-color);
 }
 
 .trophy-notification-content {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .trophy-notification-trophy {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 20px;
-  background: rgba(102, 126, 234, 0.05);
-  border-radius: 15px;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
+  background: var(--gray-stone);
+  border-radius: var(--border-radius-medium);
+  border: 2px solid var(--green-leaf);
 }
 
 .trophy-icon {
@@ -130,16 +133,18 @@
 }
 
 .trophy-info h4 {
-  margin: 0 0 10px 0;
-  color: #333;
+  margin: 0 0 var(--spacing-m) 0;
+  color: var(--primary-color);
   font-size: 1.3em;
   font-weight: 600;
+  font-family: var(--font-family);
 }
 
 .trophy-info p {
-  margin: 0 0 15px 0;
-  color: #666;
+  margin: 0 0 var(--spacing-l) 0;
+  color: var(--gray-charcoal);
   line-height: 1.5;
+  font-family: var(--font-family);
 }
 
 .trophy-meta {
@@ -153,57 +158,59 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  padding: 4px 8px;
-  border-radius: 10px;
-  background: rgba(102, 126, 234, 0.1);
+  padding: var(--spacing-xs) var(--spacing-l);
+  border-radius: var(--border-radius-small);
+  background: var(--gradient-primary);
+  color: var(--white-cloud);
 }
 
 .trophy-points {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  padding: 6px 12px;
-  border-radius: 15px;
+  background: var(--gradient-sun);
+  color: var(--gray-charcoal);
+  padding: var(--spacing-s) var(--spacing-l);
+  border-radius: var(--border-radius-medium);
   font-size: 0.9em;
   font-weight: 600;
+  font-family: var(--font-family);
 }
 
 .trophy-notification-indicators {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-top: 20px;
+  gap: var(--spacing-l);
+  margin-top: var(--spacing-xl);
 }
 
 .indicator {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #ddd;
+  background: var(--gray-stone);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-fast);
 }
 
 .indicator.active {
-  background: #667eea;
+  background: var(--gradient-primary);
   transform: scale(1.2);
 }
 
 .indicator:hover {
-  background: #667eea;
+  background: var(--gradient-sky);
   transform: scale(1.1);
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
   .trophy-notification-card {
-    padding: 20px;
-    margin: 20px;
+    padding: var(--spacing-xl);
+    margin: var(--spacing-xl);
   }
   
   .trophy-notification-trophy {
     flex-direction: column;
     text-align: center;
-    gap: 15px;
+    gap: var(--spacing-l);
   }
   
   .trophy-info {
@@ -212,7 +219,7 @@
   
   .trophy-meta {
     justify-content: center;
-    gap: 15px;
+    gap: var(--spacing-l);
   }
   
   .trophy-notification-header h3 {

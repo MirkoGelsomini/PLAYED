@@ -12,10 +12,17 @@ const MemorySelectionPage = () => {
     const loadMemoryGames = async () => {
       try {
         const games = await fetchGames();
-        // Filtra solo i memory games (escludendo il memory_selection)
-        const memoryOnly = games.filter(game => 
-          game.type === 'memory' && game.id !== 'memory_selection'
-        );
+        console.log('Risposta fetchGames (MemorySelectionPage):', games);
+        let memoryOnly = [];
+        if (Array.isArray(games)) {
+          memoryOnly = games.filter(game => 
+            game.type === 'memory' && game.id !== 'memory_selection'
+          );
+        } else if (games && Array.isArray(games.games)) {
+          memoryOnly = games.games.filter(game => 
+            game.type === 'memory' && game.id !== 'memory_selection'
+          );
+        }
         setMemoryGames(memoryOnly);
         setLoading(false);
       } catch (error) {
@@ -117,7 +124,7 @@ const MemorySelectionPage = () => {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }

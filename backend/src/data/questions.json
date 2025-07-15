@@ -4,6 +4,8 @@
     "type": "memory",
     "category": "animali",
     "question": "Abbina l'animale al suo verso",
+    "ageRange": [4, 6],
+    "difficulty": 2,
     "pairs": [
       { "front": "Cane", "back": "Bau" },
       { "front": "Gatto", "back": "Miao" },
@@ -16,6 +18,8 @@
     "type": "quiz",
     "category": "scienze",
     "question": "Qual è il pianeta più vicino al Sole?",
+    "ageRange": [7, 10],
+    "difficulty": 4,
     "options": ["Venere", "Terra", "Mercurio", "Marte"],
     "answer": "Mercurio"
   },
@@ -24,6 +28,8 @@
     "type": "matching",
     "category": "lingua",
     "question": "Abbina la parola al suo sinonimo",
+    "ageRange": [8, 12],
+    "difficulty": 5,
     "pairs": [
       { "left": "Allegro", "right": "Felice" },
       { "left": "Grande", "right": "Enorme" }
@@ -34,6 +40,8 @@
     "type": "quiz",
     "category": "scienze",
     "question": "Quale elemento chimico ha il simbolo 'O'?",
+    "ageRange": [8, 12],
+    "difficulty": 5,
     "options": ["Oro", "Ossigeno", "Osmio", "Oganesson"],
     "answer": "Ossigeno"
   },
@@ -42,6 +50,8 @@
     "type": "quiz",
     "category": "geografia",
     "question": "Qual è la capitale dell'Italia?",
+    "ageRange": [7, 10],
+    "difficulty": 3,
     "options": ["Milano", "Roma", "Firenze", "Venezia"],
     "answer": "Roma"
   },
@@ -50,6 +60,8 @@
     "type": "quiz",
     "category": "storia",
     "question": "In che anno è iniziata la Prima Guerra Mondiale?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["1914", "1915", "1916", "1917"],
     "answer": "1914"
   },
@@ -58,6 +70,8 @@
     "type": "quiz",
     "category": "matematica",
     "question": "Quanto fa 7 x 8?",
+    "ageRange": [8, 11],
+    "difficulty": 4,
     "options": ["54", "56", "58", "60"],
     "answer": "56"
   },
@@ -66,6 +80,8 @@
     "type": "quiz",
     "category": "scienze",
     "question": "Quale organo pompa il sangue nel corpo umano?",
+    "ageRange": [7, 10],
+    "difficulty": 2,
     "options": ["Polmoni", "Cuore", "Fegato", "Cervello"],
     "answer": "Cuore"
   },
@@ -74,6 +90,8 @@
     "type": "quiz",
     "category": "scienze",
     "question": "Qual è il gas più abbondante nell'atmosfera terrestre?",
+    "ageRange": [9, 12],
+    "difficulty": 6,
     "options": ["Ossigeno", "Azoto", "Anidride carbonica", "Idrogeno"],
     "answer": "Azoto"
   },
@@ -82,6 +100,8 @@
     "type": "quiz",
     "category": "geografia",
     "question": "Qual è il fiume più lungo d'Europa?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["Danubio", "Reno", "Volga", "Tamigi"],
     "answer": "Volga"
   },
@@ -90,6 +110,8 @@
     "type": "quiz",
     "category": "geografia",
     "question": "In quale continente si trova l'Egitto?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["Europa", "Asia", "Africa", "America"],
     "answer": "Africa"
   },
@@ -98,6 +120,8 @@
     "type": "quiz",
     "category": "storia",
     "question": "Chi ha dipinto la Gioconda?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["Michelangelo", "Leonardo da Vinci", "Raffaello", "Botticelli"],
     "answer": "Leonardo da Vinci"
   },
@@ -106,6 +130,8 @@
     "type": "quiz",
     "category": "storia",
     "question": "In che anno è caduto l'Impero Romano d'Occidente?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["476 d.C.", "410 d.C.", "1453 d.C.", "800 d.C."],
     "answer": "476 d.C."
   },
@@ -114,6 +140,8 @@
     "type": "quiz",
     "category": "matematica",
     "question": "Quanto fa la radice quadrata di 64?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["6", "7", "8", "9"],
     "answer": "8"
   },
@@ -122,6 +150,8 @@
     "type": "quiz",
     "category": "matematica",
     "question": "Quanto fa 15 + 27?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["40", "41", "42", "43"],
     "answer": "42"
   },
@@ -130,6 +160,8 @@
     "type": "quiz",
     "category": "lingua",
     "question": "Qual è il plurale di 'città'?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["città", "cittàs", "città", "città"],
     "answer": "città"
   },
@@ -138,6 +170,8 @@
     "type": "quiz",
     "category": "lingua",
     "question": "Quale di queste parole è un aggettivo?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["Correre", "Bello", "Rapidamente", "Casa"],
     "answer": "Bello"
   },
@@ -146,6 +180,8 @@
     "type": "quiz",
     "category": "arte",
     "question": "Quale movimento artistico è associato a Van Gogh?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["Impressionismo", "Post-impressionismo", "Cubismo", "Surrealismo"],
     "answer": "Post-impressionismo"
   },
@@ -154,6 +190,8 @@
     "type": "quiz",
     "category": "arte",
     "question": "Chi ha scolpito il David di Michelangelo?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["Leonardo da Vinci", "Michelangelo", "Donatello", "Raffaello"],
     "answer": "Michelangelo"
   },
@@ -162,6 +200,8 @@
     "type": "quiz",
     "category": "musica",
     "question": "Quante corde ha una chitarra classica?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["4", "5", "6", "7"],
     "answer": "6"
   },
@@ -170,6 +210,8 @@
     "type": "quiz",
     "category": "musica",
     "question": "Quale compositore ha scritto la Nona Sinfonia?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["Mozart", "Beethoven", "Bach", "Chopin"],
     "answer": "Beethoven"
   },
@@ -178,6 +220,8 @@
     "type": "quiz",
     "category": "sport",
     "question": "Quanti giocatori ci sono in una squadra di calcio?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["9", "10", "11", "12"],
     "answer": "11"
   },
@@ -186,6 +230,8 @@
     "type": "quiz",
     "category": "sport",
     "question": "Quale sport si gioca con una palla ovale?",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "options": ["Calcio", "Rugby", "Basket", "Tennis"],
     "answer": "Rugby"
   },
@@ -194,6 +240,8 @@
     "type": "memory",
     "category": "colori",
     "question": "Abbina il colore al suo nome in inglese",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "front": "Rosso", "back": "Red" },
       { "front": "Blu", "back": "Blue" },
@@ -206,6 +254,8 @@
     "type": "memory",
     "category": "numeri",
     "question": "Abbina il numero alla sua parola",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "front": "1", "back": "Uno" },
       { "front": "2", "back": "Due" },
@@ -220,6 +270,8 @@
     "type": "memory",
     "category": "frutta",
     "question": "Abbina la frutta al suo colore",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "front": "Mela", "back": "Rossa" },
       { "front": "Banana", "back": "Gialla" },
@@ -232,6 +284,8 @@
     "type": "memory",
     "category": "forme",
     "question": "Abbina la forma al suo nome",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "front": "Cerchio", "back": "○" },
       { "front": "Quadrato", "back": "□" },
@@ -244,6 +298,8 @@
     "type": "memory",
     "category": "professioni",
     "question": "Abbina la professione al suo strumento",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "front": "Medico", "back": "Stetoscopio" },
       { "front": "Insegnante", "back": "Gesso" },
@@ -256,6 +312,8 @@
     "type": "memory",
     "category": "mezzi",
     "question": "Abbina il mezzo di trasporto al suo suono",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "front": "Auto", "back": "Brum brum" },
       { "front": "Treno", "back": "Ciu ciu" },
@@ -268,6 +326,8 @@
     "type": "memory",
     "category": "emozioni",
     "question": "Abbina l'emozione alla sua espressione",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "front": "Felicità", "back": "😊" },
       { "front": "Tristezza", "back": "😢" },
@@ -280,6 +340,8 @@
     "type": "matching",
     "category": "lingua",
     "question": "Abbina la parola al suo sinonimo",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "left": "Allegro", "right": "Felice" },
       { "left": "Grande", "right": "Enorme" },
@@ -292,6 +354,8 @@
     "type": "matching",
     "category": "animali",
     "question": "Abbina l'animale al suo cibo preferito",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "left": "Coniglio", "right": "Carota" },
       { "left": "Gatto", "right": "Pesce" },
@@ -304,6 +368,8 @@
     "type": "matching",
     "category": "strumenti",
     "question": "Abbina il mestiere al suo strumento",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "left": "Dottore", "right": "Stetoscopio" },
       { "left": "Pittore", "right": "Pennello" },
@@ -316,6 +382,8 @@
     "type": "matching",
     "category": "colori",
     "question": "Abbina il colore all'oggetto",
+    "ageRange": [10, 13],
+    "difficulty": 7,
     "pairs": [
       { "left": "Rosso", "right": "Pomodoro" },
       { "left": "Giallo", "right": "Banana" },

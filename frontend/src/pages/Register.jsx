@@ -117,7 +117,10 @@ export default function Register() {
       </div>
       <div className="wizard-steps">
         {steps.map((label, i) => (
-          <div key={i} className={`wizard-step${i === step ? ' active' : ''}`}>{label}</div>
+          <div key={i} className={`wizard-step${i === step ? ' active' : ''}`}>
+            <span className="wizard-step-dot"></span>
+            <span className="wizard-step-label">{label}</span>
+          </div>
         ))}
       </div>
       <form className="auth-form" onSubmit={handleSubmit}>

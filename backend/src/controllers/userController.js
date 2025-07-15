@@ -75,7 +75,8 @@ async function login(req, res) {
     if (!user) return res.status(401).json({ error: 'Email o password non validi' });
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: 'Email o password non validi' });
-    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '4h' });
+    // Includi anche age e name nel payload del token
+    const token = jwt.sign({ id: user._id, role: user.role, age: user.age, name: user.name }, JWT_SECRET, { expiresIn: '4h' });
     // Imposta il token in un cookie httpOnly e secure
     res.cookie('token', token, {
       httpOnly: true,
@@ -84,7 +85,7 @@ async function login(req, res) {
       maxAge: 4 * 60 * 60 * 1000, // 4 ore
       path: '/',
     });
-    res.json({ user: { id: user._id, name: user.name, role: user.role } });
+    res.json({ user: { id: user._id, name: user.name, role: user.role, age: user.age } });
   } catch (err) {
     res.status(500).json({ error: 'Errore nel login' });
   }

@@ -1,7 +1,53 @@
-/* Variabili CSS globali */
+/* Design Language Naturale - Played */
 :root {
-  --primary-color: #4A90E2;
-  --secondary-color: #F5A623;
-  --font-family: 'Comic Sans MS', Comic Sans, cursive;
-  --border-radius: 16px;
+  /* COLORI PRIMARI */
+  --primary-color: #4CAF50;        /* Verde Chiaro e Vivace */
+  --secondary-color: #5B9BD5;      /* Azzurro Cielo */
+  --accent-color: #F4D03F;         /* Giallo Sole */
+  
+  /* COLORI SECONDARI */
+  --orange-earth: #E67E22;         /* Arancione Terra */
+  --green-leaf: #7DCE82;           /* Verde Foglia */
+  --brown-wood: #8B7355;           /* Marrone Legno */
+  
+  /* COLORI ACCENTI */
+  --pink-flower: #F8BBD9;          /* Rosa Fiore */
+  --purple-lavender: #9B59B6;      /* Viola Lavanda */
+  
+  /* COLORI NEUTRALI */
+  --white-cloud: #FFFFFF;
+  --gray-stone: #F8F9FA;
+  --gray-charcoal: #6C757D;
+  
+  /* GRADIENTI NATURALI */
+  --gradient-primary: linear-gradient(135deg, #4CAF50 0%, #7DCE82 100%);
+  --gradient-sky: linear-gradient(135deg, #5B9BD5 0%, #87CEEB 100%);
+  --gradient-sun: linear-gradient(135deg, #F4D03F 0%, #F7DC6F 100%);
+  --gradient-earth: linear-gradient(135deg, #E67E22 0%, #F39C12 100%);
+  
+  /* TIPOGRAFIA */
+  --font-family: 'Comic Sans MS', 'Fredoka One', 'Arial Rounded MT Bold', cursive;
+  
+  /* BORDER RADIUS NATURALI */
+  --border-radius-small: 12px;     /* Pietre piccole */
+  --border-radius-medium: 20px;    /* Pietre medie */
+  --border-radius-large: 28px;     /* Pietre grandi */
+  --border-radius-xl: 36px;        /* Rocce */
+  
+  /* OMBRE NATURALI */
+  --shadow-soft: 0 4px 12px rgba(76, 175, 80, 0.15);
+  --shadow-medium: 0 8px 24px rgba(76, 175, 80, 0.25);
+  --shadow-strong: 0 12px 32px rgba(76, 175, 80, 0.35);
+  
+  /* TRANSIZIONI */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-medium: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* SPACING NATURALE (sistema 8px) */
+  --spacing-xs: 4px;
+  --spacing-s: 8px;
+  --spacing-m: 16px;
+  --spacing-l: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
 } 

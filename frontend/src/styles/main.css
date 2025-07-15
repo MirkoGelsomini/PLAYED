@@ -1,17 +1,18 @@
-/* Stili globali dell'applicazione */ 
+/* Stili globali dell'applicazione - Design Language Naturale */ 
 body {
   font-family: var(--font-family);
-  background: #f9f9f9;
+  background: var(--gray-stone);
   margin: 0;
   padding: 0;
+  color: var(--gray-charcoal);
 } 
 
 .back-home-btn {
   background: none;
-  color: #4A90E2;
-  border: 2px solid #4A90E2;
-  border-radius: 999px;
-  padding: 0.35em 1.1em;
+  color: var(--primary-color);
+  border: 3px solid var(--primary-color);
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-m) var(--spacing-xl);
   font-weight: 700;
   font-size: 0.98rem;
   cursor: pointer;
@@ -19,50 +20,55 @@ body {
   display: inline-block;
   margin-bottom: 2rem;
   margin-top: 1.5rem;
-  transition: background 0.18s, color 0.18s, border 0.18s;
+  transition: all var(--transition-fast);
   outline: none;
+  box-shadow: var(--shadow-soft);
 }
+
 .back-home-btn:hover,
 .back-home-btn:focus {
-  background: #EAF4FB;
-  color: #2560A8;
-  border-color: #2560A8;
+  background: var(--gradient-primary);
+  color: var(--white-cloud);
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
 } 
 
 .dropdown-btn {
   background: none;
   border: none;
   outline: none;
-  color: #2560A8;
+  color: var(--primary-color);
   font-weight: 700;
   font-size: 1.1rem;
-  padding: 0.2em 0.7em;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  padding: var(--spacing-s) var(--spacing-l);
+  border-radius: var(--border-radius-small);
+  transition: all var(--transition-fast);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.3em;
+  gap: var(--spacing-s);
   position: relative;
   overflow: hidden;
 }
+
 .dropdown-btn:hover,
 .dropdown-btn:focus {
-  background: linear-gradient(135deg, #EAF3FB, #D4E7F7);
-  color: #4A90E2;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+  background: var(--gradient-sky);
+  color: var(--white-cloud);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
 } 
 
 /* Stile base per i link di navigazione (Home, Risultati) */
 .nav-link {
-  color: #2560A8;
+  color: var(--primary-color);
   text-decoration: none;
   font-weight: 700;
   font-size: 1.1rem;
-  padding: 0.2em 0.7em;
-  border-radius: 6px;
-  transition: background 0.15s, color 0.15s;
+  padding: var(--spacing-s) var(--spacing-l);
+  border-radius: var(--border-radius-small);
+  transition: all var(--transition-fast);
   background: none;
   border: none;
   cursor: pointer;
@@ -74,7 +80,7 @@ body {
 .main-btn,
 .profile-btn,
 .dropdown-btn {
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  transition: all var(--transition-fast);
   outline: none;
 }
 
@@ -82,27 +88,28 @@ body {
 .main-btn:focus, .main-btn:hover,
 .profile-btn:focus, .profile-btn:hover,
 .dropdown-btn:focus, .dropdown-btn:hover {
-  background: #e6f0fa;
-  color: #2176c1;
-  box-shadow: 0 0 0 2px #b3d4fc;
+  background: var(--gradient-primary);
+  color: var(--white-cloud);
+  box-shadow: var(--shadow-medium);
   text-decoration: none;
+  transform: translateY(-2px);
 }
 
 /* Dropdown menu link hover effects */
 [role="menu"] .nav-link {
-  color: #2560A8;
+  color: var(--primary-color);
   background: none;
   border: none;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
 }
 
 [role="menu"] .nav-link:focus,
 [role="menu"] .nav-link:hover {
-  background: linear-gradient(135deg, #F0F8FF, #E6F3FF);
-  color: #4A90E2;
-  box-shadow: none;
+  background: var(--gradient-sky);
+  color: var(--white-cloud);
+  box-shadow: var(--shadow-soft);
   cursor: pointer;
   border: none;
   transform: translateX(4px);
@@ -129,6 +136,10 @@ body {
 /* Enhanced dropdown menu styling */
 [role="menu"] {
   animation: dropdownFadeIn 0.2s ease-out;
+  background: var(--white-cloud);
+  border-radius: var(--border-radius-medium);
+  box-shadow: var(--shadow-medium);
+  border: 2px solid var(--green-leaf);
 }
 
 /* Additional hover effects for dropdown items */
@@ -139,10 +150,10 @@ body {
   top: 0;
   width: 0;
   height: 100%;
-  background: linear-gradient(90deg, #4A90E2, #83B3E9);
-  transition: width 0.2s ease;
+  background: var(--gradient-primary);
+  transition: width var(--transition-fast);
   z-index: -1;
-  border-radius: 8px;
+  border-radius: var(--border-radius-small);
 }
 
 [role="menu"] .nav-link:hover::before {
@@ -150,7 +161,7 @@ body {
 }
 
 [role="menu"] .nav-link:hover {
-  color: #fff !important;
+  color: var(--white-cloud) !important;
   background: none !important;
   transform: translateX(4px);
   font-weight: 800;

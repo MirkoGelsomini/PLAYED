@@ -7,146 +7,160 @@ import logo from '../logo.png';
 import '../styles/Auth.css';
 
 const headerStyle = {
-  background: '#83B3E9',
-  color: '#fff',
-  padding: '1rem 0',
-  fontFamily: 'Nunito, Arial, sans-serif',
-  boxShadow: '0 2px 8px 0 rgba(74,144,226,0.10)',
+  background: 'var(--gradient-sky)',
+  color: 'var(--white-cloud)',
+  padding: 'var(--spacing-m) 0',
+  fontFamily: 'var(--font-family)',
+  boxShadow: 'var(--shadow-medium)',
 };
+
 const containerStyle = {
   maxWidth: '1100px',
   margin: '0 auto',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '0 2rem',
+  padding: '0 var(--spacing-xl)',
 };
+
 const logoImgStyle = {
   height: '80px',
   width: 'auto',
   display: 'block',
 };
+
 const logoSectionStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: '1.2rem',
-  background: 'rgba(255,255,255,0.85)',
-  border: '2px solid #83B3E9',
-  borderRadius: '16px',
-  padding: '0.4rem 1.2rem',
-  boxShadow: '0 2px 8px 0 rgba(74,144,226,0.08)',
+  gap: 'var(--spacing-l)',
+  background: 'rgba(255,255,255,0.9)',
+  border: '3px solid var(--secondary-color)',
+  borderRadius: 'var(--border-radius-large)',
+  padding: 'var(--spacing-s) var(--spacing-l)',
+  boxShadow: 'var(--shadow-soft)',
 };
+
 const rightStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: '1rem',
-  background: 'rgba(255,255,255,0.85)',
-  border: '2px solid #83B3E9',
-  borderRadius: '16px',
-  padding: '0.4rem 1.2rem',
-  boxShadow: '0 2px 8px 0 rgba(74,144,226,0.08)',
+  gap: 'var(--spacing-m)',
+  background: 'rgba(255,255,255,0.9)',
+  border: '3px solid var(--secondary-color)',
+  borderRadius: 'var(--border-radius-large)',
+  padding: 'var(--spacing-s) var(--spacing-l)',
+  boxShadow: 'var(--shadow-soft)',
 };
+
 const navStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: '1.5rem',
+  gap: 'var(--spacing-xl)',
 };
+
 const navLinkStyle = {
-  color: '#2560A8',
+  color: 'var(--primary-color)',
   textDecoration: 'none',
   fontWeight: 700,
   fontSize: '1.1rem',
-  padding: '0.2em 0.7em',
-  borderRadius: '6px',
-  transition: 'background 0.15s, color 0.15s',
+  padding: 'var(--spacing-s) var(--spacing-l)',
+  borderRadius: 'var(--border-radius-small)',
+  transition: 'var(--transition-fast)',
   background: 'none',
 };
+
 const navLinkActiveStyle = {
-  background: '#EAF3FB',
-  color: '#4A90E2',
+  background: 'var(--gradient-primary)',
+  color: 'var(--white-cloud)',
 };
+
 const buttonSeparatorStyle = {
   height: '28px',
-  width: '1.5px',
-  background: '#E0E7EF',
-  margin: '0 0.5rem',
-  borderRadius: '2px',
+  width: '2px',
+  background: 'var(--green-leaf)',
+  margin: '0 var(--spacing-s)',
+  borderRadius: 'var(--spacing-xs)',
   alignSelf: 'center',
 };
+
 const navSeparatorStyle = {
   height: '22px',
-  width: '1.5px',
-  background: '#83B3E9',
-  margin: '0 0.5rem',
-  borderRadius: '2px',
+  width: '2px',
+  background: 'var(--secondary-color)',
+  margin: '0 var(--spacing-s)',
+  borderRadius: 'var(--spacing-xs)',
   alignSelf: 'center',
 };
+
 const avatarStyle = {
   width: '32px',
   height: '32px',
   borderRadius: '50%',
   objectFit: 'cover',
-  marginRight: '0.5rem',
-  border: '2px solid #83B3E9',
-  background: '#EAF3FB',
+  marginRight: 'var(--spacing-s)',
+  border: '2px solid var(--secondary-color)',
+  background: 'var(--gradient-primary)',
 };
+
 const profileBtnStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.3rem',
+  gap: 'var(--spacing-s)',
   background: 'none',
   border: 'none',
-  color: '#2560A8',
+  color: 'var(--primary-color)',
   fontWeight: 700,
   fontSize: '1.05rem',
   cursor: 'pointer',
-  padding: '0.2em 0.7em',
-  borderRadius: '8px',
-  transition: 'background 0.15s',
+  padding: 'var(--spacing-s) var(--spacing-l)',
+  borderRadius: 'var(--border-radius-small)',
+  transition: 'var(--transition-fast)',
 };
 
 const dropdownStyle = {
   position: 'relative',
   display: 'inline-block',
 };
+
 const dropdownBtnStyle = {
   ...navLinkStyle,
   display: 'flex',
   alignItems: 'center',
-  gap: '0.3em',
+  gap: 'var(--spacing-s)',
   cursor: 'pointer',
   userSelect: 'none',
 };
+
 const dropdownMenuStyle = {
   position: 'absolute',
-  top: 'calc(100% + 6px)',
+  top: 'calc(100% + var(--spacing-s))',
   left: 0,
   minWidth: '160px',
-  background: '#fff',
-  border: '2px solid #83B3E9',
-  borderRadius: '12px',
-  boxShadow: '0 8px 32px 0 rgba(74,144,226,0.18)',
+  background: 'var(--white-cloud)',
+  border: '3px solid var(--green-leaf)',
+  borderRadius: 'var(--border-radius-medium)',
+  boxShadow: 'var(--shadow-medium)',
   zIndex: 100,
-  padding: '0.5em 0',
-  marginTop: '2px',
+  padding: 'var(--spacing-s) 0',
+  marginTop: 'var(--spacing-s)',
   backdropFilter: 'blur(10px)',
   animation: 'dropdownFadeIn 0.2s ease-out',
 };
+
 const dropdownItemStyle = {
-  color: '#2560A8',
+  color: 'var(--primary-color)',
   background: 'none',
   textDecoration: 'none',
   fontWeight: 700,
   fontSize: '1.05rem',
-  padding: '0.6em 1.2em',
+  padding: 'var(--spacing-m) var(--spacing-l)',
   border: 'none',
-  borderRadius: '8px',
+  borderRadius: 'var(--border-radius-small)',
   display: 'block',
   width: '100%',
   textAlign: 'left',
   cursor: 'pointer',
-  transition: 'all 0.2s ease',
-  margin: '0.1em 0.3em',
+  transition: 'var(--transition-fast)',
+  margin: 'var(--spacing-xs) var(--spacing-s)',
   position: 'relative',
 };
 

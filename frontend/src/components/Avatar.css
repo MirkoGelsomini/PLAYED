@@ -1,10 +1,11 @@
-/* Stili base per il componente Avatar */
+/* Stili base per il componente Avatar - Design Language Naturale */
 .avatar-base {
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #83B3E9;
-  background: #EAF3FB;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 3px solid var(--secondary-color);
+  background: var(--gradient-primary);
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-soft);
 }
 
 /* Dimensioni degli avatar */
@@ -30,28 +31,30 @@
 
 /* Stili per il componente Avatar */
 .avatar-img {
-  border: 2px solid #83B3E9;
-  background: #EAF3FB;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 3px solid var(--secondary-color);
+  background: var(--gradient-primary);
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-soft);
 }
 
 /* Stili per l'icona di default */
 .avatar-img[src*="data:image/svg+xml"] {
-  background: #f8f9fa;
-  border: 2px solid #dee2e6;
-  padding: 2px;
+  background: var(--gray-stone);
+  border: 3px solid var(--green-leaf);
+  padding: var(--spacing-xs);
 }
 
 .avatar-img:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(131, 179, 233, 0.3);
+  box-shadow: var(--shadow-medium);
+  border-color: var(--primary-color);
 }
 
 /* Stili specifici per l'header */
 .header-avatar {
-  margin-right: 0.5rem;
-  border: 2px solid #83B3E9;
-  background: #EAF3FB;
+  margin-right: var(--spacing-s);
+  border: 3px solid var(--secondary-color);
+  background: var(--gradient-primary);
 }
 
 /* Stili per la galleria avatar nel profilo */
@@ -62,19 +65,20 @@
   object-fit: cover;
   cursor: pointer;
   border: 3px solid transparent;
-  transition: all 0.2s ease;
-  margin: 0.5rem;
+  transition: var(--transition-fast);
+  margin: var(--spacing-s);
+  box-shadow: var(--shadow-soft);
 }
 
 .avatar-thumb:hover {
   transform: scale(1.1);
-  border-color: #83B3E9;
-  box-shadow: 0 4px 12px rgba(131, 179, 233, 0.3);
+  border-color: var(--secondary-color);
+  box-shadow: var(--shadow-medium);
 }
 
 .avatar-thumb.selected {
-  border-color: #4A90E2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.3);
 }
 
 /* Stili per l'anteprima avatar nel profilo */
@@ -83,19 +87,19 @@
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #83B3E9;
-  box-shadow: 0 8px 24px rgba(131, 179, 233, 0.2);
+  border: 4px solid var(--secondary-color);
+  box-shadow: var(--shadow-medium);
 }
 
 /* Stili per gli avatar nei risultati */
 .user-avatar-img {
-  border: 4px solid #83B3E9;
-  box-shadow: 0 8px 24px rgba(131, 179, 233, 0.2);
+  border: 4px solid var(--secondary-color);
+  box-shadow: var(--shadow-medium);
 }
 
 .player-avatar {
-  border: 2px solid #83B3E9;
-  box-shadow: 0 4px 12px rgba(131, 179, 233, 0.2);
+  border: 3px solid var(--secondary-color);
+  box-shadow: var(--shadow-soft);
 }
 
 /* Responsive */
@@ -103,7 +107,7 @@
   .avatar-thumb {
     width: 50px;
     height: 50px;
-    margin: 0.3rem;
+    margin: var(--spacing-xs);
   }
   
   .avatar-preview .avatar-img {

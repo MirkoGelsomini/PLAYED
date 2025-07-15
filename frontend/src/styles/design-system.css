@@ -1,0 +1,173 @@
+/* Design System Naturale - Played */
+
+/* ===== COMPONENTI BASE ===== */
+
+/* Card Naturale */
+.natural-card {
+  background: var(--white-cloud);
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-soft);
+  border: 2px solid var(--green-leaf);
+  transition: var(--transition-fast);
+}
+
+.natural-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Badge Naturale */
+.natural-badge {
+  background: var(--gradient-primary);
+  color: var(--white-cloud);
+  padding: var(--spacing-s) var(--spacing-m);
+  border-radius: var(--border-radius-medium);
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: inline-block;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Input Naturale */
+.natural-input {
+  background: var(--white-cloud);
+  border: 3px solid var(--green-leaf);
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-m);
+  font-family: var(--font-family);
+  font-size: 1rem;
+  transition: var(--transition-fast);
+  outline: none;
+}
+
+.natural-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-1px);
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+/* Backgrounds */
+.bg-natural-primary { background: var(--gradient-primary); }
+.bg-natural-sky { background: var(--gradient-sky); }
+.bg-natural-sun { background: var(--gradient-sun); }
+.bg-natural-earth { background: var(--gradient-earth); }
+
+/* Text Colors */
+.text-natural-primary { color: var(--primary-color); }
+.text-natural-sky { color: var(--secondary-color); }
+.text-natural-sun { color: var(--accent-color); }
+.text-natural-earth { color: var(--orange-earth); }
+.text-natural-wood { color: var(--brown-wood); }
+
+/* Borders */
+.border-natural-primary { border-color: var(--primary-color); }
+.border-natural-leaf { border-color: var(--green-leaf); }
+.border-natural-sky { border-color: var(--secondary-color); }
+
+/* Shadows */
+.shadow-natural-soft { box-shadow: var(--shadow-soft); }
+.shadow-natural-medium { box-shadow: var(--shadow-medium); }
+.shadow-natural-strong { box-shadow: var(--shadow-strong); }
+
+/* ===== ANIMAZIONI NATURALI ===== */
+
+@keyframes naturalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes naturalPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes naturalBounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40%, 43% {
+    transform: translateY(-8px);
+  }
+  70% {
+    transform: translateY(-4px);
+  }
+  90% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Classi di animazione */
+.animate-natural-fade-in {
+  animation: naturalFadeIn 0.6s ease-out;
+}
+
+.animate-natural-pulse {
+  animation: naturalPulse 2s infinite;
+}
+
+.animate-natural-bounce {
+  animation: naturalBounce 1s ease-out;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+@media (max-width: 768px) {
+  .natural-card {
+    padding: var(--spacing-l);
+    border-radius: var(--border-radius-medium);
+  }
+  
+  .natural-input {
+    padding: var(--spacing-m);
+    font-size: 0.95rem;
+  }
+}
+
+/* ===== ACCESSIBILITÀ ===== */
+
+/* Focus visibile per accessibilità */
+.natural-card:focus,
+.natural-input:focus,
+.natural-badge:focus {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Contrasto alto per testo */
+.text-natural-primary {
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* ===== STATI INTERATTIVI ===== */
+
+/* Hover states */
+.natural-card:hover {
+  border-color: var(--primary-color);
+}
+
+.natural-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Active states */
+.natural-card:active {
+  transform: translateY(-2px);
+}
+
+.natural-badge:active {
+  transform: translateY(0);
+} 
