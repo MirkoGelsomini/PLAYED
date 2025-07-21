@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const TrophyController = require('../controllers/trophyController');
 const { authenticateToken } = require('../utils/authMiddleware');
-const TrophyService = require('../services/trophyService');
 
 // Endpoint di test per verificare lo stato dei modelli
 router.get('/test', authenticateToken, (req, res) => {

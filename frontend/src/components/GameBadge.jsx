@@ -65,6 +65,20 @@ const playBtnStyle = {
   boxShadow: 'var(--shadow-soft)',
 };
 
+const solvedBadgeStyle = {
+  position: 'absolute',
+  top: 'var(--spacing-m)',
+  right: 'var(--spacing-m)',
+  background: 'linear-gradient(90deg, #4ade80, #22d3ee)',
+  color: '#fff',
+  fontWeight: 700,
+  fontSize: '0.85rem',
+  borderRadius: 'var(--border-radius-small)',
+  padding: 'var(--spacing-s) var(--spacing-l)',
+  boxShadow: 'var(--shadow-soft)',
+  zIndex: 2,
+};
+
 const getGameIcon = (type, category) => {
   const iconConfigs = {
     memory: {
@@ -91,6 +105,10 @@ const getGameIcon = (type, category) => {
       icon: '🔗',
       background: 'var(--gradient-primary)',
     },
+    sorting: {
+      icon: '🔢',
+      background: 'var(--gradient-earth)',
+    },
   };
 
   return iconConfigs[type] || {
@@ -99,7 +117,7 @@ const getGameIcon = (type, category) => {
   };
 };
 
-const GameBadge = ({ name, description, to, icon, soon, type, category }) => {
+const GameBadge = ({ name, description, to, icon, soon, type, category, solved }) => {
   const gameIcon = getGameIcon(type, category);
 
   const getButtonText = () => {
@@ -125,6 +143,7 @@ const GameBadge = ({ name, description, to, icon, soon, type, category }) => {
       style={badgeStyle}
     >
       {soon && <span style={soonBadgeStyle}>Prossimamente</span>}
+      {solved && <span style={solvedBadgeStyle}>Risolto</span>}
       {icon ? (
         <img src={icon} alt={name} style={iconStyle} />
       ) : (

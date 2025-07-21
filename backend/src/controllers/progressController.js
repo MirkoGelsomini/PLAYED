@@ -147,3 +147,38 @@ exports.getImprovementTrend = async (req, res) => {
     });
   }
 }; 
+
+// Aggiorna le domande risposte per una sessione
+exports.answerQuestion = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { sessionId, questionId } = req.body;
+    if (!userId || !sessionId || !questionId) {
+      return res.status(400).json({ success: false, message: 'Dati mancanti' });
+    }
+    const progress = await ProgressService.updateAnsweredQuestions(userId, sessionId, questionId);
+    if (!progress) {
+      return res.status(404).json({ success: false, message: 'Progresso non trovato' });
+    }
+    res.status(200).json({ success: true, progress });
+  } catch (error) {
+    console.error('Errore nell\'aggiornamento delle domande risposte:', error);
+    res.status(500).json({ success: false, message: 'Errore nell\'aggiornamento delle domande risposte' });
+  }
+};
+
+// Restituisce domande fatte/non fatte e suggerimenti per un gioco
+exports.getQuestionProgressAndSuggestions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { gameType } = req.query;
+    if (!userId || !gameType) {
+      return res.status(400).json({ success: false, message: 'Dati mancanti' });
+    }
+    const result = await ProgressService.getQuestionProgressAndSuggestions(userId, gameType);
+    res.status(200).json({ success: true, ...result });
+  } catch (error) {
+    console.error('Errore nel recupero stato domande e suggerimenti:', error);
+    res.status(500).json({ success: false, message: 'Errore nel recupero stato domande e suggerimenti' });
+  }
+}; 

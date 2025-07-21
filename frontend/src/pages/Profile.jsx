@@ -58,7 +58,6 @@ export default function Profile() {
     setSuccess('');
     try {
       let data = { ...form };
-      console.log('Dati da inviare:', data);
       delete data._id;
       delete data.id;
       delete data.createdAt;
@@ -79,7 +78,6 @@ export default function Profile() {
       const res = await axios.put(`/api/users/${form.id || form._id}`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('Risposta dal server:', res.data);
       setSuccess('Profilo aggiornato!');
       login(res.data); // aggiorna context
     } catch (err) {

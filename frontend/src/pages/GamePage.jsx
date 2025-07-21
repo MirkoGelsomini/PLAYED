@@ -7,16 +7,23 @@ import QuizSelectionPage from './QuizSelectionPage';
 import MemorySelectionPage from './MemorySelectionPage';
 import MatchingSelectionPage from './MatchingSelectionPage';
 import { useParams } from 'react-router-dom';
+import { SidebarRefreshContext } from '../core/SidebarRefreshContext';
+import { useContext } from 'react';
 
 const GamePage = () => {
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [question, setQuestion] = useState(null);
   const { id: gameId } = useParams();
+  const { refresh } = useContext(SidebarRefreshContext);
+  const handleQuestionAnswered = () => {
+    refresh();
+  };
 
   useEffect(() => {
     fetchGames().then(data => {
-      const found = data.find(g => String(g.id) === String(gameId));
+      let gamesArray = Array.isArray(data) ? data : (Array.isArray(data.games) ? data.games : []);
+      const found = gamesArray.find(g => String(g.id) === String(gameId));
       setGame(found);
       setLoading(false);
       
@@ -56,16 +63,15 @@ const GamePage = () => {
           <p>Domande: {game.questionCount || 0}</p>
         </>
       )}
-      
       {/* Renderizza il gioco appropriato in base al tipo */}
       {game.type === 'memory' && question && (
-        <MemoryGame config={game.config} pairs={question.pairs} />
+        <MemoryGame config={game.config} pairs={question.pairs} onQuestionAnswered={handleQuestionAnswered} />
       )}
       {game.type === 'quiz' && (
-        <QuizGame config={game.config} questionIds={game.questionIds} />
+        <QuizGame config={game.config} questionIds={game.questionIds} onQuestionAnswered={handleQuestionAnswered} />
       )}
       {game.type === 'matching' && question && (
-        <MatchingGame config={game.config} pairs={question.pairs} />
+        <MatchingGame config={game.config} pairs={question.pairs} onQuestionAnswered={handleQuestionAnswered} />
       )}
     </div>
   );

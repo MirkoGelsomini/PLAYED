@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Memory.css';
 import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 function shuffle(array) {
   const arr = [...array];
@@ -23,9 +24,23 @@ const generateCards = (pairs) => {
   return shuffle(cards);
 };
 
-const MemoryGame = ({ config = {}, pairs: propPairs }) => {
+const MemoryGame = ({ config = {}, pairs: propPairs, onQuestionAnswered }) => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const questionIdParam = params.get('questionId');
   // propPairs è un array di oggetti {front, back}
   const pairs = propPairs || [];
+  let filteredPairs = pairs;
+  if (questionIdParam) {
+    // questionId corrisponde all'id della domanda in questions.json
+    // Trova la domanda e usa solo le sue pairs
+    // (Serve passare pairs come [{front, back}] per la domanda specifica)
+    filteredPairs = pairs.filter(p => String(p.id) === String(questionIdParam));
+    if (filteredPairs.length === 0 && pairs.length > 0) {
+      // fallback: usa tutte
+      filteredPairs = pairs;
+    }
+  }
   const [cards, setCards] = useState([]);
   const [flipped, setFlipped] = useState([]); // indici delle carte girate
   const [matched, setMatched] = useState([]); // indici delle carte trovate
@@ -38,7 +53,7 @@ const MemoryGame = ({ config = {}, pairs: propPairs }) => {
   useEffect(() => {
     resetGame();
     // eslint-disable-next-line
-  }, [JSON.stringify(pairs)]);
+  }, [JSON.stringify(filteredPairs)]);
 
   useEffect(() => {
     if (completed && !progressSaved && user) {
@@ -54,11 +69,12 @@ const MemoryGame = ({ config = {}, pairs: propPairs }) => {
         console.error('Memory: Errore nel salvataggio progressi', error.response?.data || error.message);
       });
       setProgressSaved(true);
+      if (onQuestionAnswered) onQuestionAnswered();
     }
-  }, [completed, progressSaved, user, pairs.length, config.difficulty, attempts]);
+  }, [completed, progressSaved, user, pairs.length, config.difficulty, attempts, onQuestionAnswered]);
 
   const resetGame = () => {
-    const newCards = generateCards(pairs);
+    const newCards = generateCards(filteredPairs);
     setCards(newCards);
     setFlipped([]);
     setMatched([]);

@@ -1,0 +1,140 @@
+.sorting-game-container {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.sorting-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0;
+}
+
+.sorting-list li {
+  background: #f0f4fa;
+  margin-bottom: 10px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: grab;
+  transition: background 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.sorting-list li.dragging {
+  background: #d0e6ff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+}
+
+button {
+  padding: 10px 24px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #4f8cff;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #2563c9;
+}
+
+.correct {
+  color: #2ecc40;
+  margin-top: 16px;
+  font-weight: bold;
+}
+
+.incorrect {
+  color: #ff4136;
+  margin-top: 16px;
+  font-weight: bold;
+}
+
+/* Schermata di completamento stile Memory/Matching/Quiz */
+.sorting-completed {
+  text-align: center;
+  margin-top: var(--spacing-xxl);
+  padding: var(--spacing-xxl);
+  background: var(--gray-stone);
+  border-radius: var(--border-radius-medium);
+  border: 3px solid var(--green-leaf);
+  box-shadow: var(--shadow-medium);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.5s;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sorting-celebration {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-m);
+  animation: celebrationBounce 1s infinite;
+}
+
+.sorting-completed h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  margin: 0 0 var(--spacing-m) 0;
+  font-family: var(--font-family);
+}
+
+.sorting-completed p {
+  font-size: 1.2rem;
+  color: var(--gray-charcoal);
+  margin: 0 0 var(--spacing-xl) 0;
+  font-family: var(--font-family);
+}
+
+.sorting-restart {
+  background: var(--gradient-primary);
+  color: var(--white-cloud);
+  border: none;
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-m) var(--spacing-xxl);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-family);
+  margin-top: var(--spacing-l);
+}
+
+.sorting-restart:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+  background: var(--gradient-sky);
+}
+
+@keyframes celebrationBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .sorting-completed {
+    padding: var(--spacing-l);
+    margin: var(--spacing-l);
+  }
+  .sorting-completed h2 {
+    font-size: 1.5rem;
+  }
+} 

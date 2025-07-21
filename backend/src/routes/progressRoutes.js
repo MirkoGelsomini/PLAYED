@@ -19,4 +19,10 @@ router.get('/leaderboard', auth.authenticateToken, progressController.getLeaderb
 // Ottieni trend di miglioramento
 router.get('/trend', auth.authenticateToken, progressController.getImprovementTrend);
 
+// Aggiorna le domande risposte per una sessione
+router.post('/answer', auth.authenticateToken, progressController.answerQuestion);
+
+// Restituisce domande fatte/non fatte e suggerimenti per un gioco
+router.get('/questions', auth.authenticateToken, progressController.getQuestionProgressAndSuggestions);
+
 module.exports = router; 

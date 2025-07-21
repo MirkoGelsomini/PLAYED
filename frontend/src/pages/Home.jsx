@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { fetchGames, fetchQuestions } from '../core/api';
 import { Link } from 'react-router-dom';
 import GameBadge from '../components/GameBadge';
 import '../styles/main.css';
 import RotatingText from '../components/RotatingText'
 import { useAuth } from '../core/AuthContext';
+import SidebarSuggerimenti from '../components/SidebarSuggerimenti';
+import Sorting from '../games/Sorting';
 
 
 const heroStyle = {
@@ -33,6 +35,8 @@ const Home = () => {
   const [questions, setQuestions] = useState([]);
   const [showPublic, setShowPublic] = useState(false);
   const { isAuthenticated, handle401 } = useAuth();
+  const mainRef = useRef();
+  const [sidebarHidden, setSidebarHidden] = useState(true); // Sidebar nascosta di default
 
   useEffect(() => {
     fetchGames().then(data => {
@@ -60,49 +64,83 @@ const Home = () => {
     fetchQuestions().then(setQuestions);
   }, []);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (mainRef.current) {
+        if (e.detail.hidden) {
+          mainRef.current.style.marginRight = '0px';
+        } else {
+          mainRef.current.style.marginRight = `${e.detail.width}px`;
+        }
+      }
+    };
+    window.addEventListener('sidebar-width', handler);
+    return () => window.removeEventListener('sidebar-width', handler);
+  }, []);
+
   if (!isAuthenticated || showPublic) {
     return <PublicHome />;
   }
 
   return (
-    <div>
-      
-      <section style={heroStyle}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>        
-          <RotatingText
-          texts={['Benvenuto su Played!', 'Scopri giochi didattici', 'Metti alla prova la tua memoria', 'Divertiti imparando!']}
-          mainClassName="px-3 py-2 bg-gradient-to-r from-amber-300 via-orange-400 to-pink-400 text-gray-800 overflow-hidden rounded-lg shadow-md border border-orange-200"
-          staggerFrom={"first"}
-          initial={{ y: "100%", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: "-100%", opacity: 0 }}
-          staggerDuration={0.05}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          rotationInterval={4000}
-        /></h1>
-      </section>
-      <h2 style={{ textAlign: 'center', margin: '2rem 0 1rem 0', fontWeight: 700 }}>Giochi disponibili</h2>
-      {loading ? (
-        <p style={{ textAlign: 'center' }}>Caricamento giochi...</p>
+    <div ref={mainRef} className="with-sidebar-right" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', transition: 'margin-right 0.2s' }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <section style={heroStyle}>
+          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>        
+            <RotatingText
+            texts={['Benvenuto su Played!', 'Scopri giochi didattici', 'Metti alla prova la tua memoria', 'Divertiti imparando!']}
+            mainClassName="px-3 py-2 bg-gradient-to-r from-amber-300 via-orange-400 to-pink-400 text-gray-800 overflow-hidden rounded-lg shadow-md border border-orange-200"
+            staggerFrom={"first"}
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "-100%", opacity: 0 }}
+            staggerDuration={0.05}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            rotationInterval={4000}
+          /></h1>
+        </section>
+        <h2 style={{ textAlign: 'center', margin: '2rem 0 1rem 0', fontWeight: 700 }}>Giochi disponibili</h2>
+        {loading ? (
+          <p style={{ textAlign: 'center' }}>Caricamento giochi...</p>
+        ) : (
+          <div style={gamesSectionStyle}>
+            {games.length === 0 ? (
+              <div style={{ color: '#888', fontSize: '1.2rem' }}>Nessun gioco disponibile.</div>
+            ) : (
+              games.map((game, idx) => (
+                <GameBadge
+                  key={game.id || idx}
+                  name={game.name || 'Gioco senza nome'}
+                  description={game.description || 'Descrizione non disponibile.'}
+                  to={`/game/${game.id}`}
+                  icon={game.icon || undefined}
+                  soon={game.soon}
+                  type={game.type}
+                  category={game.category}
+                />
+              ))
+            )}
+            {/* Card per il nuovo gioco di ordinamento */}
+            <GameBadge
+              name="Ordinamento"
+              description="Trascina per mettere in ordine!"
+              to="/sorting"
+              type="sorting"
+              category="sorting"
+            />
+          </div>
+        )}
+      </div>
+      {/* Sidebar: mostra solo il bottone se hidden, altrimenti la sidebar */}
+      {sidebarHidden ? (
+        <button className="ss-float-btn-fixed" onClick={() => setSidebarHidden(false)} title="Domande consigliate" style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1001 }}>
+          💡
+        </button>
       ) : (
-        <div style={gamesSectionStyle}>
-          {games.length === 0 ? (
-            <div style={{ color: '#888', fontSize: '1.2rem' }}>Nessun gioco disponibile.</div>
-          ) : (
-            games.map((game, idx) => (
-              <GameBadge
-                key={game.id || idx}
-                name={game.name || 'Gioco senza nome'}
-                description={game.description || 'Descrizione non disponibile.'}
-                to={`/game/${game.id}`}
-                icon={game.icon || undefined}
-                soon={game.soon}
-                type={game.type}
-                category={game.category}
-              />
-            ))
-          )}
-        </div>
+        <SidebarSuggerimenti onHide={() => {
+          setSidebarHidden(true);
+          if (mainRef.current) mainRef.current.style.marginRight = '0px';
+        }} />
       )}
     </div>
   );

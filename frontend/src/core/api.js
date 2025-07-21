@@ -119,10 +119,27 @@ export const fetchProgressLeaderboard = async (type = 'points', limit = 10) => {
   return res.json();
 };
 
-export const fetchImprovementTrend = async (days = 30) => {
-  const res = await fetch(`/api/progress/trend?days=${days}`, {
+// Ottieni domande fatte/non fatte e suggerimenti per un gioco
+export const fetchQuestionProgressAndSuggestions = async (gameType) => {
+  const params = new URLSearchParams();
+  params.append('gameType', gameType);
+  const res = await fetch(`/api/progress/questions?${params.toString()}`, {
     credentials: 'include'
   });
-  if (!res.ok) throw new Error('Errore nel recupero trend miglioramento');
+  if (!res.ok) throw new Error('Errore nel recupero stato domande e suggerimenti');
+  return res.json();
+};
+
+// Aggiorna le domande risposte per una sessione
+export const answerQuestion = async (sessionId, questionId) => {
+  const res = await fetch('/api/progress/answer', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify({ sessionId, questionId })
+  });
+  if (!res.ok) throw new Error('Errore nell\'aggiornamento delle domande risposte');
   return res.json();
 };

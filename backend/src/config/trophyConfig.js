@@ -78,11 +78,11 @@ const dailyObjectives = [
   },
   {
     title: "Punteggio Alto",
-    description: "Ottieni almeno 150 punti in una singola partita",
+    description: "Ottieni almeno 80 punti in una singola partita",
     type: "daily",
     category: "score",
-    target: 150,
-    reward: { type: "points", value: 50 },
+    target: 5,
+    reward: { type: "points", value: 100 },
     difficulty: "medium"
   },
   {

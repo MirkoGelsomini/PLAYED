@@ -1,10 +1,6 @@
 const TrophyService = require('../services/trophyService');
 const Progress = require('../models/Progress');
 const User = require('../models/user');
-const Trophy = require('../models/Trophy');
-const UserTrophy = require('../models/UserTrophy');
-const Objective = require('../models/Objective');
-const UserObjective = require('../models/UserObjective');
 
 class TrophyController {
   // Ottieni tutti i trofei dell'utente
@@ -102,7 +98,8 @@ class TrophyController {
         bestGameType: TrophyController.getBestGameType(stats.scoresByGameType),
         recentPerformance: TrophyController.calculateRecentPerformance(progress.slice(0, 10)),
         weeklyProgress: TrophyController.calculateWeeklyProgress(progress),
-        monthlyProgress: TrophyController.calculateMonthlyProgress(progress)
+        monthlyProgress: TrophyController.calculateMonthlyProgress(progress),
+        level: user.level || 1 
       };
 
       res.json({

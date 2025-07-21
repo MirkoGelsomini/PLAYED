@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchGames, fetchQuestions } from '../core/api';
+import { fetchGames, fetchQuestions, fetchQuestionProgressAndSuggestions } from '../core/api';
 import { Link } from 'react-router-dom';
 import GameBadge from '../components/GameBadge';
 import '../styles/main.css';
@@ -7,17 +7,33 @@ import '../styles/main.css';
 const QuizSelectionPage = () => {
   const [quizGames, setQuizGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [solvedMap, setSolvedMap] = useState({});
 
   useEffect(() => {
     const loadQuizGames = async () => {
       try {
         const games = await fetchGames();
+        const gamesArray = Array.isArray(games) ? games : (Array.isArray(games.games) ? games.games : []);
         // Filtra solo i quiz (escludendo il quiz_selection)
-        const quizOnly = games.filter(game => 
+        const quizOnly = gamesArray.filter(game => 
           game.type === 'quiz' && game.id !== 'quiz_selection'
         );
         setQuizGames(quizOnly);
         setLoading(false);
+        // Per ogni quiz, controlla se è stato completato
+        const solved = {};
+        for (const game of quizOnly) {
+          const res = await fetchQuestionProgressAndSuggestions('quiz');
+          // Filtra per categoria
+          const catQuestions = res.answeredQuestions.filter(q => q.category === game.category);
+          const allCatQuestions = [...res.answeredQuestions, ...res.unansweredQuestions].filter(q => q.category === game.category);
+          if (allCatQuestions.length > 0 && catQuestions.length === allCatQuestions.length) {
+            solved[game.id] = true;
+          } else {
+            solved[game.id] = false;
+          }
+        }
+        setSolvedMap(solved);
       } catch (error) {
         console.error('Errore nel caricamento dei quiz:', error);
         setLoading(false);
@@ -112,6 +128,7 @@ const QuizSelectionPage = () => {
               to={`/game/${game.id}`}
               type={game.type}
               category={game.category}
+              solved={!!solvedMap[game.id]}
             />
           ))}
         </div>

@@ -1,6 +1,7 @@
 const Progress = require('../models/Progress');
 const User = require('../models/user');
 const TrophyService = require('./trophyService');
+const { suggestQuestions } = require('../utils/recommendationEngine');
 
 class ProgressService {
   // Salva il progresso di una partita
@@ -24,8 +25,6 @@ class ProgressService {
       });
 
       await progress.save();
-      console.log('Progresso salvato con successo');
-
       // Aggiorna statistiche utente
       await this.updateUserStats(userId, gameData);
 
@@ -83,12 +82,11 @@ class ProgressService {
 
       user.lastPlayedDate = new Date();
 
-      // Calcola livello ed esperienza
-      const newLevel = Math.floor(user.totalPoints / 100) + 1;
-      if (newLevel > user.level) {
+      // Calcola livello secondo la nuova regola: 1% dei punti totali, arrotondato verso il basso, minimo 1
+      const newLevel = Math.max(1, Math.floor(user.totalPoints * 0.01));
+      if (newLevel !== user.level) {
         user.level = newLevel;
-        user.experienceToNextLevel = newLevel * 100;
-        
+        user.experienceToNextLevel = (newLevel + 1) * 100; // opzionale, puoi adattare se serve
         // Controlla se ci sono nuovi trofei da sbloccare
         await TrophyService.checkAndAwardTrophies(userId);
       }
@@ -236,42 +234,54 @@ class ProgressService {
     }
   }
 
-  // Ottieni trend di miglioramento
-  static async getImprovementTrend(userId, days = 30) {
+  // Aggiorna le domande risposte per una sessione
+  static async updateAnsweredQuestions(userId, sessionId, questionId) {
     try {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-
-      const progress = await Progress.find({
-        user: userId,
-        date: { $gte: startDate }
-      }).sort({ date: 1 });
-
-      // Raggruppa per giorno
-      const dailyStats = {};
-      progress.forEach(p => {
-        const date = new Date(p.date).toDateString();
-        if (!dailyStats[date]) {
-          dailyStats[date] = {
-            games: 0,
-            totalScore: 0,
-            averageScore: 0
-          };
-        }
-        dailyStats[date].games++;
-        dailyStats[date].totalScore += p.score || 0;
-      });
-
-      // Calcola media giornaliera
-      Object.keys(dailyStats).forEach(date => {
-        dailyStats[date].averageScore = Math.round(
-          dailyStats[date].totalScore / dailyStats[date].games
-        );
-      });
-
-      return dailyStats;
+      const progress = await Progress.findOne({ user: userId, sessionId });
+      if (!progress) return null;
+      if (!progress.answeredQuestions) progress.answeredQuestions = [];
+      if (!progress.answeredQuestions.includes(questionId)) {
+        progress.answeredQuestions.push(questionId);
+        await progress.save();
+      }
+      return progress;
     } catch (error) {
-      console.error('Errore nel calcolo trend miglioramento:', error);
+      console.error('Errore nell\'aggiornamento delle domande risposte:', error);
+      throw error;
+    }
+  }
+
+  // Restituisce domande fatte/non fatte e suggerimenti
+  static async getQuestionProgressAndSuggestions(userId, gameType) {
+    const fs = require('fs');
+    const path = require('path');
+    try {
+      // Recupera tutte le sessioni dell'utente per quel gioco
+      const progresses = await Progress.find({ user: userId, game: gameType });
+      const answered = new Set();
+      progresses.forEach(p => {
+        (p.answeredQuestions || []).forEach(qid => answered.add(qid.toString()));
+      });
+      // Carica tutte le domande dal file
+      const questionsPath = path.join(__dirname, '../data/questions.json');
+      const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
+      // Filtra per tipo di gioco
+      const filtered = questions.filter(q => q.type === gameType);
+      const answeredQuestions = filtered.filter(q => answered.has(q.id.toString()));
+      const unansweredQuestions = filtered.filter(q => !answered.has(q.id.toString()));
+      // Usa recommendationEngine per suggerimenti
+      let maxDiff = 1;
+      if (answeredQuestions.length > 0) {
+        maxDiff = Math.max(...answeredQuestions.map(q => q.difficulty || 1));
+      }
+      const suggestions = suggestQuestions(filtered, answered, maxDiff);
+      return {
+        answeredQuestions,
+        unansweredQuestions,
+        suggestions
+      };
+    } catch (error) {
+      console.error('Errore nel recupero stato domande e suggerimenti:', error);
       throw error;
     }
   }

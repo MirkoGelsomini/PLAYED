@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Matching.css';
 import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 function shuffle(array) {
   const arr = [...array];
@@ -12,7 +13,17 @@ function shuffle(array) {
   return arr;
 }
 
-const MatchingGame = ({ pairs = [], config = {} }) => {
+const MatchingGame = ({ pairs = [], config = {}, onQuestionAnswered }) => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const questionIdParam = params.get('questionId');
+  let filteredPairs = pairs;
+  if (questionIdParam) {
+    filteredPairs = pairs.filter(p => String(p.id) === String(questionIdParam));
+    if (filteredPairs.length === 0 && pairs.length > 0) {
+      filteredPairs = pairs;
+    }
+  }
   // pairs: [{left, right}]
   const [leftItems, setLeftItems] = useState([]);
   const [rightItems, setRightItems] = useState([]);
@@ -24,14 +35,14 @@ const MatchingGame = ({ pairs = [], config = {} }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    setLeftItems(shuffle(pairs.map(p => p.left)));
-    setRightItems(shuffle(pairs.map(p => p.right)));
+    setLeftItems(shuffle(filteredPairs.map(p => p.left)));
+    setRightItems(shuffle(filteredPairs.map(p => p.right)));
     setMatched([]);
     setCompleted(false);
     setSelectedLeft(null);
     setAttempts(0);
     setProgressSaved(false);
-  }, [pairs]);
+  }, [JSON.stringify(filteredPairs)]);
 
   useEffect(() => {
     if (completed && !progressSaved && user) {
@@ -47,8 +58,9 @@ const MatchingGame = ({ pairs = [], config = {} }) => {
         console.error('Matching: Errore nel salvataggio progressi', error.response?.data || error.message);
       });
       setProgressSaved(true);
+      if (onQuestionAnswered) onQuestionAnswered();
     }
-  }, [completed, progressSaved, user, pairs.length, config.difficulty, attempts]);
+  }, [completed, progressSaved, user, pairs.length, config.difficulty, attempts, onQuestionAnswered]);
 
   const handleLeftClick = (item) => {
     if (matched.find(m => m.left === item)) return;

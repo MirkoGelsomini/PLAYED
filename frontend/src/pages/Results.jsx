@@ -21,6 +21,56 @@ export default function Results() {
     loadAllData();
   }, [isAuthenticated]);
 
+  // Controllo coerenza livello-punti ogni volta che stats cambia
+  useEffect(() => {
+    if (
+      stats &&
+      typeof stats.totalPoints === 'number' &&
+      typeof stats.level === 'number' &&
+      user && user.id
+    ) {
+      const expectedLevel = Math.max(1, Math.floor(stats.totalPoints / 100));
+      if (stats.level !== expectedLevel) {
+        // 1. Recupera i dati completi dell'utente dal backend
+        axios.get(`/api/users/${user.id || user._id}`, { withCredentials: true })
+          .then(res => {
+            const fullUser = res.data;
+            // 2. Prepara i dati per la PUT, aggiornando solo il livello
+            let updateData = {
+              name: fullUser.name || '',
+              email: fullUser.email || '',
+              role: fullUser.role || '',
+              level: expectedLevel,
+              avatar: fullUser.avatar || ''
+            };
+            if (fullUser.role === 'allievo') {
+              updateData.age = fullUser.age ?? 0;
+              updateData.schoolLevel = fullUser.schoolLevel || '';
+              updateData.class = fullUser.class || '';
+            } else if (fullUser.role === 'docente') {
+              if (Array.isArray(fullUser.subjects)) {
+                updateData.subjects = fullUser.subjects;
+              } else if (typeof fullUser.subjects === 'string' && fullUser.subjects.length > 0) {
+                updateData.subjects = fullUser.subjects.split(',').map(s => s.trim()).filter(Boolean);
+              } else {
+                updateData.subjects = [];
+              }
+              updateData.school = fullUser.school || '';
+              updateData.teachingLevel = fullUser.teachingLevel || '';
+            }
+            // 3. Fai la PUT con i dati completi
+            return axios.put(`/api/users/${fullUser._id || fullUser.id}`, updateData, { withCredentials: true });
+          })
+          .then(() => {
+            loadAllData();
+          })
+          .catch((err) => {
+            console.error('Errore aggiornamento livello:', err);
+          });
+      }
+    }
+  }, [stats, user]);
+
   const loadAllData = async () => {
     setLoading(true);
     setError('');
@@ -167,6 +217,7 @@ export default function Results() {
 
   return (
     <div className="results-container">
+      {/* Notifica warning livello-punti */}
       {/* Notifica nuovi trofei */}
       {newTrophies.length > 0 && (
         <div className="trophy-notification">
@@ -247,12 +298,6 @@ export default function Results() {
           onClick={() => setActiveTab('leaderboard')}
         >
           🏅 Classifica
-        </button>
-        <button 
-          className={`tab ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          📈 Storico
         </button>
       </div>
 
@@ -608,30 +653,6 @@ export default function Results() {
                   <div className="player-stats">
                     <span className="player-points">{player.totalPoints || 0} punti</span>
                     <span className="player-games">{player.gamesCompleted || 0} partite</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'history' && (
-          <div className="history-tab">
-            <h3>📈 Storico Partite</h3>
-            <div className="history-list">
-              {stats?.recentGames?.map((game, index) => (
-                <div key={index} className="history-item">
-                  <div className="game-info">
-                    <span className="game-type">{game.game}</span>
-                    <span className="game-date">
-                      {new Date(game.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="game-stats">
-                    <span className="game-score">{game.score || 0} punti</span>
-                    <span className={`game-status ${game.completed ? 'completed' : 'incomplete'}`}>
-                      {game.completed ? '✅ Completato' : '❌ Incompleto'}
-                    </span>
                   </div>
                 </div>
               ))}

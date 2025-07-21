@@ -2,8 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Quiz.css';
 import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
+import { useLocation } from 'react-router-dom';
 
-const QuizGame = ({ config, questionIds }) => {
+const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const questionIdParam = params.get('questionId');
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -25,15 +29,22 @@ const QuizGame = ({ config, questionIds }) => {
         const response = await fetch('/api/questions');
         const allQuestions = await response.json();
         
-        // Filtra solo le domande specifiche del quiz
-        const quizQuestions = allQuestions.filter(q => 
+        let quizQuestions = allQuestions.filter(q => 
           questionIds && questionIds.includes(q.id)
         );
-        
-        // Shuffle delle domande per varietà
-        for (let i = quizQuestions.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [quizQuestions[i], quizQuestions[j]] = [quizQuestions[j], quizQuestions[i]];
+        // Se c'è questionId nella query string, metti quella domanda per prima
+        if (questionIdParam) {
+          const forced = quizQuestions.find(q => String(q.id) === String(questionIdParam));
+          if (forced) {
+            quizQuestions = [forced, ...quizQuestions.filter(q => String(q.id) !== String(questionIdParam))];
+          }
+        }
+        // Shuffle delle domande solo se non c'è questionId
+        if (!questionIdParam) {
+          for (let i = quizQuestions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [quizQuestions[i], quizQuestions[j]] = [quizQuestions[j], quizQuestions[i]];
+          }
         }
         
         setQuestions(quizQuestions);
@@ -42,7 +53,7 @@ const QuizGame = ({ config, questionIds }) => {
       }
     };
     loadQuestions();
-  }, [questionIds]);
+  }, [questionIds, questionIdParam]);
 
   // Shuffle delle opzioni se richiesto
   useEffect(() => {
@@ -120,6 +131,7 @@ const QuizGame = ({ config, questionIds }) => {
     }
     
     setShowResult(true);
+    if (onQuestionAnswered) onQuestionAnswered();
   };
 
   const handleNextQuestion = () => {

@@ -390,5 +390,35 @@
       { "left": "Verde", "right": "Erba" },
       { "left": "Blu", "right": "Mare" }
     ]
+  },
+  {
+    "id": 101,
+    "type": "sorting",
+    "category": "logica",
+    "question": "Ordina i numeri dal più piccolo al più grande",
+    "ageRange": [6, 8],
+    "difficulty": 2,
+    "items": ["7", "2", "5", "1"],
+    "solution": ["1", "2", "5", "7"]
+  },
+  {
+    "id": 102,
+    "type": "sorting",
+    "category": "narrazione",
+    "question": "Metti in ordine le fasi della storia",
+    "ageRange": [7, 10],
+    "difficulty": 3,
+    "items": ["C'era una volta", "Il lupo arrivò", "La nonna fu salvata", "Cappuccetto Rosso andò nel bosco"],
+    "solution": ["C'era una volta", "Cappuccetto Rosso andò nel bosco", "Il lupo arrivò", "La nonna fu salvata"]
+  },
+  {
+    "id": 103,
+    "type": "sorting",
+    "category": "narrazione",
+    "question": "Metti in ordine le fasi della storiaaaa",
+    "ageRange": [7, 10],
+    "difficulty": 3,
+    "items": ["C'era una volta", "Il lupo arrivò", "La nonna fu salvata", "Cappuccetto Rosso andò nel bosco"],
+    "solution": ["C'era una volta", "Cappuccetto Rosso andò nel bosco", "Il lupo arrivò", "La nonna fu salvata"]
   }
 ] 
