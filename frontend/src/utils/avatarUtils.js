@@ -4,22 +4,22 @@ export const getAvatarUrl = (avatar) => {
   if (!avatar) {
     return defaultUserIcon;
   }
-  
-  // Se l'avatar è già un URL completo (inizia con http o data:), usalo direttamente
-  if (avatar.startsWith('http') || avatar.startsWith('data:')) {
+
+  // Se l'avatar è già un URL completo (inizia con http, /avatar/ o data:), usalo direttamente
+  if (avatar.startsWith('http') || avatar.startsWith('data:') || avatar.startsWith('/avatar/')) {
     return avatar;
   }
-  
-  // Se l'avatar è solo il nome del file (es: "cat.png"), aggiungi il percorso
-  if (avatar.includes('.png') || avatar.includes('.jpg') || avatar.includes('.jpeg')) {
+
+  // Se l'avatar è solo il nome del file (es: "cat.png"), aggiungi il percorso corretto
+  if (avatar.match(/\.(png|jpg|jpeg)$/i)) {
     return `/avatar/${avatar}`;
   }
-  
+
   // Fallback all'icona utente di default
   return defaultUserIcon;
 };
 
-// Avatar di default disponibili
+// Avatar di default disponibili (path assoluto rispetto a public)
 export const defaultAvatars = [
   '/avatar/cat.png',
   '/avatar/dog.png',

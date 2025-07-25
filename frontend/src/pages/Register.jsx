@@ -5,6 +5,8 @@ import '../styles/Auth.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/AuthContext';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import Stepper, { Step } from '../components/Stepper';
+import { defaultAvatars, getAvatarUrl } from '../utils/avatarUtils';
 
 const initialState = {
   name: '',
@@ -17,6 +19,7 @@ const initialState = {
   subjects: '',
   school: '',
   teachingLevel: '',
+  avatar: '',
 };
 
 export default function Register() {
@@ -26,14 +29,10 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
+  const [currentStep, setCurrentStep] = useState(1);
+  const [avatarPreview, setAvatarPreview] = useState('');
   const navigate = useNavigate();
   const { login: loginContext } = useAuth();
-  const steps = [
-    'Dati base',
-    'Dati personali',
-    'Conferma',
-  ];
-  const [step, setStep] = useState(0);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -41,13 +40,18 @@ export default function Register() {
   };
 
   const handleRoleChange = role => {
-    setForm(f => ({ ...initialState, role, email: f.email }));
+    setForm(f => ({ ...initialState, role, email: f.email, avatar: f.avatar }));
   };
 
   const handlePasswordChange = e => {
     const value = e.target.value;
     setForm(f => ({ ...f, password: value }));
     setPasswordStrength(getPasswordStrength(value));
+  };
+
+  const handleAvatarSelect = avatar => {
+    setForm(f => ({ ...f, avatar }));
+    setAvatarPreview(getAvatarUrl(avatar));
   };
 
   function getPasswordStrength(pw) {
@@ -65,8 +69,74 @@ export default function Register() {
     return '';
   }
 
-  const handleSubmit = async e => {
-    e.preventDefault();
+  const validateStep = (step) => {
+    // Step 1: Dati base
+    if (step === 1) {
+      if (!form.name || !form.email || !form.password) {
+        setError('Compila tutti i campi richiesti.');
+        return false;
+      }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) {
+        setError('Inserisci una email valida.');
+        return false;
+      }
+      if (form.password.length < 6) {
+        setError('La password deve essere di almeno 6 caratteri.');
+        return false;
+      }
+    }
+    // Step 2: Avatar (nessun campo obbligatorio, ma resetto errori)
+    if (step === 2) {
+      setError('');
+      return true;
+    }
+    // Step 3: Dati personali
+    if (step === 3) {
+      if (form.role === 'allievo') {
+        if (!form.age || !form.schoolLevel || !form.class) {
+          setError('Compila tutti i campi richiesti.');
+          return false;
+        }
+        if (isNaN(Number(form.age)) || Number(form.age) < 3) {
+          setError('L\'età deve essere almeno 3 anni.');
+          return false;
+        }
+      } else {
+        if (!form.subjects || !form.school || !form.teachingLevel) {
+          setError('Compila tutti i campi richiesti.');
+          return false;
+        }
+      }
+      // Ricontrollo email anche qui per sicurezza
+      if (!form.name || !form.email || !form.password) {
+        setError('Compila tutti i campi richiesti.');
+        return false;
+      }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) {
+        setError('Inserisci una email valida.');
+        return false;
+      }
+    }
+    setError('');
+    return true;
+  };
+
+  const handleStepChange = (step) => {
+    setCurrentStep(step);
+    setError('');
+  };
+
+  const handleNext = () => {
+    if (!validateStep(currentStep)) return;
+    setCurrentStep(s => s + 1);
+  };
+
+  const handleBack = () => {
+    setCurrentStep(s => Math.max(1, s - 1));
+    setError('');
+  };
+
+  const handleSubmit = async () => {
     setError('');
     setSuccess('');
     setLoading(true);
@@ -82,6 +152,7 @@ export default function Register() {
         delete data.school;
         delete data.teachingLevel;
       }
+      if (!data.avatar) delete data.avatar;
       await axios.post('/api/users', data);
       const res = await axios.post('/api/users/auth/login', { email: data.email, password: form.password, role: form.role }, { withCredentials: true });
       loginContext(res.data.user);
@@ -95,110 +166,135 @@ export default function Register() {
     }
   };
 
-  const nextStep = () => {
-    if (step === 0) {
-      if (!form.password || form.password.length < 6) {
-        setError('La password deve essere di almeno 6 caratteri.');
-        return;
-      }
-      setError('');
-    }
-    setStep(s => Math.min(s + 1, steps.length - 1));
-  };
-  const prevStep = () => setStep(s => Math.max(s - 1, 0));
-
   return (
-    <div className="auth-container">
-      <img src={logo} alt="Logo PLAYED" className="auth-logo" />
-      <h2>Registrati a PLAYED</h2>
-      <div className="role-switch">
-        <button type="button" className={form.role === 'allievo' ? 'active' : ''} onClick={() => handleRoleChange('allievo')}>Allievo</button>
-        <button type="button" className={form.role === 'docente' ? 'active' : ''} onClick={() => handleRoleChange('docente')}>Docente</button>
-      </div>
-      <div className="wizard-steps">
-        {steps.map((label, i) => (
-          <div key={i} className={`wizard-step${i === step ? ' active' : ''}`}>
-            <span className="wizard-step-dot"></span>
-            <span className="wizard-step-label">{label}</span>
-          </div>
-        ))}
-      </div>
-      <form className="auth-form" onSubmit={handleSubmit}>
-        {step === 0 && <>
-          <input name="name" placeholder="Nome" value={form.name} onChange={handleChange} required className="form-input" />
-          <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required className="form-input" />
-          <div className="input-container">
-            <input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={form.password}
-              onChange={handlePasswordChange}
-              required
-              minLength={6}
-              className="password-input form-input"
-              aria-label="Password"
-            />
-            <span
-              onClick={() => setShowPassword(v => !v)}
-              className="eye-icon"
-              tabIndex={0}
-              aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
-              role="button"
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </span>
-            {form.password && (
-              <div
-                className={`password-strength-overlay ${passwordStrength.toLowerCase()}`}
-              >
-                {passwordStrength}
-              </div>
-            )}
-          </div>
-        </>}
-        {step === 1 && <>
-          {form.role === 'allievo' && <>
-            <input name="age" type="number" placeholder="Età" value={form.age} onChange={handleChange} min={3} max={100} className="form-input" />
-            <input name="schoolLevel" placeholder="Livello scolastico" value={form.schoolLevel} onChange={handleChange} className="form-input" />
-            <input name="class" placeholder="Classe" value={form.class} onChange={handleChange} className="form-input" />
-          </>}
-          {form.role === 'docente' && <>
-            <input name="subjects" placeholder="Materie insegnate (separate da virgola)" value={form.subjects} onChange={handleChange} className="form-input" />
-            <input name="school" placeholder="Scuola" value={form.school} onChange={handleChange} className="form-input" />
-            <input name="teachingLevel" placeholder="Livello scolastico insegnato" value={form.teachingLevel} onChange={handleChange} className="form-input" />
-          </>}
-        </>}
-        {step === 2 && <>
-          <div className="wizard-confirm">
-            <strong>Controlla i dati inseriti prima di confermare la registrazione.</strong>
-            <ul style={{textAlign:'left',marginTop:'1rem'}}>
-              <li><b>Nome:</b> {form.name}</li>
-              <li><b>Email:</b> {form.email}</li>
-              <li><b>Ruolo:</b> {form.role}</li>
-              {form.role === 'allievo' && <>
-                <li><b>Età:</b> {form.age}</li>
-                <li><b>Livello scolastico:</b> {form.schoolLevel}</li>
-                <li><b>Classe:</b> {form.class}</li>
-              </>}
-              {form.role === 'docente' && <>
-                <li><b>Materie:</b> {form.subjects}</li>
-                <li><b>Scuola:</b> {form.school}</li>
-                <li><b>Livello insegnato:</b> {form.teachingLevel}</li>
-              </>}
-            </ul>
-          </div>
-        </>}
-        <div className="wizard-nav">
-          {step > 0 && <button type="button" onClick={prevStep} className="neutral-button small">Indietro</button>}
-          {step < steps.length - 1 && <button type="button" onClick={nextStep} className="danger-button small">Avanti</button>}
-          {step === steps.length - 1 && <button type="submit" disabled={loading} className="danger-button small">{loading ? 'Registrazione...' : 'Registrati'}</button>}
+    <div className="auth-outer-center" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none' }}>
+      <div>
+        <img src={logo} alt="Logo PLAYED" className="auth-logo" style={{ display: 'block', margin: '0 auto' }} />
+        <h2 style={{ textAlign: 'center' }}>Registrati a PLAYED</h2>
+        <div className="role-switch" style={{ justifyContent: 'center', marginLeft: '50px' }}>
+          <button type="button" className={form.role === 'allievo' ? 'active' : ''} onClick={() => handleRoleChange('allievo')}>Allievo</button>
+          <button type="button" className={form.role === 'docente' ? 'active' : ''} onClick={() => handleRoleChange('docente')}>Docente</button>
         </div>
+        <Stepper
+          initialStep={1}
+          onStepChange={handleStepChange}
+          onFinalStepCompleted={handleSubmit}
+          backButtonText="Indietro"
+          nextButtonText="Avanti"
+          disableStepIndicators={false}
+          stepCircleContainerClassName="bg-natural-primary"
+          nextButtonProps={{ disabled: loading }}
+          backButtonProps={{ disabled: loading }}
+          onStepNext={validateStep}
+        >
+          <Step>
+            {/* Step 1: Dati base */}
+            <input name="name" placeholder="Nome" value={form.name} onChange={handleChange} required className="form-input" />
+            <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required className="form-input" />
+            <div className="input-container">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={form.password}
+                onChange={handlePasswordChange}
+                required
+                minLength={6}
+                className="password-input form-input"
+                aria-label="Password"
+              />
+              <span
+                onClick={() => setShowPassword(v => !v)}
+                className="eye-icon"
+                tabIndex={0}
+                aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+                role="button"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+              {form.password && (
+                <div
+                  className={`password-strength-overlay ${passwordStrength.toLowerCase()}`}
+                >
+                  {passwordStrength}
+                </div>
+              )}
+            </div>
+          </Step>
+          <Step>
+            {/* Step 2: Avatar opzionale */}
+            <div className="avatar-section">
+              <div className="avatar-header">
+                <span>Seleziona un avatar (opzionale):</span>
+                {form.avatar && (
+                  <img src={avatarPreview || getAvatarUrl(form.avatar)} alt="Avatar selezionato" className="avatar-img" />
+                )}
+              </div>
+              <div className="avatar-gallery">
+                {defaultAvatars.map((av, i) => (
+                  <img
+                    key={av}
+                    src={getAvatarUrl(av)}
+                    alt={`Avatar ${i+1}`}
+                    className={`avatar-thumb${form.avatar === av ? ' selected' : ''}`}
+                    onClick={() => handleAvatarSelect(av)}
+                    tabIndex={0}
+                    style={{ outline: form.avatar === av ? '2px solid var(--primary-color)' : 'none' }}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                className="neutral-button small"
+                style={{ marginTop: 16 }}
+                onClick={() => { setForm(f => ({ ...f, avatar: '' })); setAvatarPreview(''); }}
+                disabled={loading || !form.avatar}
+              >
+                Rimuovi avatar
+              </button>
+            </div>
+          </Step>
+          <Step>
+            {/* Step 3: Dati personali */}
+            {form.role === 'allievo' && <>
+              <input name="age" type="number" placeholder="Età" value={form.age} onChange={handleChange} min={3} max={100} className="form-input" />
+              <input name="schoolLevel" placeholder="Livello scolastico" value={form.schoolLevel} onChange={handleChange} className="form-input" />
+              <input name="class" placeholder="Classe" value={form.class} onChange={handleChange} className="form-input" />
+            </>}
+            {form.role === 'docente' && <>
+              <input name="subjects" placeholder="Materie insegnate (separate da virgola)" value={form.subjects} onChange={handleChange} className="form-input" />
+              <input name="school" placeholder="Scuola" value={form.school} onChange={handleChange} className="form-input" />
+              <input name="teachingLevel" placeholder="Livello scolastico insegnato" value={form.teachingLevel} onChange={handleChange} className="form-input" />
+            </>}
+          </Step>
+          <Step>
+            {/* Step 4: Conferma */}
+            <div className="wizard-confirm">
+              <strong>Controlla i dati inseriti prima di confermare la registrazione.</strong>
+              <ul style={{textAlign:'left',marginTop:'1rem'}}>
+                <li><b>Nome:</b> {form.name}</li>
+                <li><b>Email:</b> {form.email}</li>
+                <li><b>Ruolo:</b> {form.role}</li>
+                {form.avatar && <li><b>Avatar:</b> <img src={getAvatarUrl(form.avatar)} alt="Avatar" style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid var(--green-leaf)' }} /></li>}
+                {form.role === 'allievo' && <>
+                  <li><b>Età:</b> {form.age}</li>
+                  <li><b>Livello scolastico:</b> {form.schoolLevel}</li>
+                  <li><b>Classe:</b> {form.class}</li>
+                </>}
+                {form.role === 'docente' && <>
+                  <li><b>Materie:</b> {form.subjects}</li>
+                  <li><b>Scuola:</b> {form.school}</li>
+                  <li><b>Livello insegnato:</b> {form.teachingLevel}</li>
+                </>}
+              </ul>
+            </div>
+          </Step>
+        </Stepper>
         {error && <div className="auth-error">{error}</div>}
         {success && <div className="auth-success">{success}</div>}
-      </form>
-      <div className="auth-link">
-        Hai già un account? <a href="/login">Accedi</a>
+        <div className="auth-link" style={{ textAlign: 'center' }}>
+          Hai già un account? <a href="/login">Accedi</a>
+        </div>
       </div>
     </div>
   );
