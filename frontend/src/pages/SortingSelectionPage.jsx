@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchQuestions } from '../core/api';
+import { fetchQuestions, fetchQuestionProgressAndSuggestions } from '../core/api';
 import { Link } from 'react-router-dom';
 import GameBadge from '../components/GameBadge';
 import '../styles/main.css';
@@ -7,16 +7,42 @@ import '../styles/main.css';
 const SortingSelectionPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unlockedCategories, setUnlockedCategories] = useState({});
 
   useEffect(() => {
-    fetchQuestions().then(questions => {
-      // Prendi solo domande di tipo 'sorting'
-      const sortingQuestions = questions.filter(q => q.type === 'sorting');
-      // Estrai le categorie uniche
-      const uniqueCategories = Array.from(new Set(sortingQuestions.map(q => q.category)));
-      setCategories(uniqueCategories);
-      setLoading(false);
-    });
+    const loadCategories = async () => {
+      try {
+        const [questions, progressRes] = await Promise.all([
+          fetchQuestions(),
+          fetchQuestionProgressAndSuggestions('sorting')
+        ]);
+        
+        // Prendi solo domande di tipo 'sorting'
+        const sortingQuestions = questions.filter(q => q.type === 'sorting');
+        const maxUnlockedLevel = progressRes.maxUnlockedLevel || 1;
+        
+        // Estrai le categorie uniche e controlla se hanno domande sbloccate
+        const uniqueCategories = Array.from(new Set(sortingQuestions.map(q => q.category)));
+        const unlocked = {};
+        
+        for (const category of uniqueCategories) {
+          // Prendi tutte le domande di questa categoria
+          const catQuestions = sortingQuestions.filter(q => q.category === category);
+          // Filtra solo quelle sbloccate
+          const unlockedQuestions = catQuestions.filter(q => (q.difficulty || 1) <= maxUnlockedLevel);
+          unlocked[category] = unlockedQuestions.length > 0;
+        }
+        
+        setUnlockedCategories(unlocked);
+        setCategories(uniqueCategories);
+        setLoading(false);
+      } catch (error) {
+        console.error('Errore nel caricamento delle categorie sorting:', error);
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
   }, []);
 
   const headerStyle = {
@@ -77,7 +103,7 @@ const SortingSelectionPage = () => {
         </div>
       ) : (
         <div style={gamesSectionStyle}>
-          {categories.map((cat, idx) => (
+          {categories.filter(cat => unlockedCategories[cat]).map((cat, idx) => (
             <GameBadge
               key={cat}
               name={cat.charAt(0).toUpperCase() + cat.slice(1)}

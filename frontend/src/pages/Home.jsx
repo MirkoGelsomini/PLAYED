@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { fetchGames, fetchQuestions } from '../core/api';
+import { fetchGames, fetchQuestions, fetchDetailedProgress } from '../core/api';
 import { Link } from 'react-router-dom';
 import GameBadge from '../components/GameBadge';
+import ProgressCard from '../components/ProgressCard';
 import '../styles/main.css';
 import RotatingText from '../components/RotatingText'
 import { useAuth } from '../core/AuthContext';
 import SidebarSuggerimenti from '../components/SidebarSuggerimenti';
-import Sorting from '../games/Sorting';
 
 
 const heroStyle = {
@@ -34,6 +34,8 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
   const [showPublic, setShowPublic] = useState(false);
+  const [detailedProgress, setDetailedProgress] = useState({});
+  const [progressLoading, setProgressLoading] = useState(true);
   const { isAuthenticated, handle401 } = useAuth();
   const mainRef = useRef();
   const [sidebarHidden, setSidebarHidden] = useState(true); // Sidebar nascosta di default
@@ -63,6 +65,28 @@ const Home = () => {
     });
     fetchQuestions().then(setQuestions);
   }, []);
+
+  // Carica i progressi dettagliati
+  const loadDetailedProgress = async () => {
+    try {
+      const progress = await fetchDetailedProgress();
+      setDetailedProgress(progress);
+    } catch (error) {
+      console.error('Errore nel caricamento progressi dettagliati:', error);
+    } finally {
+      setProgressLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && !showPublic) {
+      loadDetailedProgress();
+      
+      // Refresh automatico ogni 30 secondi
+      const interval = setInterval(loadDetailedProgress, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, showPublic]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -99,6 +123,30 @@ const Home = () => {
             rotationInterval={4000}
           /></h1>
         </section>
+
+        {/* Sezione Progressi */}
+        <section style={{ marginBottom: '3rem' }}>
+          <h2 style={{ textAlign: 'center', margin: '2rem 0 1.5rem 0', fontWeight: 700, color: '#1f2937' }}>
+            I tuoi Progressi
+          </h2>
+          {progressLoading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <p>Caricamento progressi...</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+              {Object.keys(detailedProgress).map(gameType => (
+                <ProgressCard
+                  key={gameType}
+                  gameType={gameType}
+                  progressData={detailedProgress[gameType]}
+                  onLevelUnlocked={loadDetailedProgress}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
         <h2 style={{ textAlign: 'center', margin: '2rem 0 1rem 0', fontWeight: 700 }}>Giochi disponibili</h2>
         {loading ? (
           <p style={{ textAlign: 'center' }}>Caricamento giochi...</p>

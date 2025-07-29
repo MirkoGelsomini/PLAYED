@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchGames } from '../core/api';
+import { fetchGames, fetchQuestionProgressAndSuggestions } from '../core/api';
 import { Link } from 'react-router-dom';
 import GameBadge from '../components/GameBadge';
 import '../styles/main.css';
@@ -7,15 +7,30 @@ import '../styles/main.css';
 const MatchingSelectionPage = () => {
   const [matchingGames, setMatchingGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unlockedCategories, setUnlockedCategories] = useState({});
 
   useEffect(() => {
     const loadMatchingGames = async () => {
       try {
         const games = await fetchGames();
-        // Filtra solo i giochi matching (escludendo il matching_selection)
-        const matchingOnly = games.filter(game => 
+        const gamesArray = Array.isArray(games) ? games : (Array.isArray(games.games) ? games.games : []);
+        // Filtra solo i matching (escludendo il matching_selection)
+        const matchingOnly = gamesArray.filter(game => 
           game.type === 'matching' && game.id !== 'matching_selection'
         );
+        // Recupera domande sbloccate per categoria
+        const res = await fetchQuestionProgressAndSuggestions('matching');
+        const maxUnlockedLevel = res.maxUnlockedLevel || 1;
+        // Raggruppa domande per categoria
+        const unlocked = {};
+        for (const game of matchingOnly) {
+          // Prendi tutte le domande di questa categoria
+          const catQuestions = [...res.answeredQuestions, ...res.unansweredQuestions].filter(q => q.category === game.category);
+          // Filtra solo quelle sbloccate
+          const unlockedQuestions = catQuestions.filter(q => (q.difficulty || 1) <= maxUnlockedLevel);
+          unlocked[game.category] = unlockedQuestions.length > 0;
+        }
+        setUnlockedCategories(unlocked);
         setMatchingGames(matchingOnly);
         setLoading(false);
       } catch (error) {
@@ -23,6 +38,7 @@ const MatchingSelectionPage = () => {
         setLoading(false);
       }
     };
+
     loadMatchingGames();
   }, []);
 
@@ -103,7 +119,7 @@ const MatchingSelectionPage = () => {
         </div>
       ) : (
         <div style={gamesSectionStyle}>
-          {matchingGames.map((game) => (
+          {matchingGames.filter(game => unlockedCategories[game.category]).map((game) => (
             <GameBadge
               key={game.id}
               name={game.name}

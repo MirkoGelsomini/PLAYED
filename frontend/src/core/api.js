@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 // Funzioni di utilità per chiamate API al backend
 export const fetchGames = async () => {
   const res = await fetch('/api/games', {
@@ -142,4 +144,14 @@ export const answerQuestion = async (sessionId, questionId) => {
   });
   if (!res.ok) throw new Error('Errore nell\'aggiornamento delle domande risposte');
   return res.json();
+};
+
+export const fetchDetailedProgress = async () => {
+  try {
+    const response = await axios.get('/api/progress/detailed', { withCredentials: true });
+    return response.data;
+  } catch (error) {
+    console.error('Errore nel recupero progressi dettagliati:', error);
+    throw error;
+  }
 };

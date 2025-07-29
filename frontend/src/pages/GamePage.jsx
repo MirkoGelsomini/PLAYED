@@ -65,13 +65,28 @@ const GamePage = () => {
       )}
       {/* Renderizza il gioco appropriato in base al tipo */}
       {game.type === 'memory' && question && (
-        <MemoryGame config={game.config} pairs={question.pairs} onQuestionAnswered={handleQuestionAnswered} />
+        <MemoryGame 
+          config={game.config} 
+          pairs={question.pairs} 
+          category={game.category}
+          onQuestionAnswered={handleQuestionAnswered} 
+        />
       )}
       {game.type === 'quiz' && (
-        <QuizGame config={game.config} questionIds={game.questionIds} onQuestionAnswered={handleQuestionAnswered} />
+        <QuizGame 
+          config={game.config} 
+          questionIds={game.questionIds} 
+          category={game.category}
+          onQuestionAnswered={handleQuestionAnswered} 
+        />
       )}
       {game.type === 'matching' && question && (
-        <MatchingGame config={game.config} pairs={question.pairs} onQuestionAnswered={handleQuestionAnswered} />
+        <MatchingGame 
+          config={game.config} 
+          pairs={question.pairs} 
+          category={game.category}
+          onQuestionAnswered={handleQuestionAnswered} 
+        />
       )}
     </div>
   );

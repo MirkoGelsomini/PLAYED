@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
 import { useLocation } from 'react-router-dom';
 
+const LEVEL_THRESHOLD = 5;
+
 function shuffle(array) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -13,18 +15,15 @@ function shuffle(array) {
   return arr;
 }
 
-const MatchingGame = ({ pairs = [], config = {}, onQuestionAnswered }) => {
+const MatchingGame = ({ pairs: propPairs = [], config = {}, category, onQuestionAnswered }) => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const questionIdParam = params.get('questionId');
-  let filteredPairs = pairs;
-  if (questionIdParam) {
-    filteredPairs = pairs.filter(p => String(p.id) === String(questionIdParam));
-    if (filteredPairs.length === 0 && pairs.length > 0) {
-      filteredPairs = pairs;
-    }
-  }
-  // pairs: [{left, right}]
+  const { user } = useAuth();
+  const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(1);
+  const [levelProgress, setLevelProgress] = useState(0);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [pairs, setPairs] = useState([]);
   const [leftItems, setLeftItems] = useState([]);
   const [rightItems, setRightItems] = useState([]);
   const [selectedLeft, setSelectedLeft] = useState(null);
@@ -32,35 +31,105 @@ const MatchingGame = ({ pairs = [], config = {}, onQuestionAnswered }) => {
   const [completed, setCompleted] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [progressSaved, setProgressSaved] = useState(false);
-  const { user } = useAuth();
 
+  // Carica pairs filtrate per livello sbloccato
   useEffect(() => {
-    setLeftItems(shuffle(filteredPairs.map(p => p.left)));
-    setRightItems(shuffle(filteredPairs.map(p => p.right)));
-    setMatched([]);
-    setCompleted(false);
-    setSelectedLeft(null);
-    setAttempts(0);
-    setProgressSaved(false);
-  }, [JSON.stringify(filteredPairs)]);
+    const loadPairsAndLevel = async () => {
+      try {
+        const res = await axios.get('/api/progress/questions?gameType=matching', { withCredentials: true });
+        const { unansweredQuestions, answeredQuestions, maxUnlockedLevel, correctAnswersPerLevel } = res.data;
+        setMaxUnlockedLevel(maxUnlockedLevel || 1);
+        setLevelProgress(correctAnswersPerLevel?.[maxUnlockedLevel?.toString()] || 0);
+        let allQuestions = [...answeredQuestions, ...unansweredQuestions].filter(q => 
+          (q.difficulty || 1) <= (maxUnlockedLevel || 1) && 
+          q.category === category
+        );
+        
+        // Se c'è un questionId specifico, trova quella domanda
+        if (questionIdParam) {
+          const specificQuestion = allQuestions.find(q => q.id.toString() === questionIdParam);
+          if (specificQuestion) {
+            allQuestions = [specificQuestion];
+          } else {
+          }
+        }
+        
+        // Seleziona una sola domanda per sessione (la prima disponibile)
+        let selectedQuestion = null;
+        if (allQuestions.length > 0) {
+          // Se c'è un questionId specifico, usa quella domanda
+          if (questionIdParam) {
+            selectedQuestion = allQuestions[0];
+          } else {
+            // Preferisci domande non risposte
+            selectedQuestion = allQuestions.find(q => !answeredQuestions.find(aq => aq.id === q.id)) || allQuestions[0];
+          }
+        }
+        
+        if (selectedQuestion && Array.isArray(selectedQuestion.pairs)) {
+          // Usa solo le coppie della domanda selezionata
+          const questionPairs = selectedQuestion.pairs.map(p => ({ 
+            ...p, 
+            id: selectedQuestion.id, 
+            difficulty: selectedQuestion.difficulty 
+          }));
+          
+          // Rimuovi duplicati basati su left e right
+          const uniquePairs = questionPairs.filter((pair, index, self) => 
+            index === self.findIndex(p => p.left === pair.left && p.right === pair.right)
+          );
+          
+          setPairs(uniquePairs);
+          setLeftItems(shuffle(uniquePairs.map(p => p.left)));
+          setRightItems(shuffle(uniquePairs.map(p => p.right)));
+        } else {
+          // Fallback alle props
+          setPairs(propPairs || []);
+          setLeftItems(shuffle((propPairs || []).map(p => p.left)));
+          setRightItems(shuffle((propPairs || []).map(p => p.right)));
+        }
+      } catch (err) {
+        setPairs(propPairs || []);
+        setLeftItems(shuffle((propPairs || []).map(p => p.left)));
+        setRightItems(shuffle((propPairs || []).map(p => p.right)));
+      }
+    };
+    loadPairsAndLevel();
+  }, [JSON.stringify(propPairs), questionIdParam, category]);
 
   useEffect(() => {
     if (completed && !progressSaved && user) {
-      axios.post('/api/progress', {
-        game: 'Matching',
-        sessionId: `${user._id}-matching-${Date.now()}`,
-        score: pairs.length,
-        level: config.difficulty || 1,
-        completed: true,
-        details: { attempts }
+      const difficulty = pairs[0]?.difficulty || config.difficulty || 1;
+      
+      // Genera un sessionId per questa risposta
+      const responseSessionId = `${user._id}-matching-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      axios.post('/api/progress/answer', {
+        sessionId: responseSessionId,
+        questionId: pairs[0]?.id || 'matching',
+        isCorrect: true,
+        questionDifficulty: difficulty
       }, { withCredentials: true })
-      .catch(error => {
-        console.error('Matching: Errore nel salvataggio progressi', error.response?.data || error.message);
+      .then(resp => {
+        const nuovoLivello = resp.data.progress.maxUnlockedLevel;
+        if (nuovoLivello > maxUnlockedLevel) {
+          setShowLevelUp(true);
+          setTimeout(() => setShowLevelUp(false), 3000);
+          setMaxUnlockedLevel(nuovoLivello);
+          setLevelProgress(0);
+        } else {
+          const correctPerLevel = resp.data.progress.correctAnswersPerLevel || {};
+          const currentLevelProgress = correctPerLevel[maxUnlockedLevel?.toString()] || 0;
+          setLevelProgress(currentLevelProgress);
+        }
+      })
+      .catch(err => {
+        console.error('Errore salvataggio progressi Matching:', err);
       });
       setProgressSaved(true);
       if (onQuestionAnswered) onQuestionAnswered();
     }
-  }, [completed, progressSaved, user, pairs.length, config.difficulty, attempts, onQuestionAnswered]);
+  }, [completed, progressSaved, user, pairs, config.difficulty, onQuestionAnswered, maxUnlockedLevel]);
 
   const handleLeftClick = (item) => {
     if (matched.find(m => m.left === item)) return;
@@ -78,17 +147,6 @@ const MatchingGame = ({ pairs = [], config = {}, onQuestionAnswered }) => {
       setTimeout(() => {
         if (matched.length + 1 === pairs.length) {
           setCompleted(true);
-          if (!progressSaved && user) {
-            axios.post('/api/progress', {
-              game: 'Matching',
-              sessionId: `${user._id}-matching-${Date.now()}`,
-              score: pairs.length,
-              level: config.difficulty || 1,
-              completed: true,
-              details: { attempts }
-            }, { withCredentials: true }).catch(() => {});
-            setProgressSaved(true);
-          }
         }
       }, 300);
     } else {
@@ -108,9 +166,29 @@ const MatchingGame = ({ pairs = [], config = {}, onQuestionAnswered }) => {
 
   return (
     <div className="matching-container">
+      {showLevelUp && (
+        <div className="levelup-notification">
+          <span role="img" aria-label="level up">🚀</span> Nuovo livello sbloccato! Ora puoi affrontare domande più difficili!
+        </div>
+      )}
       <div className="matching-header">
         <span className="matching-title">Abbina gli elementi!</span>
         <span className="matching-attempts">Tentativi: {attempts}</span>
+        <div className="matching-level-progress">
+          <span>Livello sbloccato: <strong>{maxUnlockedLevel}</strong></span>
+          <div className="level-progress-container">
+            <div className="level-progress-bar">
+              <div 
+                className="level-progress-fill"
+                style={{
+                  width: `${Math.min(100, (levelProgress / LEVEL_THRESHOLD) * 100)}%`,
+                  background: 'linear-gradient(90deg, #fbbf24, #f59e0b)'
+                }}
+              />
+            </div>
+            <span className="level-progress-text">{levelProgress}/{LEVEL_THRESHOLD}</span>
+          </div>
+        </div>
       </div>
       <div className="matching-board">
         <div className="matching-column">

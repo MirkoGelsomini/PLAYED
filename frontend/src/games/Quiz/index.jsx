@@ -4,7 +4,17 @@ import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
 import { useLocation } from 'react-router-dom';
 
-const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
+function generateSessionId(user, gameType) {
+  if (window.crypto && window.crypto.randomUUID) {
+    return `${user?._id || 'anon'}-${gameType}-${window.crypto.randomUUID()}`;
+  }
+  // fallback
+  return `${user?._id || 'anon'}-${gameType}-${Date.now()}-${Math.floor(Math.random()*100000)}`;
+}
+
+const LEVEL_THRESHOLD = 5; // quante risposte corrette per sbloccare il livello successivo
+
+const QuizGame = ({ config, questionIds, category, onQuestionAnswered }) => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const questionIdParam = params.get('questionId');
@@ -19,41 +29,122 @@ const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
   const [questions, setQuestions] = useState([]);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(1);
+  const [levelProgress, setLevelProgress] = useState(0);
+  const [showLevelUp, setShowLevelUp] = useState(false);
   const timerRef = useRef(null);
   const { user, isAuthenticated } = useAuth();
+  const [sessionId, setSessionId] = useState(null);
+  const specificQuestionLoadedRef = useRef(false);
 
-  // Carica le domande specifiche del quiz
+  // Genera sessionId all'inizio della partita
   useEffect(() => {
-    const loadQuestions = async () => {
+    if (!sessionId && user) {
+      setSessionId(generateSessionId(user, 'quiz'));
+    }
+  }, [user, sessionId]);
+
+  // Reset flag quando cambia questionIdParam
+  useEffect(() => {
+    specificQuestionLoadedRef.current = false;
+  }, [questionIdParam]);
+
+  // Carica domande e livello sbloccato
+  useEffect(() => {
+    const loadQuestionsAndLevel = async () => {
       try {
-        const response = await fetch('/api/questions');
-        const allQuestions = await response.json();
+        // Carica domande e livello
+        const res = await axios.get(`/api/progress/questions?gameType=quiz`, { withCredentials: true });
+        const { answeredQuestions, unansweredQuestions, maxUnlockedLevel } = res.data;
         
-        let quizQuestions = allQuestions.filter(q => 
-          questionIds && questionIds.includes(q.id)
+        // Filtra domande per livello sbloccato E categoria
+        const availableQuestions = [...answeredQuestions, ...unansweredQuestions];
+        const filteredQuestions = availableQuestions.filter(q => 
+          q.difficulty <= maxUnlockedLevel && 
+          q.category === category
         );
-        // Se c'è questionId nella query string, metti quella domanda per prima
-        if (questionIdParam) {
-          const forced = quizQuestions.find(q => String(q.id) === String(questionIdParam));
-          if (forced) {
-            quizQuestions = [forced, ...quizQuestions.filter(q => String(q.id) !== String(questionIdParam))];
-          }
-        }
-        // Shuffle delle domande solo se non c'è questionId
-        if (!questionIdParam) {
-          for (let i = quizQuestions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [quizQuestions[i], quizQuestions[j]] = [quizQuestions[j], quizQuestions[i]];
-          }
+        
+        if (filteredQuestions.length === 0) {
+          return;
         }
         
-        setQuestions(quizQuestions);
-      } catch (error) {
-        console.error('Errore nel caricamento delle domande:', error);
+        setQuestions(filteredQuestions);
+        setMaxUnlockedLevel(maxUnlockedLevel);
+        
+        // Se c'è un questionId specifico, trova quella domanda
+        if (questionIdParam) {
+          const specificQuestion = filteredQuestions.find(q => q.id.toString() === questionIdParam);
+          if (specificQuestion) {
+            setQuestions([specificQuestion]);
+            setCurrentQuestionIndex(0);
+            specificQuestionLoadedRef.current = true;
+          } else {
+            specificQuestionLoadedRef.current = false;
+          }
+        } else {
+          specificQuestionLoadedRef.current = false;
+        }
+        
+        // Calcola progresso livello corrente
+        const correctPerLevel = res.data.correctAnswersPerLevel || {};
+        const currentLevelProgress = correctPerLevel[maxUnlockedLevel?.toString()] || 0;
+        setLevelProgress(currentLevelProgress);
+      } catch (err) {
+        console.error('Errore nel caricamento domande/level:', err);
       }
     };
-    loadQuestions();
-  }, [questionIds, questionIdParam]);
+
+    if (user && category) {
+      loadQuestionsAndLevel();
+    }
+  }, [user, category, questionIdParam]);
+
+  // Ricarica domande quando sblocchi un nuovo livello
+  useEffect(() => {
+    const reloadQuestionsForNewLevel = async () => {
+      // Non ricaricare se è già stata caricata una domanda specifica
+      if (specificQuestionLoadedRef.current && questionIdParam) {
+        return;
+      }
+      
+      if (maxUnlockedLevel > 1 && category) {
+        try {
+          const res = await axios.get(`/api/progress/questions?gameType=quiz`, { withCredentials: true });
+          const { answeredQuestions, unansweredQuestions, maxUnlockedLevel: newMaxLevel } = res.data;
+          
+          // Filtra domande per nuovo livello sbloccato E categoria
+          const availableQuestions = [...answeredQuestions, ...unansweredQuestions];
+          const filteredQuestions = availableQuestions.filter(q => 
+            q.difficulty <= newMaxLevel && 
+            q.category === category
+          );
+          
+          if (filteredQuestions.length > 0) {
+            // Se c'è un questionId specifico, mantieni quella domanda
+            if (questionIdParam) {
+              const specificQuestion = filteredQuestions.find(q => q.id.toString() === questionIdParam);
+              if (specificQuestion) {
+                setQuestions([specificQuestion]);
+                setCurrentQuestionIndex(0);
+                specificQuestionLoadedRef.current = true;
+              } else {
+                setQuestions(filteredQuestions);
+                specificQuestionLoadedRef.current = false;
+              }
+            } else {
+              setQuestions(filteredQuestions);
+              specificQuestionLoadedRef.current = false;
+            }
+          }
+        } catch (err) {
+          console.error('Errore nel ricaricamento domande per nuovo livello:', err);
+        }
+      }
+    };
+
+    reloadQuestionsForNewLevel();
+  }, [maxUnlockedLevel, category, questionIdParam]);
 
   // Shuffle delle opzioni se richiesto
   useEffect(() => {
@@ -89,26 +180,12 @@ const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
     };
   }, [timeLeft, isAnswered, config.showTimer, questions.length]);
 
+  // Quando il quiz è completato, salva il progresso con il sessionId unico
   useEffect(() => {
-    if (gameCompleted && !progressSaved && user) {
-      const percentage = Math.round((score / questions.length) * 100);
-      axios.post('/api/progress', {
-        game: 'Quiz',
-        sessionId: `${user._id}-quiz-${Date.now()}`,
-        score,
-        level: config.difficulty || 1,
-        completed: true,
-        details: { totalQuestions: questions.length, percentage }
-      }, { withCredentials: true })
-      .then(response => {
-        console.log('Quiz: Progressi salvati con successo', response.data);
-      })
-      .catch(error => {
-        console.error('Quiz: Errore nel salvataggio progressi', error.response?.data || error.message);
-      });
+    if (gameCompleted && !progressSaved && user && sessionId) {
       setProgressSaved(true);
     }
-  }, [gameCompleted, progressSaved, user, score, questions.length, config.difficulty]);
+  }, [gameCompleted, progressSaved, user, sessionId]);
 
   const handleTimeout = () => {
     setIsAnswered(true);
@@ -116,22 +193,55 @@ const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
     setShowResult(true);
   };
 
-  const handleAnswerSelect = (answer) => {
-    if (isAnswered || questions.length === 0) return;
-    
-    setSelectedAnswer(answer);
-    setIsAnswered(true);
+  // Quando l'utente risponde, aggiorna il backend e controlla se sblocca un nuovo livello
+  const handleAnswerSelect = async (answer) => {
+    if (isAnswered) return;
     
     const currentQuestion = questions[currentQuestionIndex];
     const correct = answer === currentQuestion.answer;
+    setIsAnswered(true);
     setIsCorrect(correct);
+    setSelectedAnswer(answer);
     
     if (correct) {
-      setScore(prev => prev + 1);
+      setScore(prev => prev + 10);
+      setCorrectAnswers(prev => prev + 1);
     }
-    
     setShowResult(true);
     if (onQuestionAnswered) onQuestionAnswered();
+    
+    // Aggiorna progresso backend
+    try {
+      // Genera un sessionId per questa risposta
+      const responseSessionId = generateSessionId(user, 'quiz');
+      
+      const resp = await axios.post('/api/progress/answer', {
+        sessionId: responseSessionId,
+        questionId: currentQuestion.id,
+        isCorrect: correct,
+        questionDifficulty: currentQuestion.difficulty || 1
+      }, { withCredentials: true });
+      
+      // Se il livello è aumentato, mostra animazione
+      const nuovoLivello = resp.data.progress.maxUnlockedLevel;
+      if (nuovoLivello > maxUnlockedLevel) {
+        setShowLevelUp(true);
+        setTimeout(() => setShowLevelUp(false), 3000);
+        setMaxUnlockedLevel(nuovoLivello);
+        setLevelProgress(0);
+      } else {
+        // Aggiorna progresso livello
+        const correctPerLevel = resp.data.progress.correctAnswersPerLevel || {};
+        
+        // Calcola il progresso per il livello corrente
+        const currentLevelProgress = correctPerLevel[maxUnlockedLevel] || correctPerLevel[maxUnlockedLevel.toString()] || 0;
+        
+        setLevelProgress(currentLevelProgress);
+      }
+    } catch (err) {
+      console.error('Errore aggiornamento progresso:', err);
+      console.error('Dettagli errore:', err.response?.data);
+    }
   };
 
   const handleNextQuestion = () => {
@@ -150,6 +260,7 @@ const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
   const handleRestartGame = () => {
     setCurrentQuestionIndex(0);
     setScore(0);
+    setCorrectAnswers(0);
     setSelectedAnswer(null);
     setIsAnswered(false);
     setIsCorrect(false);
@@ -157,6 +268,7 @@ const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
     setTimeLeft(config.timeLimit || 30);
     setGameCompleted(false);
     setProgressSaved(false);
+    setSessionId(generateSessionId(user, 'quiz'));
   };
 
   if (questions.length === 0) {
@@ -171,14 +283,15 @@ const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
   }
 
   if (gameCompleted) {
-    const percentage = Math.round((score / questions.length) * 100);
+    const percentage = Math.round((correctAnswers / questions.length) * 100);
     return (
       <div className="quiz-container">
         <div className="quiz-completed">
           <div className="completion-icon">🎉</div>
           <h2>Quiz Completato!</h2>
           <div className="final-score">
-            <p>Hai risposto correttamente a <strong>{score}</strong> domande su <strong>{questions.length}</strong></p>
+            <p>Hai risposto correttamente a <strong>{correctAnswers}</strong> domande su <strong>{questions.length}</strong></p>
+            <p>Punteggio totale: <strong>{score}</strong></p>
             <div className="score-percentage">{percentage}%</div>
           </div>
           <div className="score-message">
@@ -199,6 +312,12 @@ const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
 
   return (
     <div className="quiz-container">
+      {/* Notifica sblocco livello */}
+      {showLevelUp && (
+        <div className="levelup-notification">
+          <span role="img" aria-label="level up">🚀</span> Nuovo livello sbloccato! Ora puoi affrontare domande più difficili!
+        </div>
+      )}
       {/* Header con timer e score */}
       <div className="quiz-header">
         <div className="quiz-score">
@@ -218,6 +337,20 @@ const QuizGame = ({ config, questionIds, onQuestionAnswered }) => {
             </div>
           </div>
         )}
+        <div className="quiz-level-progress">
+          <span>Livello sbloccato: <strong>{maxUnlockedLevel}</strong></span>
+          <div className="level-progress-container">
+            <div className="level-progress-bar">
+              <div 
+                className="level-progress-fill"
+                style={{ width: `${(levelProgress / LEVEL_THRESHOLD) * 100}%` }}
+              />
+            </div>
+            <span className="level-progress-text">
+              {levelProgress}/{LEVEL_THRESHOLD} per sbloccare livello {maxUnlockedLevel + 1}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Domanda */}

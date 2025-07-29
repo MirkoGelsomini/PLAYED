@@ -9,6 +9,8 @@ import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
 import { fetchQuestions } from '../../core/api';
 
+const LEVEL_THRESHOLD = 5;
+
 // Componente per ogni item ordinabile
 function SortableItem({ id, children }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -31,19 +33,39 @@ function SortableItem({ id, children }) {
 }
 
 const Sorting = ({ question }) => {
+  const { user } = useAuth();
+  const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(1);
+  const [levelProgress, setLevelProgress] = useState(0);
+  const [showLevelUp, setShowLevelUp] = useState(false);
   const [questionData, setQuestionData] = useState(question || null);
   const [items, setItems] = useState(question ? question.items : []);
   const [isCorrect, setIsCorrect] = useState(null);
   const [completed, setCompleted] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [progressSaved, setProgressSaved] = useState(false);
-  const { user } = useAuth();
 
+  // Carica domanda filtrata per livello sbloccato
   useEffect(() => {
-    if (question) {
-      setQuestionData(question);
-      setItems(question.items);
-    }
+    const loadQuestionAndLevel = async () => {
+      try {
+        const res = await axios.get('/api/progress/questions?gameType=sorting', { withCredentials: true });
+        const { unansweredQuestions, answeredQuestions, maxUnlockedLevel, correctAnswersPerLevel } = res.data;
+        setMaxUnlockedLevel(maxUnlockedLevel || 1);
+        setLevelProgress(correctAnswersPerLevel?.[maxUnlockedLevel?.toString()] || 0);
+        let allQuestions = [...answeredQuestions, ...unansweredQuestions].filter(q => (q.difficulty || 1) <= (maxUnlockedLevel || 1));
+        // Prendi la prima domanda disponibile
+        if (allQuestions.length > 0) {
+          setQuestionData(allQuestions[0]);
+          setItems(allQuestions[0].items);
+        }
+      } catch (err) {
+        if (question) {
+          setQuestionData(question);
+          setItems(question.items);
+        }
+      }
+    };
+    loadQuestionAndLevel();
   }, [question]);
 
   const handleDragEnd = (event) => {
@@ -67,21 +89,37 @@ const Sorting = ({ question }) => {
 
   // Salva i progressi quando il gioco è completato
   React.useEffect(() => {
-    if (completed && !progressSaved && user) {
-      axios.post('/api/progress', {
-        game: 'Sorting',
-        sessionId: `${user._id}-sorting-${Date.now()}`,
-        score: items.length,
-        level: 1,
-        completed: true,
-        details: { attempts }
+    if (completed && !progressSaved && user && questionData) {
+      const difficulty = questionData.difficulty || 1;
+      
+      // Genera un sessionId per questa risposta
+      const responseSessionId = `${user._id}-sorting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      axios.post('/api/progress/answer', {
+        sessionId: responseSessionId,
+        questionId: questionData.id || 'sorting',
+        isCorrect: true,
+        questionDifficulty: difficulty
       }, { withCredentials: true })
-      .catch(error => {
-        console.error('Sorting: Errore nel salvataggio progressi', error.response?.data || error.message);
+      .then(resp => {
+        const nuovoLivello = resp.data.progress.maxUnlockedLevel;
+        if (nuovoLivello > maxUnlockedLevel) {
+          setShowLevelUp(true);
+          setTimeout(() => setShowLevelUp(false), 3000);
+          setMaxUnlockedLevel(nuovoLivello);
+          setLevelProgress(0);
+        } else {
+          const correctPerLevel = resp.data.progress.correctAnswersPerLevel || {};
+          const currentLevelProgress = correctPerLevel[maxUnlockedLevel?.toString()] || 0;
+          setLevelProgress(currentLevelProgress);
+        }
+      })
+      .catch(err => {
+        console.error('Errore salvataggio progressi Sorting:', err);
       });
       setProgressSaved(true);
     }
-  }, [completed, progressSaved, user, items.length, attempts]);
+  }, [completed, progressSaved, user, items.length, attempts, questionData, maxUnlockedLevel]);
 
   const resetGame = () => {
     setItems(questionData.items);
@@ -108,7 +146,27 @@ const Sorting = ({ question }) => {
 
   return (
     <div className="sorting-game-container">
+      {showLevelUp && (
+        <div className="levelup-notification">
+          <span role="img" aria-label="level up">🚀</span> Nuovo livello sbloccato! Ora puoi affrontare domande più difficili!
+        </div>
+      )}
       <h2>{questionData?.question}</h2>
+      <div className="sorting-level-progress">
+        <span>Livello sbloccato: <strong>{maxUnlockedLevel}</strong></span>
+        <div className="level-progress-container">
+          <div className="level-progress-bar">
+            <div 
+              className="level-progress-fill"
+              style={{
+                width: `${Math.min(100, (levelProgress / LEVEL_THRESHOLD) * 100)}%`,
+                background: 'linear-gradient(90deg, #fbbf24, #f59e0b)'
+              }}
+            />
+          </div>
+          <span className="level-progress-text">{levelProgress}/{LEVEL_THRESHOLD}</span>
+        </div>
+      </div>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={items} strategy={verticalListSortingStrategy}>
           <ul className="sorting-list">

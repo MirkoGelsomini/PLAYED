@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchGames, fetchQuestions } from '../core/api';
+import { fetchGames, fetchQuestionProgressAndSuggestions } from '../core/api';
 import { Link } from 'react-router-dom';
 import GameBadge from '../components/GameBadge';
 import '../styles/main.css';
@@ -7,22 +7,31 @@ import '../styles/main.css';
 const MemorySelectionPage = () => {
   const [memoryGames, setMemoryGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unlockedCategories, setUnlockedCategories] = useState({});
 
   useEffect(() => {
     const loadMemoryGames = async () => {
       try {
         const games = await fetchGames();
-        console.log('Risposta fetchGames (MemorySelectionPage):', games);
-        let memoryOnly = [];
-        if (Array.isArray(games)) {
-          memoryOnly = games.filter(game => 
-            game.type === 'memory' && game.id !== 'memory_selection'
-          );
-        } else if (games && Array.isArray(games.games)) {
-          memoryOnly = games.games.filter(game => 
-            game.type === 'memory' && game.id !== 'memory_selection'
-          );
+        const gamesArray = Array.isArray(games) ? games : (Array.isArray(games.games) ? games.games : []);
+        // Filtra solo i memory (escludendo il memory_selection)
+        const memoryOnly = gamesArray.filter(game => 
+          game.type === 'memory' && game.id !== 'memory_selection'
+        );
+        // Recupera domande sbloccate per categoria
+        const res = await fetchQuestionProgressAndSuggestions('memory');
+        const maxUnlockedLevel = res.maxUnlockedLevel || 1;
+        
+        // Raggruppa domande per categoria
+        const unlocked = {};
+        for (const game of memoryOnly) {
+          // Prendi tutte le domande di questa categoria
+          const catQuestions = [...res.answeredQuestions, ...res.unansweredQuestions].filter(q => q.category === game.category);
+          // Filtra solo quelle sbloccate
+          const unlockedQuestions = catQuestions.filter(q => (q.difficulty || 1) <= maxUnlockedLevel);
+          unlocked[game.category] = unlockedQuestions.length > 0;
         }
+        setUnlockedCategories(unlocked);
         setMemoryGames(memoryOnly);
         setLoading(false);
       } catch (error) {
@@ -111,7 +120,7 @@ const MemorySelectionPage = () => {
         </div>
       ) : (
         <div style={gamesSectionStyle}>
-          {memoryGames.map((game) => (
+          {memoryGames.filter(game => unlockedCategories[game.category]).map((game) => (
             <GameBadge
               key={game.id}
               name={game.name}

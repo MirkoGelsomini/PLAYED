@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
 import { useLocation } from 'react-router-dom';
 
+const LEVEL_THRESHOLD = 5;
+
 function shuffle(array) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -24,57 +26,94 @@ const generateCards = (pairs) => {
   return shuffle(cards);
 };
 
-const MemoryGame = ({ config = {}, pairs: propPairs, onQuestionAnswered }) => {
+const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswered }) => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const questionIdParam = params.get('questionId');
-  // propPairs è un array di oggetti {front, back}
-  const pairs = propPairs || [];
-  let filteredPairs = pairs;
-  if (questionIdParam) {
-    // questionId corrisponde all'id della domanda in questions.json
-    // Trova la domanda e usa solo le sue pairs
-    // (Serve passare pairs come [{front, back}] per la domanda specifica)
-    filteredPairs = pairs.filter(p => String(p.id) === String(questionIdParam));
-    if (filteredPairs.length === 0 && pairs.length > 0) {
-      // fallback: usa tutte
-      filteredPairs = pairs;
-    }
-  }
+  const { user } = useAuth();
+  const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(1);
+  const [levelProgress, setLevelProgress] = useState(0);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [pairs, setPairs] = useState([]);
   const [cards, setCards] = useState([]);
-  const [flipped, setFlipped] = useState([]); // indici delle carte girate
-  const [matched, setMatched] = useState([]); // indici delle carte trovate
+  const [flipped, setFlipped] = useState([]);
+  const [matched, setMatched] = useState([]);
   const [attempts, setAttempts] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [lock, setLock] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
-  const { user } = useAuth();
 
+  // Carica pairs filtrate per livello sbloccato
   useEffect(() => {
-    resetGame();
+    const loadPairsAndLevel = async () => {
+      try {
+        const res = await axios.get('/api/progress/questions?gameType=memory', { withCredentials: true });
+        const { unansweredQuestions, answeredQuestions, maxUnlockedLevel, correctAnswersPerLevel } = res.data;
+        setMaxUnlockedLevel(maxUnlockedLevel || 1);
+        setLevelProgress(correctAnswersPerLevel?.[maxUnlockedLevel?.toString()] || 0);
+        let allQuestions = [...answeredQuestions, ...unansweredQuestions].filter(q => 
+          (q.difficulty || 1) <= (maxUnlockedLevel || 1) && 
+          q.category === category
+        );
+        // Se questionIdParam, filtra per quella domanda
+        if (questionIdParam) {
+          allQuestions = allQuestions.filter(q => String(q.id) === String(questionIdParam));
+        }
+        // Ricava tutte le pairs
+        let allPairs = [];
+        allQuestions.forEach(q => {
+          if (Array.isArray(q.pairs)) {
+            allPairs = allPairs.concat(q.pairs.map(p => ({ ...p, id: q.id, difficulty: q.difficulty })));
+          }
+        });
+        setPairs(allPairs);
+        setCards(generateCards(allPairs));
+      } catch (err) {
+        setPairs(propPairs || []);
+        setCards(generateCards(propPairs || []));
+      }
+    };
+    loadPairsAndLevel();
     // eslint-disable-next-line
-  }, [JSON.stringify(filteredPairs)]);
+  }, [JSON.stringify(propPairs), questionIdParam, category]);
 
   useEffect(() => {
     if (completed && !progressSaved && user) {
-      axios.post('/api/progress', {
-        game: 'Memory',
-        sessionId: `${user._id}-memory-${Date.now()}`,
-        score: pairs.length,
-        level: config.difficulty || 1,
-        completed: true,
-        details: { attempts }
+      // Prendi la difficoltà della domanda (se unica)
+      const difficulty = pairs[0]?.difficulty || config.difficulty || 1;
+      
+      // Genera un sessionId per questa risposta
+      const responseSessionId = `${user._id}-memory-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      axios.post('/api/progress/answer', {
+        sessionId: responseSessionId,
+        questionId: pairs[0]?.id || 'memory',
+        isCorrect: true,
+        questionDifficulty: difficulty
       }, { withCredentials: true })
-      .catch(error => {
-        console.error('Memory: Errore nel salvataggio progressi', error.response?.data || error.message);
+      .then(resp => {
+        const nuovoLivello = resp.data.progress.maxUnlockedLevel;
+        if (nuovoLivello > maxUnlockedLevel) {
+          setShowLevelUp(true);
+          setTimeout(() => setShowLevelUp(false), 3000);
+          setMaxUnlockedLevel(nuovoLivello);
+          setLevelProgress(0);
+        } else {
+          const correctPerLevel = resp.data.progress.correctAnswersPerLevel || {};
+          const currentLevelProgress = correctPerLevel[maxUnlockedLevel?.toString()] || 0;
+          setLevelProgress(currentLevelProgress);
+        }
+      })
+      .catch(err => {
+        console.error('Errore salvataggio progressi Memory:', err);
       });
       setProgressSaved(true);
       if (onQuestionAnswered) onQuestionAnswered();
     }
-  }, [completed, progressSaved, user, pairs.length, config.difficulty, attempts, onQuestionAnswered]);
+  }, [completed, progressSaved, user, pairs, config.difficulty, onQuestionAnswered, maxUnlockedLevel]);
 
   const resetGame = () => {
-    const newCards = generateCards(filteredPairs);
+    const newCards = generateCards(pairs);
     setCards(newCards);
     setFlipped([]);
     setMatched([]);
@@ -102,17 +141,6 @@ const MemoryGame = ({ config = {}, pairs: propPairs, onQuestionAnswered }) => {
           setMatched(m => [...m, flipped[0], idx]);
           if (matched.length + 2 === cards.length) {
             setCompleted(true);
-            if (!progressSaved && user) {
-              axios.post('/api/progress', {
-                game: 'Memory',
-                sessionId: `${user._id}-memory-${Date.now()}`,
-                score: pairs.length,
-                level: config.difficulty || 1,
-                completed: true,
-                details: { attempts }
-              }, { withCredentials: true }).catch(() => {});
-              setProgressSaved(true);
-            }
           }
         }
         setFlipped([]);
@@ -123,9 +151,29 @@ const MemoryGame = ({ config = {}, pairs: propPairs, onQuestionAnswered }) => {
 
   return (
     <div className="memory-container">
+      {showLevelUp && (
+        <div className="levelup-notification">
+          <span role="img" aria-label="level up">🚀</span> Nuovo livello sbloccato! Ora puoi affrontare domande più difficili!
+        </div>
+      )}
       <div className="memory-header">
         <span className="memory-title">Memory Game</span>
         <span className="memory-attempts">Tentativi: {attempts}</span>
+        <div className="memory-level-progress">
+          <span>Livello sbloccato: <strong>{maxUnlockedLevel}</strong></span>
+          <div className="level-progress-container">
+            <div className="level-progress-bar">
+              <div 
+                className="level-progress-fill"
+                style={{
+                  width: `${Math.min(100, (levelProgress / LEVEL_THRESHOLD) * 100)}%`,
+                  background: 'linear-gradient(90deg, #fbbf24, #f59e0b)'
+                }}
+              />
+            </div>
+            <span className="level-progress-text">{levelProgress}/{LEVEL_THRESHOLD}</span>
+          </div>
+        </div>
       </div>
       <div className="memory-board-wrapper">
         <div className="memory-board-grid">

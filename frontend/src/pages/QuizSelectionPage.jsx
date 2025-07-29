@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchGames, fetchQuestions, fetchQuestionProgressAndSuggestions } from '../core/api';
+import { fetchGames, fetchQuestionProgressAndSuggestions } from '../core/api';
 import { Link } from 'react-router-dom';
 import GameBadge from '../components/GameBadge';
 import '../styles/main.css';
@@ -8,6 +8,7 @@ const QuizSelectionPage = () => {
   const [quizGames, setQuizGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [solvedMap, setSolvedMap] = useState({});
+  const [unlockedCategories, setUnlockedCategories] = useState({});
 
   useEffect(() => {
     const loadQuizGames = async () => {
@@ -18,6 +19,19 @@ const QuizSelectionPage = () => {
         const quizOnly = gamesArray.filter(game => 
           game.type === 'quiz' && game.id !== 'quiz_selection'
         );
+        // Recupera domande sbloccate per categoria
+        const res = await fetchQuestionProgressAndSuggestions('quiz');
+        const maxUnlockedLevel = res.maxUnlockedLevel || 1;
+        // Raggruppa domande per categoria
+        const unlocked = {};
+        for (const game of quizOnly) {
+          // Prendi tutte le domande di questa categoria
+          const catQuestions = [...res.answeredQuestions, ...res.unansweredQuestions].filter(q => q.category === game.category);
+          // Filtra solo quelle sbloccate
+          const unlockedQuestions = catQuestions.filter(q => (q.difficulty || 1) <= maxUnlockedLevel);
+          unlocked[game.category] = unlockedQuestions.length > 0;
+        }
+        setUnlockedCategories(unlocked);
         setQuizGames(quizOnly);
         setLoading(false);
         // Per ogni quiz, controlla se è stato completato
@@ -120,7 +134,7 @@ const QuizSelectionPage = () => {
         </div>
       ) : (
         <div style={gamesSectionStyle}>
-          {quizGames.map((game) => (
+          {quizGames.filter(game => unlockedCategories[game.category]).map((game) => (
             <GameBadge
               key={game.id}
               name={game.name}

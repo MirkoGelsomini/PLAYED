@@ -112,9 +112,12 @@ const SidebarSuggerimenti = ({ onHide }) => {
           {suggestions.map((q, idx) => (
             <li key={q.id + '-' + idx} className="ss-sugg-badge">
               <Link to={`/game/${q.gameType}_${q.category}?questionId=${q.id}`} className="ss-sugg-link-beauty">
-                <span className="ss-sugg-materia-badge">{q.materia}</span>
+                <div className="ss-sugg-header">
+                  <span className="ss-sugg-materia-badge">{q.materia}</span>
+                  <span className="ss-sugg-level-badge">Livello {q.difficulty}</span>
+                </div>
                 <span className="ss-sugg-question">{q.question}</span>
-                <span className="ss-sugg-diff-badge">{q.difficulty}</span>
+                <span className="ss-sugg-hint">💡 Per completare il livello corrente</span>
               </Link>
             </li>
           ))}

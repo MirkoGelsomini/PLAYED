@@ -112,7 +112,6 @@ export default function Results() {
   const testModels = async () => {
     try {
       const res = await axios.get('/api/trophy/test', { withCredentials: true });
-      console.log('Test modelli:', res.data);
       alert('Test completato! Controlla la console per i dettagli.');
     } catch (err) {
       console.error('Errore nel test:', err);
@@ -121,15 +120,12 @@ export default function Results() {
   };
 
   const claimReward = async (objectiveId) => {
-    console.log('Frontend - Claim reward per objectiveId:', objectiveId);
     setClaimingReward(true);
     try {
       const res = await axios.post('/api/trophy/claim-reward', 
         { objectiveId }, 
         { withCredentials: true }
       );
-      
-      console.log('Frontend - Risposta claim reward:', res.data);
       
       if (res.data.success) {
         alert(`🎉 Ricompensa riscattata! Hai guadagnato ${res.data.pointsEarned} punti!`);
@@ -385,18 +381,6 @@ export default function Results() {
                   I trofei si sbloccano automaticamente quando raggiungi nuovi livelli! 
                   Ogni 100 punti totali guadagnati = 1 livello.
                 </p>
-                <div className="level-progression">
-                  <h4>📈 Progressione Livelli:</h4>
-                  <ul>
-                    <li><strong>Livello 5:</strong> 500 punti totali</li>
-                    <li><strong>Livello 10:</strong> 1000 punti totali</li>
-                    <li><strong>Livello 20:</strong> 2000 punti totali</li>
-                    <li><strong>Livello 35:</strong> 3500 punti totali</li>
-                    <li><strong>Livello 50:</strong> 5000 punti totali</li>
-                    <li><strong>Livello 75:</strong> 7500 punti totali</li>
-                    <li><strong>Livello 100:</strong> 10000 punti totali</li>
-                  </ul>
-                </div>
               </div>
             </div>
 
