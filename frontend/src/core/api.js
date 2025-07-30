@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { apiCall, handleError } from '../utils/errorHandler';
 
 // Funzioni di utilità per chiamate API al backend
 export const fetchGames = async () => {
@@ -9,7 +10,10 @@ export const fetchGames = async () => {
 };
 
 export const fetchQuestions = async () => {
-  const res = await fetch('/api/questions');
+  const res = await fetch('/api/questions/filtered', {
+    credentials: 'include'
+  });
+  if (!res.ok) throw new Error('Errore nel recupero delle domande');
   return res.json();
 };
 

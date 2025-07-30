@@ -4,8 +4,10 @@ import logo from '../logo.png';
 import '../styles/Auth.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../core/AuthContext';
+import { useErrorHandler } from '../utils/errorHandler';
 
 export default function Login() {
+  const { handleComponentError } = useErrorHandler();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('allievo');
@@ -28,9 +30,7 @@ export default function Login() {
       setPassword('');
       setTimeout(() => navigate('/'), 500);
     } catch (err) {
-      setError(err.response?.data?.error || 'Credenziali non valide');
-    } finally {
-      setLoading(false);
+      handleComponentError(err, setError, setLoading);
     }
   };
 

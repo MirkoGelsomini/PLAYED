@@ -3,13 +3,21 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { authenticateToken } = require('../utils/authMiddleware');
+const mongoose = require('mongoose');
 
-// CRUD
-router.post('/', userController.createUser); // Crea utente
-router.get('/', authenticateToken, userController.getAllUsers); // Lista utenti
-router.get('/:id', authenticateToken, userController.getUserById); // Ottieni utente per ID
-router.put('/:id', authenticateToken, userController.updateUser); // Aggiorna utente
-router.delete('/:id', authenticateToken, userController.deleteUser); // Elimina utente
+// Middleware per validare ObjectId
+const validateObjectId = (req, res, next) => {
+  const { id } = req.params;
+  if (!id || id === 'undefined' || id === 'me') {
+    return res.status(400).json({ error: 'ID utente non valido' });
+  }
+  
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Formato ID non valido' });
+  }
+  
+  next();
+};
 
 // Login
 router.post('/auth/login', userController.login);
@@ -38,5 +46,12 @@ router.get('/auth/status', (req, res) => {
     res.json({ isAuthenticated: false, user: null });
   }
 });
+
+// CRUD - con validazione ObjectId
+router.post('/', userController.createUser); // Crea utente
+router.get('/', authenticateToken, userController.getAllUsers); // Lista utenti
+router.get('/:id', authenticateToken, validateObjectId, userController.getUserById); // Ottieni utente per ID
+router.put('/:id', authenticateToken, validateObjectId, userController.updateUser); // Aggiorna utente
+router.delete('/:id', authenticateToken, validateObjectId, userController.deleteUser); // Elimina utente
 
 module.exports = router; 

@@ -95,7 +95,7 @@ const SortingSelectionPage = () => {
         </p>
       </section>
       <h2 style={{ textAlign: 'center', margin: '2rem 0 1rem 0', fontWeight: 700 }}>
-        Categorie disponibili ({categories.length})
+        Categorie disponibili ({categories.filter(cat => unlockedCategories[cat]).length})
       </h2>
       {categories.length === 0 ? (
         <div style={{ textAlign: 'center', color: '#888', fontSize: '1.2rem', padding: '2rem' }}>

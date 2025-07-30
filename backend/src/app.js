@@ -6,6 +6,9 @@ const app = express();
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+// Import del sistema di gestione errori
+const { errorHandler, notFoundHandler } = require('./utils/errorHandler');
+
 // Middlewares
 app.use(cors({
   origin: 'http://localhost:3000', 
@@ -27,18 +30,24 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/trophy', trophyRoutes);
 
-const MONGODB_URI = process.env.MONGODB_URI;
-mongoose.connect(MONGODB_URI, {
+// Middleware per gestire route non trovate (deve essere prima del gestore errori)
+app.use(notFoundHandler);
+
+// Middleware per la gestione centralizzata degli errori (deve essere l'ultimo)
+app.use(errorHandler);
+
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/played', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-  .then(() => console.log('Connesso a MongoDB'))
-  .catch(err => {
-    console.error('Errore di connessione a MongoDB:', err.message);
-    process.exit(1);
-  });
+.then(() => {
+  // Connessione riuscita
+})
+.catch(err => {
+  console.error('Errore di connessione a MongoDB:', err);
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`Server backend avviato sulla porta ${PORT}`);
+  // Server avviato con successo
 }); 

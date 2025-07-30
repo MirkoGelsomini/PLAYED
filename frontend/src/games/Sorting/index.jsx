@@ -93,7 +93,7 @@ const Sorting = ({ question }) => {
       const difficulty = questionData.difficulty || 1;
       
       // Genera un sessionId per questa risposta
-      const responseSessionId = `${user._id}-sorting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const responseSessionId = `${user.id || user._id}-sorting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       axios.post('/api/progress/answer', {
         sessionId: responseSessionId,

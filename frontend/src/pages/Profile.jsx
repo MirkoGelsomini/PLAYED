@@ -7,6 +7,7 @@ import { deleteUser as deleteUserApi } from '../core/api';
 import Button from '../components/Button';
 import Avatar from '../components/Avatar';
 import { defaultAvatars } from '../utils/avatarUtils';
+import { USER_CONSTRAINTS } from '../shared/constraints';
 
 export default function Profile() {
   const { user, token, login, logout } = useAuth();
@@ -24,9 +25,18 @@ export default function Profile() {
   useEffect(() => {
     const fetchUser = async () => {
       if (!user) return;
+      
+      // Verifica che l'ID sia valido
+      const userId = user.id || user._id;
+      if (!userId || userId === 'undefined') {
+        setError('ID utente non valido');
+        setFetching(false);
+        return;
+      }
+      
       setFetching(true);
       try {
-        const res = await axios.get(`/api/users/${user.id || user._id}`, {
+        const res = await axios.get(`/api/users/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setForm(res.data);
@@ -130,7 +140,7 @@ export default function Profile() {
       <form className="auth-form" onSubmit={handleSubmit}>
         <input name="name" placeholder="Nome" value={form.name || ''} onChange={handleChange} required className="form-input" />
         {form.role === 'allievo' && <>
-          <input name="age" type="number" placeholder="Età" value={form.age || ''} onChange={handleChange} min={3} max={100} className="form-input" />
+          <input name="age" type="number" placeholder="Età" value={form.age || ''} onChange={handleChange} min={USER_CONSTRAINTS.AGE.MIN} max={USER_CONSTRAINTS.AGE.MAX} className="form-input" />
           <input name="schoolLevel" placeholder="Livello scolastico" value={form.schoolLevel || ''} onChange={handleChange} className="form-input" />
           <input name="class" placeholder="Classe" value={form.class || ''} onChange={handleChange} className="form-input" />
         </>}

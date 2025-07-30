@@ -2,41 +2,42 @@
 const User = require('../models/user');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
+const { USER_CONSTRAINTS, LEVEL_CONSTRAINTS } = require('../../../shared/constraints');
 
 // Schema di validazione per la creazione e aggiornamento utente
 const userValidationSchema = Joi.object({
-  name: Joi.string().required(),
+  name: Joi.string().min(USER_CONSTRAINTS.NAME.MIN_LENGTH).max(USER_CONSTRAINTS.NAME.MAX_LENGTH).required(),
   email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
-  role: Joi.string().valid('allievo', 'docente').required(),
+  password: Joi.string().min(USER_CONSTRAINTS.PASSWORD.MIN_LENGTH).max(USER_CONSTRAINTS.PASSWORD.MAX_LENGTH).required(),
+  role: Joi.string().valid(...USER_CONSTRAINTS.ROLE.VALID_VALUES).required(),
   avatar: Joi.string().allow('').optional(),
   age: Joi.when('role', {
-    is: 'allievo',
-    then: Joi.number().integer().min(3).max(100).required(),
+    is: USER_CONSTRAINTS.AGE.REQUIRED_FOR_ROLE,
+    then: Joi.number().integer().min(USER_CONSTRAINTS.AGE.MIN).max(USER_CONSTRAINTS.AGE.MAX).required(),
     otherwise: Joi.forbidden()
   }),
   schoolLevel: Joi.when('role', {
-    is: 'allievo',
+    is: USER_CONSTRAINTS.SCHOOL_LEVEL.REQUIRED_FOR_ROLE,
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
   class: Joi.when('role', {
-    is: 'allievo',
+    is: USER_CONSTRAINTS.CLASS.REQUIRED_FOR_ROLE,
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
   subjects: Joi.when('role', {
-    is: 'docente',
-    then: Joi.array().items(Joi.string()).required(),
+    is: USER_CONSTRAINTS.SUBJECTS.REQUIRED_FOR_ROLE,
+    then: Joi.array().items(Joi.string()).min(USER_CONSTRAINTS.SUBJECTS.MIN_ITEMS).required(),
     otherwise: Joi.forbidden()
   }),
   school: Joi.when('role', {
-    is: 'docente',
+    is: USER_CONSTRAINTS.SCHOOL.REQUIRED_FOR_ROLE,
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
   teachingLevel: Joi.when('role', {
-    is: 'docente',
+    is: USER_CONSTRAINTS.TEACHING_LEVEL.REQUIRED_FOR_ROLE,
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
@@ -44,40 +45,40 @@ const userValidationSchema = Joi.object({
 
 // Schema di validazione per l'update utente (password opzionale)
 const userUpdateValidationSchema = Joi.object({
-  name: Joi.string().required(),
+  name: Joi.string().min(USER_CONSTRAINTS.NAME.MIN_LENGTH).max(USER_CONSTRAINTS.NAME.MAX_LENGTH).required(),
   email: Joi.string().email().required(),
-  password: Joi.string().min(6).optional(),
-  role: Joi.string().valid('allievo', 'docente').required(),
+  password: Joi.string().min(USER_CONSTRAINTS.PASSWORD.MIN_LENGTH).max(USER_CONSTRAINTS.PASSWORD.MAX_LENGTH).optional(),
+  role: Joi.string().valid(...USER_CONSTRAINTS.ROLE.VALID_VALUES).required(),
   avatar: Joi.string().allow('').optional(),
   // Campi specifici per Allievo
   age: Joi.when('role', {
-    is: 'allievo',
-    then: Joi.number().integer().min(3).max(100).required(),
+    is: USER_CONSTRAINTS.AGE.REQUIRED_FOR_ROLE,
+    then: Joi.number().integer().min(USER_CONSTRAINTS.AGE.MIN).max(USER_CONSTRAINTS.AGE.MAX).required(),
     otherwise: Joi.forbidden()
   }),
   schoolLevel: Joi.when('role', {
-    is: 'allievo',
+    is: USER_CONSTRAINTS.SCHOOL_LEVEL.REQUIRED_FOR_ROLE,
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
   class: Joi.when('role', {
-    is: 'allievo',
+    is: USER_CONSTRAINTS.CLASS.REQUIRED_FOR_ROLE,
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
   // Campi specifici per Docente
   subjects: Joi.when('role', {
-    is: 'docente',
-    then: Joi.array().items(Joi.string()).required(),
+    is: USER_CONSTRAINTS.SUBJECTS.REQUIRED_FOR_ROLE,
+    then: Joi.array().items(Joi.string()).min(USER_CONSTRAINTS.SUBJECTS.MIN_ITEMS).required(),
     otherwise: Joi.forbidden()
   }),
   school: Joi.when('role', {
-    is: 'docente',
+    is: USER_CONSTRAINTS.SCHOOL.REQUIRED_FOR_ROLE,
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
   teachingLevel: Joi.when('role', {
-    is: 'docente',
+    is: USER_CONSTRAINTS.TEACHING_LEVEL.REQUIRED_FOR_ROLE,
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   }),
@@ -87,9 +88,9 @@ const userUpdateValidationSchema = Joi.object({
   dailyStreak: Joi.number().default(0).optional(),
   lastPlayedDate: Joi.date().optional(),
   trophyCount: Joi.number().default(0).optional(),
-  level: Joi.number().default(1).optional(),
+  level: Joi.number().default(LEVEL_CONSTRAINTS.LEVEL_CALCULATION.MIN_LEVEL).optional(),
   experience: Joi.number().default(0).optional(),
-  experienceToNextLevel: Joi.number().default(100).optional(),
+  experienceToNextLevel: Joi.number().default(LEVEL_CONSTRAINTS.EXPERIENCE.DEFAULT_TO_NEXT_LEVEL).optional(),
 });
 
 async function createUser(data) {
@@ -102,6 +103,17 @@ async function createUser(data) {
 }
 
 async function getUserById(id) {
+  // Validazione dell'ID
+  if (!id || id === 'undefined' || id === 'me') {
+    throw new Error('ID utente non valido');
+  }
+  
+  // Verifica che sia un ObjectId valido
+  const mongoose = require('mongoose');
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error('Formato ID non valido');
+  }
+  
   return await User.findById(id);
 }
 

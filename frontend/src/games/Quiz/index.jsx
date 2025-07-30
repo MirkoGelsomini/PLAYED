@@ -6,10 +6,10 @@ import { useLocation } from 'react-router-dom';
 
 function generateSessionId(user, gameType) {
   if (window.crypto && window.crypto.randomUUID) {
-    return `${user?._id || 'anon'}-${gameType}-${window.crypto.randomUUID()}`;
+    return `${user?.id || user?._id || 'anon'}-${gameType}-${window.crypto.randomUUID()}`;
   }
   // fallback
-  return `${user?._id || 'anon'}-${gameType}-${Date.now()}-${Math.floor(Math.random()*100000)}`;
+  return `${user?.id || user?._id || 'anon'}-${gameType}-${Date.now()}-${Math.floor(Math.random()*100000)}`;
 }
 
 const LEVEL_THRESHOLD = 5; // quante risposte corrette per sbloccare il livello successivo

@@ -12,7 +12,7 @@ const trophySchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['achievement', 'milestone', 'special', 'seasonal', 'challenge'],
+    enum: ['achievement', 'milestone', 'special', 'seasonal', 'challenge', 'level'],
     required: true
   },
   icon: {

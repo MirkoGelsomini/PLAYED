@@ -102,7 +102,7 @@ const MatchingGame = ({ pairs: propPairs = [], config = {}, category, onQuestion
       const difficulty = pairs[0]?.difficulty || config.difficulty || 1;
       
       // Genera un sessionId per questa risposta
-      const responseSessionId = `${user._id}-matching-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const responseSessionId = `${user.id || user._id}-matching-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       axios.post('/api/progress/answer', {
         sessionId: responseSessionId,

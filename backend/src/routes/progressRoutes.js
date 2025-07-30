@@ -16,13 +16,14 @@ router.get('/stats', auth.authenticateToken, progressController.getStats);
 // Ottieni leaderboard
 router.get('/leaderboard', auth.authenticateToken, progressController.getLeaderboard);
 
-// Ottieni trend di miglioramento
-router.get('/trend', auth.authenticateToken, progressController.getImprovementTrend);
-
 // Aggiorna le domande risposte per una sessione
 router.post('/answer', auth.authenticateToken, progressController.answerQuestion);
 
+// Sblocca manualmente un livello per un gioco
+router.post('/unlock-level', auth.authenticateToken, progressController.unlockLevel);
+
 // Restituisce domande fatte/non fatte e suggerimenti per un gioco
 router.get('/questions', auth.authenticateToken, progressController.getQuestionProgressAndSuggestions);
+router.get('/detailed', auth.authenticateToken, progressController.getDetailedProgress);
 
 module.exports = router; 

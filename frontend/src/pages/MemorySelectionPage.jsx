@@ -18,6 +18,7 @@ const MemorySelectionPage = () => {
         const memoryOnly = gamesArray.filter(game => 
           game.type === 'memory' && game.id !== 'memory_selection'
         );
+        
         // Recupera domande sbloccate per categoria
         const res = await fetchQuestionProgressAndSuggestions('memory');
         const maxUnlockedLevel = res.maxUnlockedLevel || 1;
@@ -31,12 +32,17 @@ const MemorySelectionPage = () => {
           const unlockedQuestions = catQuestions.filter(q => (q.difficulty || 1) <= maxUnlockedLevel);
           unlocked[game.category] = unlockedQuestions.length > 0;
         }
+        
         setUnlockedCategories(unlocked);
         setMemoryGames(memoryOnly);
         setLoading(false);
       } catch (error) {
         console.error('Errore nel caricamento dei giochi memory:', error);
         setLoading(false);
+        // Se non ci sono domande disponibili, mostra un messaggio
+        if (error.message && error.message.includes('età non disponibile')) {
+          setMemoryGames([]);
+        }
       }
     };
 
@@ -80,17 +86,19 @@ const MemorySelectionPage = () => {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '3rem' }}>
-        <div className="loading-spinner" style={{
-          width: '40px',
-          height: '40px',
-          border: '4px solid #e9ecef',
-          borderTop: '4px solid #4A90E2',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          margin: '0 auto 1rem auto',
-        }}></div>
-        <p>Caricamento giochi memory disponibili...</p>
+      <div className="container">
+        <div className="loading">Caricamento giochi Memory...</div>
+      </div>
+    );
+  }
+
+  if (memoryGames.length === 0) {
+    return (
+      <div className="container">
+        <div className="no-games">
+          <h2>Nessun gioco Memory disponibile</h2>
+          <p>Non ci sono domande disponibili per la tua età. Prova a modificare la tua età nel profilo per vedere più contenuti.</p>
+        </div>
       </div>
     );
   }
@@ -114,24 +122,16 @@ const MemorySelectionPage = () => {
         Giochi Memory Disponibili ({memoryGames.length})
       </h2>
 
-      {memoryGames.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#888', fontSize: '1.2rem', padding: '2rem' }}>
-          Nessun gioco memory disponibile al momento.
-        </div>
-      ) : (
-        <div style={gamesSectionStyle}>
-          {memoryGames.filter(game => unlockedCategories[game.category]).map((game) => (
-            <GameBadge
-              key={game.id}
-              name={game.name}
-              description={`${game.description} (${game.config?.pairs || 0} coppie)`}
-              to={`/game/${game.id}`}
-              type={game.type}
-              category={game.category}
-            />
-          ))}
-        </div>
-      )}
+      {memoryGames.filter(game => unlockedCategories[game.category]).map((game) => (
+        <GameBadge
+          key={game.id}
+          name={game.name}
+          description={`${game.description} (${game.config?.pairs || 0} coppie)`}
+          to={`/game/${game.id}`}
+          type={game.type}
+          category={game.category}
+        />
+      ))}
 
       <style>{`
         @keyframes spin {

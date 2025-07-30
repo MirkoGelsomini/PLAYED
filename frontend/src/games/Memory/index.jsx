@@ -83,7 +83,7 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
       const difficulty = pairs[0]?.difficulty || config.difficulty || 1;
       
       // Genera un sessionId per questa risposta
-      const responseSessionId = `${user._id}-memory-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const responseSessionId = `${user.id || user._id}-memory-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       axios.post('/api/progress/answer', {
         sessionId: responseSessionId,

@@ -28,15 +28,17 @@ const getQuestions = () => {
 // Funzione di filtro domande per età e difficoltà
 function filterQuestions(questions, userAge, minDifficulty = 1, maxDifficulty = 10) {
   return questions.filter(q => {
-    // Filtro per età
-    if (q.ageRange && userAge !== undefined && userAge !== null) {
-      if (userAge < q.ageRange[0] || userAge > q.ageRange[1]) return false;
+    // Controlla difficoltà
+    const difficultyMatch = q.difficulty >= minDifficulty && q.difficulty <= maxDifficulty;
+    
+    // Controlla età se la domanda ha un ageRange
+    let ageMatch = true;
+    if (q.ageRange && Array.isArray(q.ageRange) && q.ageRange.length === 2) {
+      const [minAge, maxAge] = q.ageRange;
+      ageMatch = userAge >= minAge && userAge <= maxAge;
     }
-    // Filtro per difficoltà
-    if (q.difficulty !== undefined && q.difficulty !== null) {
-      if (q.difficulty < minDifficulty || q.difficulty > maxDifficulty) return false;
-    }
-    return true;
+    
+    return difficultyMatch && ageMatch;
   });
 }
 
@@ -66,6 +68,33 @@ router.get('/', authenticateToken, (req, res) => {
     res.json(allGames);
   } catch (error) {
     console.error('Errore nella generazione dei giochi:', error);
+    res.status(500).json({ error: 'Errore interno del server' });
+  }
+});
+
+// Rotta per ottenere domande filtrate per età
+router.get('/questions/filtered', authenticateToken, (req, res) => {
+  try {
+    const user = req.user;
+    if (!user || user.age === undefined || user.age === null) {
+      return res.status(401).json({ error: 'Utente non autenticato o età non disponibile' });
+    }
+    
+    const minDifficulty = req.query.minDifficulty ? parseInt(req.query.minDifficulty) : 1;
+    const maxDifficulty = req.query.maxDifficulty ? parseInt(req.query.maxDifficulty) : 10;
+    const gameType = req.query.gameType; // opzionale: filtra per tipo di gioco
+    
+    const questions = getQuestions();
+    let filteredQuestions = filterQuestions(questions, user.age, minDifficulty, maxDifficulty);
+    
+    // Filtra per tipo di gioco se specificato
+    if (gameType) {
+      filteredQuestions = filteredQuestions.filter(q => q.type === gameType);
+    }
+    
+    res.json(filteredQuestions);
+  } catch (error) {
+    console.error('Errore nel recupero delle domande filtrate:', error);
     res.status(500).json({ error: 'Errore interno del server' });
   }
 });

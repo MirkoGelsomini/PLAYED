@@ -4,7 +4,49 @@ const Objective = require('../models/Objective');
 const UserObjective = require('../models/UserObjective');
 const Progress = require('../models/Progress');
 const User = require('../models/user');
-const { levelBasedTrophies, dailyObjectives } = require('../config/trophyConfig');
+const { TROPHY_CONSTRAINTS, OBJECTIVE_CONSTRAINTS, SCORE_CONSTRAINTS } = require('../../../shared/constraints');
+
+// Genera i trofei basati sui livelli dai constraint
+const levelBasedTrophies = TROPHY_CONSTRAINTS.LEVEL_TROPHIES.map(trophy => ({
+  name: trophy.name,
+  description: `Raggiungi il livello ${trophy.level}`,
+  category: "level",
+  icon: "🏆",
+  rarity: "common",
+  points: trophy.points,
+  requirements: { level: trophy.level }
+}));
+
+// Genera gli obiettivi giornalieri dai constraint
+const dailyObjectives = [
+  {
+    title: "Giocatore del Giorno",
+    description: "Completa 3 partite oggi",
+    type: OBJECTIVE_CONSTRAINTS.TYPES.VALUES[0], // "daily"
+    category: OBJECTIVE_CONSTRAINTS.CATEGORIES.VALUES[0], // "games"
+    target: 3,
+    reward: { type: OBJECTIVE_CONSTRAINTS.REWARD_TYPES.VALUES[0], value: 25 }, // "points"
+    difficulty: OBJECTIVE_CONSTRAINTS.DIFFICULTY.VALUES[0] // "easy"
+  },
+  {
+    title: "Punteggio Alto",
+    description: `Ottieni almeno ${Math.round(SCORE_CONSTRAINTS.MAX_SCORE_PER_GAME * 0.8)} punti in una singola partita`,
+    type: OBJECTIVE_CONSTRAINTS.TYPES.VALUES[0], // "daily"
+    category: OBJECTIVE_CONSTRAINTS.CATEGORIES.VALUES[1], // "score"
+    target: 5,
+    reward: { type: OBJECTIVE_CONSTRAINTS.REWARD_TYPES.VALUES[0], value: 100 }, // "points"
+    difficulty: OBJECTIVE_CONSTRAINTS.DIFFICULTY.VALUES[1] // "medium"
+  },
+  {
+    title: "Varietà di Giochi",
+    description: "Gioca 2 tipi diversi di giochi",
+    type: OBJECTIVE_CONSTRAINTS.TYPES.VALUES[0], // "daily"
+    category: OBJECTIVE_CONSTRAINTS.CATEGORIES.VALUES[3], // "variety"
+    target: 2,
+    reward: { type: OBJECTIVE_CONSTRAINTS.REWARD_TYPES.VALUES[0], value: 30 }, // "points"
+    difficulty: OBJECTIVE_CONSTRAINTS.DIFFICULTY.VALUES[0] // "easy"
+  }
+];
 
 class TrophyService {
   // Trofei basati sui livelli dell'utente
@@ -79,7 +121,8 @@ class TrophyService {
         stats.maxScore = Math.max(stats.maxScore, p.score || 0);
         stats.gameTypes.add(p.game);
         
-        if (p.score >= 100) stats.perfectGames++;
+        const { SCORE_CONSTRAINTS } = require('../../../shared/constraints');
+        if (p.score >= SCORE_CONSTRAINTS.MAX_SCORE_PER_GAME) stats.perfectGames++;
         
         if (!stats.scoresByGameType[p.game]) {
           stats.scoresByGameType[p.game] = [];
@@ -298,65 +341,53 @@ class TrophyService {
   // Riscatta ricompensa obiettivo
   static async claimObjectiveReward(userId, objectiveId) {
     try {
-      console.log('Service - Claim reward iniziato per:', { userId, objectiveId });
-      
       // Trova l'obiettivo e il progresso dell'utente
       const objective = await Objective.findById(objectiveId);
-      console.log('Service - Obiettivo trovato:', objective ? 'sì' : 'no');
       
+      // Trova il progresso dell'utente per questo obiettivo
       const userObjective = await UserObjective.findOne({
         userId,
         objectiveId
       });
-      console.log('Service - UserObjective trovato:', userObjective ? 'sì' : 'no');
-
+      
+      // Verifica che l'obiettivo esista e sia completato ma non ancora riscattato
       if (!objective) {
         throw new Error('Obiettivo non trovato');
       }
-
+      
       if (!userObjective) {
         throw new Error('Progresso obiettivo non trovato');
       }
-
-      console.log('Service - Stato obiettivo:', {
-        isCompleted: userObjective.isCompleted,
-        rewardClaimed: userObjective.rewardClaimed,
-        progress: userObjective.progress
-      });
-
+      
       if (!userObjective.isCompleted) {
         throw new Error('Obiettivo non ancora completato');
       }
-
+      
       if (userObjective.rewardClaimed) {
         throw new Error('Ricompensa già riscattata');
       }
-
+      
       // Calcola i punti da assegnare
       const pointsEarned = objective.reward.value || 0;
-      console.log('Service - Punti da assegnare:', pointsEarned);
-
+      
       // Aggiorna l'utente
       const user = await User.findById(userId);
       if (!user) {
         throw new Error('Utente non trovato');
       }
-
+      
       const oldPoints = user.totalPoints || 0;
       user.totalPoints = oldPoints + pointsEarned;
       await user.save();
-      console.log('Service - Punti utente aggiornati:', { oldPoints, newPoints: user.totalPoints });
-
+      
       // Marca la ricompensa come riscattata
       userObjective.rewardClaimed = true;
       userObjective.claimedAt = new Date();
       await userObjective.save();
-      console.log('Service - Ricompensa marcata come riscattata');
-
-      // Controlla se ci sono nuovi trofei da sbloccare
+      
+      // Controlla se sblocca nuovi trofei
       await this.checkAndAwardTrophies(userId);
-      console.log('Service - Controllo trofei completato');
-
+      
       return {
         pointsEarned,
         newTotalPoints: user.totalPoints

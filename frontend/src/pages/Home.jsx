@@ -63,7 +63,12 @@ const Home = () => {
         setShowPublic(true);
       }
     });
-    fetchQuestions().then(setQuestions);
+    
+    // Carica domande filtrate per età
+    fetchQuestions().then(setQuestions).catch(err => {
+      console.error('Errore nel caricamento domande:', err);
+      setQuestions([]); // Imposta array vuoto se non ci sono domande disponibili
+    });
   }, []);
 
   // Carica i progressi dettagliati

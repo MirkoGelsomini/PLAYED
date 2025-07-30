@@ -7,6 +7,7 @@ import { useAuth } from '../core/AuthContext';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import Stepper, { Step } from '../components/Stepper';
 import { defaultAvatars, getAvatarUrl } from '../utils/avatarUtils';
+import { USER_CONSTRAINTS, validatePasswordStrength, validateEmail } from '../shared/constraints';
 
 const initialState = {
   name: '',
@@ -55,18 +56,7 @@ export default function Register() {
   };
 
   function getPasswordStrength(pw) {
-    if (!pw) return '';
-    if (pw.length < 6) return 'Debole';
-    let score = 0;
-    if (/[A-Z]/.test(pw)) score++;
-    if (/[a-z]/.test(pw)) score++;
-    if (/[0-9]/.test(pw)) score++;
-    if (/[^A-Za-z0-9]/.test(pw)) score++;
-    if (pw.length >= 10) score++;
-    if (score <= 2) return 'Debole';
-    if (score === 3) return 'Media';
-    if (score >= 4) return 'Forte';
-    return '';
+    return validatePasswordStrength(pw);
   }
 
   const validateStep = (step) => {
@@ -76,12 +66,12 @@ export default function Register() {
         setError('Compila tutti i campi richiesti.');
         return false;
       }
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) {
+      if (!validateEmail(form.email)) {
         setError('Inserisci una email valida.');
         return false;
       }
-      if (form.password.length < 6) {
-        setError('La password deve essere di almeno 6 caratteri.');
+      if (form.password.length < USER_CONSTRAINTS.PASSWORD.MIN_LENGTH) {
+        setError(`La password deve essere di almeno ${USER_CONSTRAINTS.PASSWORD.MIN_LENGTH} caratteri.`);
         return false;
       }
     }
@@ -92,13 +82,13 @@ export default function Register() {
     }
     // Step 3: Dati personali
     if (step === 3) {
-      if (form.role === 'allievo') {
+      if (form.role === USER_CONSTRAINTS.AGE.REQUIRED_FOR_ROLE) {
         if (!form.age || !form.schoolLevel || !form.class) {
           setError('Compila tutti i campi richiesti.');
           return false;
         }
-        if (isNaN(Number(form.age)) || Number(form.age) < 3) {
-          setError('L\'età deve essere almeno 3 anni.');
+        if (isNaN(Number(form.age)) || Number(form.age) < USER_CONSTRAINTS.AGE.MIN) {
+          setError(`L'età deve essere almeno ${USER_CONSTRAINTS.AGE.MIN} anni.`);
           return false;
         }
       } else {
@@ -112,7 +102,7 @@ export default function Register() {
         setError('Compila tutti i campi richiesti.');
         return false;
       }
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) {
+      if (!validateEmail(form.email)) {
         setError('Inserisci una email valida.');
         return false;
       }
@@ -199,7 +189,7 @@ export default function Register() {
                 value={form.password}
                 onChange={handlePasswordChange}
                 required
-                minLength={6}
+                minLength={USER_CONSTRAINTS.PASSWORD.MIN_LENGTH}
                 className="password-input form-input"
                 aria-label="Password"
               />
@@ -257,7 +247,7 @@ export default function Register() {
           <Step>
             {/* Step 3: Dati personali */}
             {form.role === 'allievo' && <>
-              <input name="age" type="number" placeholder="Età" value={form.age} onChange={handleChange} min={3} max={100} className="form-input" />
+              <input name="age" type="number" placeholder="Età" value={form.age} onChange={handleChange} min={USER_CONSTRAINTS.AGE.MIN} max={USER_CONSTRAINTS.AGE.MAX} className="form-input" />
               <input name="schoolLevel" placeholder="Livello scolastico" value={form.schoolLevel} onChange={handleChange} className="form-input" />
               <input name="class" placeholder="Classe" value={form.class} onChange={handleChange} className="form-input" />
             </>}

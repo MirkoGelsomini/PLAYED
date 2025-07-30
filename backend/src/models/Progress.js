@@ -10,7 +10,10 @@ const progressSchema = new Schema({
   completed: { type: Boolean, default: false },
   date: { type: Date, default: Date.now },
   details: { type: Schema.Types.Mixed }, 
-  answeredQuestions: [{ type: String }], // ID delle domande a cui si è risposto
+  answeredQuestions: [{ type: String }], // ID delle domande a cui si è risposto CORRETTAMENTE
+  wrongAnsweredQuestions: [{ type: String }], // ID delle domande a cui si è risposto SBAGLIATO
+  maxUnlockedLevel: { type: Number, default: 1 }, // livello massimo sbloccato per il gioco
+  correctAnswersPerLevel: { type: Schema.Types.Mixed, default: {} }, // livello: numero risposte corrette
 });
 
 module.exports = mongoose.model('Progress', progressSchema); 

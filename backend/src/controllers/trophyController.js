@@ -111,7 +111,6 @@ class TrophyController {
       });
     } catch (error) {
       console.error('Errore nel recupero statistiche:', error);
-      console.error('Stack trace:', error.stack);
       res.status(500).json({
         success: false,
         message: 'Errore nel recupero delle statistiche',

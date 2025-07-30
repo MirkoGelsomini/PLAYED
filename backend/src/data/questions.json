@@ -4,8 +4,8 @@
     "type": "memory",
     "category": "animali",
     "question": "Abbina l'animale al suo verso",
-    "ageRange": [4, 6],
-    "difficulty": 2,
+    "ageRange": [4, 9],
+    "difficulty": 1,
     "pairs": [
       { "front": "Cane", "back": "Bau" },
       { "front": "Gatto", "back": "Miao" },
@@ -19,7 +19,7 @@
     "category": "scienze",
     "question": "Qual è il pianeta più vicino al Sole?",
     "ageRange": [7, 10],
-    "difficulty": 4,
+    "difficulty": 1,
     "options": ["Venere", "Terra", "Mercurio", "Marte"],
     "answer": "Mercurio"
   },
@@ -29,7 +29,7 @@
     "category": "lingua",
     "question": "Abbina la parola al suo sinonimo",
     "ageRange": [8, 12],
-    "difficulty": 5,
+    "difficulty": 1,
     "pairs": [
       { "left": "Allegro", "right": "Felice" },
       { "left": "Grande", "right": "Enorme" }
@@ -41,7 +41,7 @@
     "category": "scienze",
     "question": "Quale elemento chimico ha il simbolo 'O'?",
     "ageRange": [8, 12],
-    "difficulty": 5,
+    "difficulty": 1,
     "options": ["Oro", "Ossigeno", "Osmio", "Oganesson"],
     "answer": "Ossigeno"
   },
@@ -51,7 +51,7 @@
     "category": "geografia",
     "question": "Qual è la capitale dell'Italia?",
     "ageRange": [7, 10],
-    "difficulty": 3,
+    "difficulty": 2,
     "options": ["Milano", "Roma", "Firenze", "Venezia"],
     "answer": "Roma"
   },
@@ -61,7 +61,7 @@
     "category": "storia",
     "question": "In che anno è iniziata la Prima Guerra Mondiale?",
     "ageRange": [10, 13],
-    "difficulty": 7,
+    "difficulty": 2,
     "options": ["1914", "1915", "1916", "1917"],
     "answer": "1914"
   },
@@ -71,7 +71,7 @@
     "category": "matematica",
     "question": "Quanto fa 7 x 8?",
     "ageRange": [8, 11],
-    "difficulty": 4,
+    "difficulty": 3,
     "options": ["54", "56", "58", "60"],
     "answer": "56"
   },
@@ -91,7 +91,7 @@
     "category": "scienze",
     "question": "Qual è il gas più abbondante nell'atmosfera terrestre?",
     "ageRange": [9, 12],
-    "difficulty": 6,
+    "difficulty": 3,
     "options": ["Ossigeno", "Azoto", "Anidride carbonica", "Idrogeno"],
     "answer": "Azoto"
   },
@@ -110,8 +110,8 @@
     "type": "quiz",
     "category": "geografia",
     "question": "In quale continente si trova l'Egitto?",
-    "ageRange": [10, 13],
-    "difficulty": 7,
+    "ageRange": [7, 13],
+    "difficulty": 3,
     "options": ["Europa", "Asia", "Africa", "America"],
     "answer": "Africa"
   },
@@ -120,8 +120,8 @@
     "type": "quiz",
     "category": "storia",
     "question": "Chi ha dipinto la Gioconda?",
-    "ageRange": [10, 13],
-    "difficulty": 7,
+    "ageRange": [6, 13],
+    "difficulty": 3,
     "options": ["Michelangelo", "Leonardo da Vinci", "Raffaello", "Botticelli"],
     "answer": "Leonardo da Vinci"
   },
@@ -130,8 +130,8 @@
     "type": "quiz",
     "category": "storia",
     "question": "In che anno è caduto l'Impero Romano d'Occidente?",
-    "ageRange": [10, 13],
-    "difficulty": 7,
+    "ageRange": [7, 13],
+    "difficulty": 3,
     "options": ["476 d.C.", "410 d.C.", "1453 d.C.", "800 d.C."],
     "answer": "476 d.C."
   },
@@ -161,7 +161,7 @@
     "category": "lingua",
     "question": "Qual è il plurale di 'città'?",
     "ageRange": [10, 13],
-    "difficulty": 7,
+    "difficulty": 2,
     "options": ["città", "cittàs", "città", "città"],
     "answer": "città"
   },
@@ -210,8 +210,8 @@
     "type": "quiz",
     "category": "musica",
     "question": "Quale compositore ha scritto la Nona Sinfonia?",
-    "ageRange": [10, 13],
-    "difficulty": 7,
+    "ageRange": [4, 13],
+    "difficulty": 4,
     "options": ["Mozart", "Beethoven", "Bach", "Chopin"],
     "answer": "Beethoven"
   },
@@ -220,8 +220,8 @@
     "type": "quiz",
     "category": "sport",
     "question": "Quanti giocatori ci sono in una squadra di calcio?",
-    "ageRange": [10, 13],
-    "difficulty": 7,
+    "ageRange": [7, 13],
+    "difficulty": 4,
     "options": ["9", "10", "11", "12"],
     "answer": "11"
   },
@@ -230,8 +230,8 @@
     "type": "quiz",
     "category": "sport",
     "question": "Quale sport si gioca con una palla ovale?",
-    "ageRange": [10, 13],
-    "difficulty": 7,
+    "ageRange": [7, 13],
+    "difficulty": 4,
     "options": ["Calcio", "Rugby", "Basket", "Tennis"],
     "answer": "Rugby"
   },
@@ -255,7 +255,7 @@
     "category": "numeri",
     "question": "Abbina il numero alla sua parola",
     "ageRange": [10, 13],
-    "difficulty": 7,
+    "difficulty": 1,
     "pairs": [
       { "front": "1", "back": "Uno" },
       { "front": "2", "back": "Due" },
@@ -339,14 +339,14 @@
     "id": 31,
     "type": "matching",
     "category": "lingua",
-    "question": "Abbina la parola al suo sinonimo",
-    "ageRange": [10, 13],
-    "difficulty": 7,
+    "question": "Abbina la parola al suo sinonimo (parte 2)",
+    "ageRange": [7, 13],
+    "difficulty": 1,
     "pairs": [
-      { "left": "Allegro", "right": "Felice" },
-      { "left": "Grande", "right": "Enorme" },
       { "left": "Veloce", "right": "Rapido" },
-      { "left": "Piccolo", "right": "Minuscolo" }
+      { "left": "Piccolo", "right": "Minuscolo" },
+      { "left": "Bello", "right": "Bellissimo" },
+      { "left": "Cattivo", "right": "Malvagio" }
     ]
   },
   {
@@ -368,8 +368,8 @@
     "type": "matching",
     "category": "strumenti",
     "question": "Abbina il mestiere al suo strumento",
-    "ageRange": [10, 13],
-    "difficulty": 7,
+    "ageRange": [7, 13],
+    "difficulty": 1,
     "pairs": [
       { "left": "Dottore", "right": "Stetoscopio" },
       { "left": "Pittore", "right": "Pennello" },
@@ -413,12 +413,90 @@
   },
   {
     "id": 103,
-    "type": "sorting",
-    "category": "narrazione",
-    "question": "Metti in ordine le fasi della storiaaaa",
+    "type": "quiz",
+    "category": "lingua",
+    "question": "Qual è il plurale di 'casa'?",
     "ageRange": [7, 10],
-    "difficulty": 3,
-    "items": ["C'era una volta", "Il lupo arrivò", "La nonna fu salvata", "Cappuccetto Rosso andò nel bosco"],
-    "solution": ["C'era una volta", "Cappuccetto Rosso andò nel bosco", "Il lupo arrivò", "La nonna fu salvata"]
+    "difficulty": 1,
+    "options": ["case", "casi", "casa", "case"],
+    "answer": "case"
+  },
+  {
+    "id": 104,
+    "type": "quiz",
+    "category": "lingua",
+    "question": "Quale di queste parole è un verbo?",
+    "ageRange": [7, 10],
+    "difficulty": 1,
+    "options": ["Casa", "Correre", "Bello", "Rapidamente"],
+    "answer": "Correre"
+  },
+  {
+    "id": 105,
+    "type": "quiz",
+    "category": "storia",
+    "question": "Chi ha scoperto l'America?",
+    "ageRange": [8, 12],
+    "difficulty": 1,
+    "options": ["Cristoforo Colombo", "Marco Polo", "Amerigo Vespucci", "Vasco da Gama"],
+    "answer": "Cristoforo Colombo"
+  },
+  {
+    "id": 106,
+    "type": "quiz",
+    "category": "storia",
+    "question": "In che anno è iniziata la Seconda Guerra Mondiale?",
+    "ageRange": [10, 13],
+    "difficulty": 2,
+    "options": ["1939", "1940", "1941", "1942"],
+    "answer": "1939"
+  },
+  {
+    "id": 107,
+    "type": "quiz",
+    "category": "lingua",
+    "question": "Qual è l'articolo corretto per 'scuola'?",
+    "ageRange": [7, 10],
+    "difficulty": 1,
+    "options": ["il", "la", "lo", "gli"],
+    "answer": "la"
+  },
+  {
+    "id": 108,
+    "type": "quiz",
+    "category": "storia",
+    "question": "Quale imperatore romano ha costruito il Colosseo?",
+    "ageRange": [9, 12],
+    "difficulty": 2,
+    "options": ["Nerone", "Vespasiano", "Tito", "Domiziano"],
+    "answer": "Vespasiano"
+  },
+  {
+    "id": 109,
+    "type": "matching",
+    "category": "lingua",
+    "question": "Abbina la parola al suo contrario",
+    "ageRange": [7, 10],
+    "difficulty": 1,
+    "pairs": [
+      { "left": "Alto", "right": "Basso" },
+      { "left": "Lungo", "right": "Corto" },
+      { "left": "Caldo", "right": "Freddo" },
+      { "left": "Nuovo", "right": "Vecchio" }
+    ]
+  },
+  {
+    "id": 110,
+    "type": "matching",
+    "category": "lingua",
+    "question": "Abbina l'articolo alla parola",
+    "ageRange": [7, 10],
+    "difficulty": 1,
+    "pairs": [
+      { "left": "il", "right": "tavolo" },
+      { "left": "la", "right": "casa" },
+      { "left": "lo", "right": "specchio" },
+      { "left": "gli", "right": "alberi" }
+    ]
   }
 ] 

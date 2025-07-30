@@ -1,11 +1,18 @@
 // Modello dati per i giochi
 
+const { GAME_CONFIGS } = require('../../../shared/constraints');
+
 const {
   memoryCategoryNames,
   quizCategoryNames,
   quizTimeLimits,
   matchingCategoryNames
-} = require('../config/gamesConfig');
+} = {
+  memoryCategoryNames: GAME_CONFIGS.MEMORY_CATEGORIES,
+  quizCategoryNames: GAME_CONFIGS.QUIZ_CATEGORIES,
+  quizTimeLimits: GAME_CONFIGS.QUIZ_TIME_LIMITS,
+  matchingCategoryNames: GAME_CONFIGS.MATCHING_CATEGORIES
+};
 
 // Funzione per generare dinamicamente i giochi Memory dalle domande
 const generateMemoryGames = (questions) => {

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../core/AuthContext';
 import axios from 'axios';
+import { useErrorHandler } from '../utils/errorHandler';
 import Avatar from '../components/Avatar';
 import './Results.css';
 
 export default function Results() {
   const { user, isAuthenticated } = useAuth();
+  const { handleComponentError } = useErrorHandler();
   const [stats, setStats] = useState(null);
   const [trophies, setTrophies] = useState([]);
   const [objectives, setObjectives] = useState([]);
@@ -18,11 +20,17 @@ export default function Results() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    console.log('=== DEBUG Results - useEffect triggered ===');
     loadAllData();
   }, [isAuthenticated]);
 
   // Controllo coerenza livello-punti ogni volta che stats cambia
   useEffect(() => {
+    console.log('=== DEBUG Results - useEffect stats ===');
+    console.log('stats:', stats);
+    console.log('user:', user);
+    console.log('isAuthenticated:', isAuthenticated);
+    
     if (
       stats &&
       typeof stats.totalPoints === 'number' &&
@@ -31,8 +39,15 @@ export default function Results() {
     ) {
       const expectedLevel = Math.max(1, Math.floor(stats.totalPoints / 100));
       if (stats.level !== expectedLevel) {
+        // Verifica che l'ID sia valido
+        const userId = user.id || user._id;
+        if (!userId || userId === 'undefined') {
+          console.error('ID utente non valido');
+          return;
+        }
+        
         // 1. Recupera i dati completi dell'utente dal backend
-        axios.get(`/api/users/${user.id || user._id}`, { withCredentials: true })
+        axios.get(`/api/users/${userId}`, { withCredentials: true })
           .then(res => {
             const fullUser = res.data;
             // 2. Prepara i dati per la PUT, aggiornando solo il livello
@@ -75,6 +90,8 @@ export default function Results() {
     setLoading(true);
     setError('');
     try {
+      console.log('=== DEBUG Results - Caricamento dati ===');
+      
       const [statsRes, trophiesRes, objectivesRes, leaderboardRes] = await Promise.all([
         axios.get('/api/trophy/stats', { withCredentials: true }),
         axios.get('/api/trophy/trophies', { withCredentials: true }),
@@ -82,29 +99,23 @@ export default function Results() {
         axios.get('/api/trophy/leaderboard?type=points&limit=10', { withCredentials: true })
       ]);
 
+      console.log('Stats response:', statsRes.data);
+      console.log('Trophies response:', trophiesRes.data);
+      console.log('Objectives response:', objectivesRes.data);
+      console.log('Leaderboard response:', leaderboardRes.data);
+
       setStats(statsRes.data.stats);
       setTrophies(trophiesRes.data.trophies);
       setObjectives(objectivesRes.data.objectives);
       setLeaderboard(leaderboardRes.data.leaderboard);
+      
+      console.log('Dati impostati nel state');
+      console.log('Impostando loading a false...');
+      setLoading(false);
+      console.log('Loading impostato a false');
     } catch (err) {
-      console.error('Errore nel caricamento dei dati:', err);
-      
-      // Gestione specifica per errori di autenticazione
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        setError('Sessione scaduta. Effettua nuovamente il login.');
-        // Reindirizza al login dopo un breve delay
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-        return;
-      }
-      
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError('Errore nel caricamento dei dati. Riprova più tardi.');
-      }
-    } finally {
+      console.error('Errore nel caricamento dati Results:', err);
+      setError('Errore nel caricamento dei dati');
       setLoading(false);
     }
   };
@@ -132,15 +143,8 @@ export default function Results() {
         loadAllData(); // Ricarica i dati per aggiornare le statistiche
       }
     } catch (err) {
-      console.error('Frontend - Errore nel riscatto ricompensa:', err);
-      console.error('Frontend - Dettagli errore:', {
-        response: err.response?.data,
-        status: err.response?.status,
-        message: err.message
-      });
+      handleComponentError(err, setError, setClaimingReward);
       alert('Errore nel riscatto della ricompensa: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setClaimingReward(false);
     }
   };
 
@@ -149,6 +153,7 @@ export default function Results() {
 
 
   if (!isAuthenticated) {
+    console.log('=== DEBUG Results - Rendering auth required ===');
     return (
       <div className="results-container">
         <div className="auth-required">
@@ -160,6 +165,7 @@ export default function Results() {
   }
 
   if (loading) {
+    console.log('=== DEBUG Results - Rendering loading ===');
     return (
       <div className="results-container">
         <div className="loading-state">
@@ -171,6 +177,7 @@ export default function Results() {
   }
 
   if (error) {
+    console.log('=== DEBUG Results - Rendering error ===');
     return (
       <div className="results-container">
         <div className="error-state">
@@ -189,6 +196,13 @@ export default function Results() {
     );
   }
 
+  console.log('=== DEBUG Results - Render ===');
+  console.log('stats:', stats);
+  console.log('trophies:', trophies);
+  console.log('objectives:', objectives);
+  console.log('leaderboard:', leaderboard);
+  console.log('activeTab:', activeTab);
+
   const getRarityColor = (rarity) => {
     const colors = {
       common: '#6c757d',
@@ -197,19 +211,25 @@ export default function Results() {
       legendary: '#fd7e14',
       mythic: '#dc3545'
     };
-    return colors[rarity] || '#6c757d';
+    return colors[rarity] || colors.common;
   };
 
   const getRarityGlow = (rarity) => {
     const glows = {
-      common: '0 0 10px rgba(108, 117, 125, 0.3)',
-      rare: '0 0 15px rgba(0, 123, 255, 0.4)',
-      epic: '0 0 20px rgba(111, 66, 193, 0.5)',
-      legendary: '0 0 25px rgba(253, 126, 20, 0.6)',
-      mythic: '0 0 30px rgba(220, 53, 69, 0.7)'
+      common: '0 0 5px rgba(108, 117, 125, 0.3)',
+      rare: '0 0 10px rgba(0, 123, 255, 0.4)',
+      epic: '0 0 15px rgba(111, 66, 193, 0.5)',
+      legendary: '0 0 20px rgba(253, 126, 20, 0.6)',
+      mythic: '0 0 25px rgba(220, 53, 69, 0.7)'
     };
-    return glows[rarity] || 'none';
+    return glows[rarity] || glows.common;
   };
+
+  console.log('=== DEBUG Results - Prima del return ===');
+  console.log('stats è definito:', !!stats);
+  console.log('trophies è definito:', !!trophies);
+  console.log('objectives è definito:', !!objectives);
+  console.log('leaderboard è definito:', !!leaderboard);
 
   return (
     <div className="results-container">
