@@ -7,6 +7,7 @@ import '../styles/main.css';
 const MatchingSelectionPage = () => {
   const [matchingGames, setMatchingGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [solvedMap, setSolvedMap] = useState({});
   const [unlockedCategories, setUnlockedCategories] = useState({});
 
   useEffect(() => {
@@ -33,6 +34,21 @@ const MatchingSelectionPage = () => {
         setUnlockedCategories(unlocked);
         setMatchingGames(matchingOnly);
         setLoading(false);
+        
+        // Per ogni matching game, controlla se è stato completato
+        const solved = {};
+        for (const game of matchingOnly) {
+          const res = await fetchQuestionProgressAndSuggestions('matching');
+          // Filtra per categoria
+          const catQuestions = res.answeredQuestions.filter(q => q.category === game.category);
+          const allCatQuestions = [...res.answeredQuestions, ...res.unansweredQuestions].filter(q => q.category === game.category);
+          if (allCatQuestions.length > 0 && catQuestions.length === allCatQuestions.length) {
+            solved[game.id] = true;
+          } else {
+            solved[game.id] = false;
+          }
+        }
+        setSolvedMap(solved);
       } catch (error) {
         console.error('Errore nel caricamento dei giochi matching:', error);
         setLoading(false);
@@ -127,6 +143,7 @@ const MatchingSelectionPage = () => {
               to={`/game/${game.id}`}
               type={game.type}
               category={game.category}
+              solved={!!solvedMap[game.id]}
             />
           ))}
         </div>

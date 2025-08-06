@@ -18,7 +18,7 @@ const userValidationSchema = Joi.object({
   }),
   schoolLevel: Joi.when('role', {
     is: USER_CONSTRAINTS.SCHOOL_LEVEL.REQUIRED_FOR_ROLE,
-    then: Joi.string().required(),
+    then: Joi.string().valid('scuola primaria', 'scuola secondaria di primo grado', 'scuola secondaria di secondo grado').required(),
     otherwise: Joi.forbidden()
   }),
   class: Joi.when('role', {
@@ -58,7 +58,7 @@ const userUpdateValidationSchema = Joi.object({
   }),
   schoolLevel: Joi.when('role', {
     is: USER_CONSTRAINTS.SCHOOL_LEVEL.REQUIRED_FOR_ROLE,
-    then: Joi.string().required(),
+    then: Joi.string().valid('scuola primaria', 'scuola secondaria di primo grado', 'scuola secondaria di secondo grado').required(),
     otherwise: Joi.forbidden()
   }),
   class: Joi.when('role', {

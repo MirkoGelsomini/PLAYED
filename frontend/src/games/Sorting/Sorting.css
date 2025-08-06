@@ -157,7 +157,7 @@ button:hover {
 }
 
 .sorting-restart {
-  background: var(--gradient-primary);
+  background: var(--gradient-sky);
   color: var(--white-cloud);
   border: none;
   border-radius: var(--border-radius-medium);
@@ -174,7 +174,6 @@ button:hover {
 .sorting-restart:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-medium);
-  background: var(--gradient-sky);
 }
 
 @keyframes celebrationBounce {

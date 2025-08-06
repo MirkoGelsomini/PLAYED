@@ -50,7 +50,7 @@ const soonBadgeStyle = {
 
 const playBtnStyle = {
   marginTop: 'var(--spacing-l)',
-  background: 'var(--gradient-primary)',
+  background: 'var(--gradient-sky)',
   color: 'var(--white-cloud)',
   border: 'none',
   borderRadius: 'var(--border-radius-medium)',

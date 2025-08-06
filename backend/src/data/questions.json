@@ -407,7 +407,7 @@
     "category": "narrazione",
     "question": "Metti in ordine le fasi della storia",
     "ageRange": [7, 10],
-    "difficulty": 3,
+    "difficulty": 1,
     "items": ["C'era una volta", "Il lupo arrivò", "La nonna fu salvata", "Cappuccetto Rosso andò nel bosco"],
     "solution": ["C'era una volta", "Cappuccetto Rosso andò nel bosco", "Il lupo arrivò", "La nonna fu salvata"]
   },

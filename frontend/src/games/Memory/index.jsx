@@ -20,8 +20,20 @@ const generateCards = (pairs) => {
   if (!Array.isArray(pairs) || pairs.length === 0) return [];
   let cards = [];
   pairs.forEach((pair, idx) => {
-    cards.push({ id: `f${idx}`, value: pair.front, pairId: idx, type: 'front' });
-    cards.push({ id: `b${idx}`, value: pair.back, pairId: idx, type: 'back' });
+    cards.push({ 
+      id: `f${idx}`, 
+      value: pair.front, 
+      pairId: idx, 
+      type: 'front',
+      colorIndex: idx
+    });
+    cards.push({ 
+      id: `b${idx}`, 
+      value: pair.back, 
+      pairId: idx, 
+      type: 'back',
+      colorIndex: idx
+    });
   });
   return shuffle(cards);
 };
@@ -42,6 +54,30 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
   const [completed, setCompleted] = useState(false);
   const [lock, setLock] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
+  const [gridColumns, setGridColumns] = useState(4);
+
+  // Array di colori per le diverse coppie
+  const pairColors = [
+    'var(--gradient-sun)',
+    'var(--gradient-sky)',
+    'var(--gradient-primary)',
+    'var(--gradient-green)',
+    'var(--gradient-purple)',
+    'var(--gradient-orange)',
+    'var(--gradient-pink)',
+    'var(--gradient-teal)'
+  ];
+
+  // Calcola il numero ottimale di colonne per una distribuzione bilanciata
+  const calculateOptimalColumns = (cardCount) => {
+    if (cardCount <= 4) return 2;
+    if (cardCount <= 6) return 3;
+    if (cardCount <= 8) return 4;
+    if (cardCount <= 10) return 5;
+    if (cardCount <= 12) return 4; // 3 righe di 4
+    if (cardCount <= 16) return 4; // 4 righe di 4
+    return 5; // per più di 16 card
+  };
 
   // Carica pairs filtrate per livello sbloccato
   useEffect(() => {
@@ -68,9 +104,15 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
         });
         setPairs(allPairs);
         setCards(generateCards(allPairs));
+        // Calcola il numero ottimale di colonne
+        const cardCount = allPairs.length * 2;
+        setGridColumns(calculateOptimalColumns(cardCount));
       } catch (err) {
         setPairs(propPairs || []);
         setCards(generateCards(propPairs || []));
+        // Calcola il numero ottimale di colonne per il fallback
+        const cardCount = (propPairs || []).length * 2;
+        setGridColumns(calculateOptimalColumns(cardCount));
       }
     };
     loadPairsAndLevel();
@@ -115,6 +157,9 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
   const resetGame = () => {
     const newCards = generateCards(pairs);
     setCards(newCards);
+    // Ricalcola il numero di colonne
+    const cardCount = newCards.length;
+    setGridColumns(calculateOptimalColumns(cardCount));
     setFlipped([]);
     setMatched([]);
     setAttempts(0);
@@ -176,16 +221,29 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
         </div>
       </div>
       <div className="memory-board-wrapper">
-        <div className="memory-board-grid">
+        <div 
+          className="memory-board-grid"
+          style={{ 
+            gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+            maxWidth: gridColumns <= 3 ? '400px' : gridColumns <= 4 ? '500px' : '600px'
+          }}
+        >
           {cards.map((card, idx) => {
             const isFlipped = flipped.includes(idx) || matched.includes(idx);
+            const isMatched = matched.includes(idx);
+            const colorIndex = card.colorIndex % pairColors.length;
+            const pairColor = pairColors[colorIndex];
+            
             return (
               <button
                 key={card.id}
-                className={`memory-card${isFlipped ? ' flipped' : ''}${matched.includes(idx) ? ' matched' : ''}`}
+                className={`memory-card${isFlipped ? ' flipped' : ''}${isMatched ? ' matched' : ''}`}
                 onClick={() => handleCardClick(idx)}
                 disabled={isFlipped || lock || completed}
                 aria-label={isFlipped ? card.value : 'Carta coperta'}
+                style={isMatched ? {
+                  '--pair-color': pairColor
+                } : {}}
               >
                 <span className="memory-card-inner">
                   <span className="memory-card-front">{card.value}</span>

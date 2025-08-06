@@ -32,6 +32,18 @@ const MatchingGame = ({ pairs: propPairs = [], config = {}, category, onQuestion
   const [attempts, setAttempts] = useState(0);
   const [progressSaved, setProgressSaved] = useState(false);
 
+  // Array di colori per le diverse coppie (stesso sistema del Memory)
+  const pairColors = [
+    'var(--gradient-sun)',
+    'var(--gradient-sky)',
+    'var(--gradient-primary)',
+    'var(--gradient-green)',
+    'var(--gradient-purple)',
+    'var(--gradient-orange)',
+    'var(--gradient-pink)',
+    'var(--gradient-teal)'
+  ];
+
   // Carica pairs filtrate per livello sbloccato
   useEffect(() => {
     const loadPairsAndLevel = async () => {
@@ -68,30 +80,42 @@ const MatchingGame = ({ pairs: propPairs = [], config = {}, category, onQuestion
         
         if (selectedQuestion && Array.isArray(selectedQuestion.pairs)) {
           // Usa solo le coppie della domanda selezionata
-          const questionPairs = selectedQuestion.pairs.map(p => ({ 
+          const questionPairs = selectedQuestion.pairs.map((p, idx) => ({ 
             ...p, 
             id: selectedQuestion.id, 
-            difficulty: selectedQuestion.difficulty 
+            difficulty: selectedQuestion.difficulty,
+            colorIndex: idx // Aggiungi l'indice del colore per ogni coppia
           }));
           
-          // Rimuovi duplicati basati su left e right
+          // Rimuovi duplicati basati su left e right, mantenendo il colorIndex
           const uniquePairs = questionPairs.filter((pair, index, self) => 
             index === self.findIndex(p => p.left === pair.left && p.right === pair.right)
-          );
+          ).map((pair, idx) => ({
+            ...pair,
+            colorIndex: idx // Re-assigna colorIndex dopo il filtro
+          }));
           
           setPairs(uniquePairs);
           setLeftItems(shuffle(uniquePairs.map(p => p.left)));
           setRightItems(shuffle(uniquePairs.map(p => p.right)));
         } else {
           // Fallback alle props
-          setPairs(propPairs || []);
-          setLeftItems(shuffle((propPairs || []).map(p => p.left)));
-          setRightItems(shuffle((propPairs || []).map(p => p.right)));
+          const fallbackPairs = (propPairs || []).map((p, idx) => ({
+            ...p,
+            colorIndex: idx
+          }));
+          setPairs(fallbackPairs);
+          setLeftItems(shuffle(fallbackPairs.map(p => p.left)));
+          setRightItems(shuffle(fallbackPairs.map(p => p.right)));
         }
       } catch (err) {
-        setPairs(propPairs || []);
-        setLeftItems(shuffle((propPairs || []).map(p => p.left)));
-        setRightItems(shuffle((propPairs || []).map(p => p.right)));
+        const fallbackPairs = (propPairs || []).map((p, idx) => ({
+          ...p,
+          colorIndex: idx
+        }));
+        setPairs(fallbackPairs);
+        setLeftItems(shuffle(fallbackPairs.map(p => p.left)));
+        setRightItems(shuffle(fallbackPairs.map(p => p.right)));
       }
     };
     loadPairsAndLevel();
@@ -192,28 +216,48 @@ const MatchingGame = ({ pairs: propPairs = [], config = {}, category, onQuestion
       </div>
       <div className="matching-board">
         <div className="matching-column">
-          {leftItems.map((item, idx) => (
-            <button
-              key={item}
-              className={`matching-item left ${selectedLeft === item ? 'selected' : ''} ${matched.find(m => m.left === item) ? 'matched' : ''}`}
-              onClick={() => handleLeftClick(item)}
-              disabled={matched.find(m => m.left === item) || completed}
-            >
-              {item}
-            </button>
-          ))}
+          {leftItems.map((item, idx) => {
+            const matchedPair = matched.find(m => m.left === item);
+            const pair = pairs.find(p => p.left === item);
+            const colorIndex = pair ? pair.colorIndex % pairColors.length : 0;
+            const pairColor = pairColors[colorIndex];
+            
+            return (
+              <button
+                key={item}
+                className={`matching-item left ${selectedLeft === item ? 'selected' : ''} ${matchedPair ? 'matched' : ''}`}
+                onClick={() => handleLeftClick(item)}
+                disabled={matchedPair || completed}
+                style={matchedPair ? {
+                  '--pair-color': pairColor
+                } : {}}
+              >
+                {item}
+              </button>
+            );
+          })}
         </div>
         <div className="matching-column">
-          {rightItems.map((item, idx) => (
-            <button
-              key={item}
-              className={`matching-item right ${matched.find(m => m.right === item) ? 'matched' : ''}`}
-              onClick={() => handleRightClick(item)}
-              disabled={matched.find(m => m.right === item) || completed}
-            >
-              {item}
-            </button>
-          ))}
+          {rightItems.map((item, idx) => {
+            const matchedPair = matched.find(m => m.right === item);
+            const pair = pairs.find(p => p.right === item);
+            const colorIndex = pair ? pair.colorIndex % pairColors.length : 0;
+            const pairColor = pairColors[colorIndex];
+            
+            return (
+              <button
+                key={item}
+                className={`matching-item right ${matchedPair ? 'matched' : ''}`}
+                onClick={() => handleRightClick(item)}
+                disabled={matchedPair || completed}
+                style={matchedPair ? {
+                  '--pair-color': pairColor
+                } : {}}
+              >
+                {item}
+              </button>
+            );
+          })}
         </div>
       </div>
       {completed && (

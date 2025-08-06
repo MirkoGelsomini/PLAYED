@@ -58,13 +58,13 @@ const QuizSelectionPage = () => {
   }, []);
 
   const headerStyle = {
-    background: 'linear-gradient(135deg, #F7C873 0%, #FFD700 100%)',
-    color: '#fff',
+    background: 'linear-gradient(135deg, #E8F4F8 0%, #D1ECF1 100%)',
+    color: '#2C3E50',
     padding: '2rem 1rem',
     borderRadius: '18px',
     margin: '2rem auto 2.5rem auto',
     maxWidth: '900px',
-    boxShadow: '0 4px 24px 0 rgba(247,200,115,0.20)',
+    boxShadow: '0 4px 24px 0 rgba(209,236,241,0.30)',
     textAlign: 'center',
   };
 

@@ -24,6 +24,11 @@
   --gradient-sky: linear-gradient(135deg, #5B9BD5 0%, #87CEEB 100%);
   --gradient-sun: linear-gradient(135deg, #F4D03F 0%, #F7DC6F 100%);
   --gradient-earth: linear-gradient(135deg, #E67E22 0%, #F39C12 100%);
+  --gradient-green: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+  --gradient-purple: linear-gradient(135deg, #9B59B6 0%, #8E44AD 100%);
+  --gradient-orange: linear-gradient(135deg, #E67E22 0%, #D35400 100%);
+  --gradient-pink: linear-gradient(135deg, #E91E63 0%, #F06292 100%);
+  --gradient-teal: linear-gradient(135deg, #1A5F7A 0%, #2C3E50 100%);
   
   /* TIPOGRAFIA */
   --font-family: 'Comic Sans MS', 'Fredoka One', 'Arial Rounded MT Bold', cursive;

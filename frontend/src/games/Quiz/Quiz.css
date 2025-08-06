@@ -127,7 +127,7 @@
   border-radius: var(--border-radius-medium);
   cursor: pointer;
   transition: var(--transition-fast);
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   font-weight: 600;
   color: var(--gray-charcoal);
   text-align: left;
@@ -237,7 +237,7 @@
 }
 
 .next-button {
-  background: var(--gradient-primary);
+  background: var(--gradient-sky);
   color: var(--white-cloud);
   border: none;
   border-radius: var(--border-radius-medium);
@@ -307,8 +307,8 @@
 }
 
 .restart-button {
-  background: linear-gradient(135deg, #F7C873, #FFD700);
-  color: #fff;
+  background: var(--gradient-sky);
+  color: var(--white-cloud);
   border: none;
   border-radius: 12px;
   padding: 1.2rem 2.5rem;
@@ -316,12 +316,12 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(247, 200, 115, 0.3);
+  box-shadow: var(--shadow-soft);
 }
 
 .restart-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(247, 200, 115, 0.4);
+  box-shadow: var(--shadow-medium);
 }
 
 /* Progress bar timer */
@@ -414,7 +414,7 @@
   
   .quiz-option {
     padding: 1rem 1.2rem;
-    font-size: 1rem;
+    font-size: 1.2rem;
   }
   
   .timer-circle {

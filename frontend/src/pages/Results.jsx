@@ -634,8 +634,6 @@ export default function Results() {
               <h3>🏅 Classifica Globale</h3>
               <div className="leaderboard-filters">
                 <button className="filter-btn active">Punti</button>
-                <button className="filter-btn">Partite</button>
-                <button className="filter-btn">Streak</button>
               </div>
             </div>
             

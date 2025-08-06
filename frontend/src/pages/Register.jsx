@@ -248,7 +248,12 @@ export default function Register() {
             {/* Step 3: Dati personali */}
             {form.role === 'allievo' && <>
               <input name="age" type="number" placeholder="Età" value={form.age} onChange={handleChange} min={USER_CONSTRAINTS.AGE.MIN} max={USER_CONSTRAINTS.AGE.MAX} className="form-input" />
-              <input name="schoolLevel" placeholder="Livello scolastico" value={form.schoolLevel} onChange={handleChange} className="form-input" />
+              <select name="schoolLevel" value={form.schoolLevel} onChange={handleChange} className="form-input" required>
+                <option value="">Seleziona il livello scolastico</option>
+                <option value="scuola primaria">Scuola primaria</option>
+                <option value="scuola secondaria di primo grado">Scuola secondaria di primo grado</option>
+                <option value="scuola secondaria di secondo grado">Scuola secondaria di secondo grado</option>
+              </select>
               <input name="class" placeholder="Classe" value={form.class} onChange={handleChange} className="form-input" />
             </>}
             {form.role === 'docente' && <>

@@ -7,6 +7,7 @@ import '../styles/main.css';
 const SortingSelectionPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [solvedMap, setSolvedMap] = useState({});
   const [unlockedCategories, setUnlockedCategories] = useState({});
 
   useEffect(() => {
@@ -36,6 +37,20 @@ const SortingSelectionPage = () => {
         setUnlockedCategories(unlocked);
         setCategories(uniqueCategories);
         setLoading(false);
+        
+        // Per ogni categoria, controlla se è stata completata
+        const solved = {};
+        for (const category of uniqueCategories) {
+          // Filtra per categoria
+          const catQuestions = progressRes.answeredQuestions.filter(q => q.category === category);
+          const allCatQuestions = [...progressRes.answeredQuestions, ...progressRes.unansweredQuestions].filter(q => q.category === category);
+          if (allCatQuestions.length > 0 && catQuestions.length === allCatQuestions.length) {
+            solved[category] = true;
+          } else {
+            solved[category] = false;
+          }
+        }
+        setSolvedMap(solved);
       } catch (error) {
         console.error('Errore nel caricamento delle categorie sorting:', error);
         setLoading(false);
@@ -111,6 +126,7 @@ const SortingSelectionPage = () => {
               to={`/sorting/category/${encodeURIComponent(cat)}`}
               type="sorting"
               category={cat}
+              solved={!!solvedMap[cat]}
             />
           ))}
         </div>
