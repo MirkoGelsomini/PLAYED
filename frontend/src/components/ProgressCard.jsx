@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import axios from 'axios';
 import './ProgressCard.css';
 import LevelUnlockModal from './LevelUnlockModal';
+import { toastSuccess, toastError } from '../utils/toast';
 
 const ProgressCard = ({ gameType, progressData, onLevelUnlocked }) => {
   const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -22,18 +23,10 @@ const ProgressCard = ({ gameType, progressData, onLevelUnlocked }) => {
     sorting: '📊'
   };
 
-  const getLevelColor = (level, isUnlocked) => {
-    if (!isUnlocked) return '#e5e7eb';
-    if (level === progressData.maxUnlockedLevel) return '#fbbf24'; // Giallo per livello corrente
-    return '#10b981'; // Verde per livelli completati
-  };
-
   const handleUnlockLevel = useCallback(async (level) => {
-    // Previeni il flickering chiudendo prima il modal se aperto
     if (showUnlockModal) {
       setShowUnlockModal(false);
       setUnlockingLevel(null);
-      // Piccolo delay per assicurare che il modal precedente sia chiuso
       setTimeout(() => {
         setUnlockingLevel(level);
         setShowUnlockModal(true);
@@ -65,7 +58,7 @@ const ProgressCard = ({ gameType, progressData, onLevelUnlocked }) => {
         }
         
         // Mostra un messaggio di successo
-        alert(`🎉 Livello ${unlockingLevel} sbloccato con successo!`);
+        toastSuccess(`🎉 Livello ${unlockingLevel} sbloccato con successo!`);
       }
     } catch (error) {
       console.error('ProgressCard - Errore nello sblocco del livello:', error);
@@ -74,7 +67,7 @@ const ProgressCard = ({ gameType, progressData, onLevelUnlocked }) => {
         status: error.response?.status,
         message: error.message
       });
-      alert('Errore nello sblocco del livello. Riprova più tardi.');
+      toastError('Errore nello sblocco del livello. Riprova più tardi.');
     } finally {
       setIsUnlocking(false);
     }

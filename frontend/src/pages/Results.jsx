@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useAuth } from '../core/AuthContext';
 import axios from 'axios';
 import { useErrorHandler } from '../utils/errorHandler';
 import Avatar from '../components/Avatar';
 import './Results.css';
+import { SidebarRefreshContext } from '../core/SidebarRefreshContext';
+import { toastSuccess, toastError, toastInfo } from '../utils/toast';
 
 export default function Results() {
   const { user, isAuthenticated } = useAuth();
@@ -17,6 +19,7 @@ export default function Results() {
   const [activeTab, setActiveTab] = useState('overview');
   const [newTrophies, setNewTrophies] = useState([]);
   const [claimingReward, setClaimingReward] = useState(false);
+  const { refreshToken } = useContext(SidebarRefreshContext);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -24,67 +27,13 @@ export default function Results() {
     loadAllData();
   }, [isAuthenticated]);
 
-  // Controllo coerenza livello-punti ogni volta che stats cambia
+  // Ricarica quando arriva un refresh globale (es. domanda risolta)
   useEffect(() => {
-    console.log('=== DEBUG Results - useEffect stats ===');
-    console.log('stats:', stats);
-    console.log('user:', user);
-    console.log('isAuthenticated:', isAuthenticated);
-    
-    if (
-      stats &&
-      typeof stats.totalPoints === 'number' &&
-      typeof stats.level === 'number' &&
-      user && user.id
-    ) {
-      const expectedLevel = Math.max(1, Math.floor(stats.totalPoints / 100));
-      if (stats.level !== expectedLevel) {
-        // Verifica che l'ID sia valido
-        const userId = user.id || user._id;
-        if (!userId || userId === 'undefined') {
-          console.error('ID utente non valido');
-          return;
-        }
-        
-        // 1. Recupera i dati completi dell'utente dal backend
-        axios.get(`/api/users/${userId}`, { withCredentials: true })
-          .then(res => {
-            const fullUser = res.data;
-            // 2. Prepara i dati per la PUT, aggiornando solo il livello
-            let updateData = {
-              name: fullUser.name || '',
-              email: fullUser.email || '',
-              role: fullUser.role || '',
-              level: expectedLevel,
-              avatar: fullUser.avatar || ''
-            };
-            if (fullUser.role === 'allievo') {
-              updateData.age = fullUser.age ?? 0;
-              updateData.schoolLevel = fullUser.schoolLevel || '';
-              updateData.class = fullUser.class || '';
-            } else if (fullUser.role === 'docente') {
-              if (Array.isArray(fullUser.subjects)) {
-                updateData.subjects = fullUser.subjects;
-              } else if (typeof fullUser.subjects === 'string' && fullUser.subjects.length > 0) {
-                updateData.subjects = fullUser.subjects.split(',').map(s => s.trim()).filter(Boolean);
-              } else {
-                updateData.subjects = [];
-              }
-              updateData.school = fullUser.school || '';
-              updateData.teachingLevel = fullUser.teachingLevel || '';
-            }
-            // 3. Fai la PUT con i dati completi
-            return axios.put(`/api/users/${fullUser._id || fullUser.id}`, updateData, { withCredentials: true });
-          })
-          .then(() => {
-            loadAllData();
-          })
-          .catch((err) => {
-            console.error('Errore aggiornamento livello:', err);
-          });
-      }
-    }
-  }, [stats, user]);
+    if (!isAuthenticated) return;
+    loadAllData();
+  }, [refreshToken, isAuthenticated]);
+
+  // Rimosso: aggiornamento livello lato client per evitare incoerenze e chiamate PUT superflue
 
   const loadAllData = async () => {
     setLoading(true);
@@ -123,10 +72,10 @@ export default function Results() {
   const testModels = async () => {
     try {
       const res = await axios.get('/api/trophy/test', { withCredentials: true });
-      alert('Test completato! Controlla la console per i dettagli.');
+      toastInfo('🧪 Test completato! Controlla la console per i dettagli.');
     } catch (err) {
       console.error('Errore nel test:', err);
-      alert('Errore nel test: ' + err.message);
+      toastError('Errore nel test: ' + err.message);
     }
   };
 
@@ -139,12 +88,12 @@ export default function Results() {
       );
       
       if (res.data.success) {
-        alert(`🎉 Ricompensa riscattata! Hai guadagnato ${res.data.pointsEarned} punti!`);
+        toastSuccess(`🎉 Ricompensa riscattata! Hai guadagnato ${res.data.pointsEarned} punti!`);
         loadAllData(); // Ricarica i dati per aggiornare le statistiche
       }
     } catch (err) {
       handleComponentError(err, setError, setClaimingReward);
-      alert('Errore nel riscatto della ricompensa: ' + (err.response?.data?.message || err.message));
+      toastError('Errore nel riscatto della ricompensa: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -159,6 +108,19 @@ export default function Results() {
         <div className="auth-required">
           <h2>🔐 Accesso Richiesto</h2>
           <p>Devi essere loggato per vedere i tuoi risultati e trofei!</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user?.role === 'docente') {
+    console.log('=== DEBUG Results - Rendering access denied for teacher ===');
+    return (
+      <div className="results-container">
+        <div className="auth-required">
+          <h2>🚫 Accesso Negato</h2>
+          <p>I docenti non hanno accesso alla pagina dei risultati.</p>
+          <p>Utilizza il <strong>Pannello Docente</strong> per gestire le tue domande.</p>
         </div>
       </div>
     );

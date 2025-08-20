@@ -59,7 +59,7 @@ const QuizGame = ({ config, questionIds, category, onQuestionAnswered }) => {
         const { answeredQuestions, unansweredQuestions, maxUnlockedLevel } = res.data;
         
         // Filtra domande per livello sbloccato E categoria
-        const availableQuestions = [...answeredQuestions, ...unansweredQuestions];
+         const availableQuestions = [...answeredQuestions, ...unansweredQuestions];
         const filteredQuestions = availableQuestions.filter(q => 
           q.difficulty <= maxUnlockedLevel && 
           q.category === category
@@ -74,7 +74,7 @@ const QuizGame = ({ config, questionIds, category, onQuestionAnswered }) => {
         
         // Se c'è un questionId specifico, trova quella domanda
         if (questionIdParam) {
-          const specificQuestion = filteredQuestions.find(q => q.id.toString() === questionIdParam);
+           const specificQuestion = filteredQuestions.find(q => (q.id || q._id)?.toString() === questionIdParam);
           if (specificQuestion) {
             setQuestions([specificQuestion]);
             setCurrentQuestionIndex(0);
@@ -87,7 +87,7 @@ const QuizGame = ({ config, questionIds, category, onQuestionAnswered }) => {
         }
         
         // Calcola progresso livello corrente
-        const correctPerLevel = res.data.correctAnswersPerLevel || {};
+         const correctPerLevel = res.data.correctAnswersPerLevel || {};
         const currentLevelProgress = correctPerLevel[maxUnlockedLevel?.toString()] || 0;
         setLevelProgress(currentLevelProgress);
       } catch (err) {
@@ -208,7 +208,6 @@ const QuizGame = ({ config, questionIds, category, onQuestionAnswered }) => {
       setCorrectAnswers(prev => prev + 1);
     }
     setShowResult(true);
-    if (onQuestionAnswered) onQuestionAnswered();
     
     // Aggiorna progresso backend
     try {
@@ -217,7 +216,7 @@ const QuizGame = ({ config, questionIds, category, onQuestionAnswered }) => {
       
       const resp = await axios.post('/api/progress/answer', {
         sessionId: responseSessionId,
-        questionId: currentQuestion.id,
+        questionId: currentQuestion.id || currentQuestion._id,
         isCorrect: correct,
         questionDifficulty: currentQuestion.difficulty || 1
       }, { withCredentials: true });
@@ -238,7 +237,9 @@ const QuizGame = ({ config, questionIds, category, onQuestionAnswered }) => {
         
         setLevelProgress(currentLevelProgress);
       }
-    } catch (err) {
+        // Notifica refresh globale (Sidebar/Home/Results) solo dopo salvataggio riuscito
+        if (onQuestionAnswered) onQuestionAnswered();
+      } catch (err) {
       console.error('Errore aggiornamento progresso:', err);
       console.error('Dettagli errore:', err.response?.data);
     }

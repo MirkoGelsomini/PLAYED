@@ -1,21 +1,27 @@
 const ProgressService = require('../services/progressService');
 const Progress = require('../models/Progress');
-const { createError, assert } = require('../utils/errorHandler');
+const { assert } = require('../utils/errorHandler');
+const { GAME_CONSTRAINTS } = require('../../../shared/constraints');
+
+/**
+ * Controller per gestire i progressi degli utenti
+ */
+
 
 // Salva il progresso di una partita
 exports.saveProgress = async (req, res) => {
   const userId = req.user.id;
-  const { gameType, game, score, level, completed, timeSpent, mistakes, sessionId } = req.body;
+  const { gameType, score, level, completed, timeSpent, mistakes, sessionId } = req.body;
   
   assert.authenticated(userId, 'Utente non autenticato');
 
   const gameData = {
     game: gameType || req.body.game, 
-    score: parseInt(score) || 0,
-    level: parseInt(level) || 1,
+    score: parseInt(score),
+    level: parseInt(level),
     completed: Boolean(completed),
-    timeSpent: parseInt(timeSpent) || 0,
-    mistakes: parseInt(mistakes) || 0,
+    timeSpent: parseInt(timeSpent),
+    mistakes: parseInt(mistakes),
     sessionId: sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   };
 
@@ -143,6 +149,18 @@ exports.getQuestionProgressAndSuggestions = async (req, res) => {
     if (!userId || !gameType) {
       return res.status(400).json({ success: false, message: 'Dati mancanti' });
     }
+    
+    // I docenti non hanno progressi di gioco, restituiamo dati vuoti
+    if (req.user.role === 'docente') {
+      return res.status(200).json({
+        success: true,
+        answeredQuestions: [],
+        unansweredQuestions: [],
+        maxUnlockedLevel: 1,
+        suggestions: []
+      });
+    }
+    
     const result = await ProgressService.getQuestionProgressAndSuggestions(userId, gameType);
     res.status(200).json({ success: true, ...result, maxUnlockedLevel: result.maxUnlockedLevel });
   } catch (error) {
@@ -155,6 +173,20 @@ exports.getQuestionProgressAndSuggestions = async (req, res) => {
 exports.getDetailedProgress = async (req, res) => {
   try {
     const userId = req.user.id;
+    
+    // I docenti non hanno progressi di gioco, restituiamo dati vuoti
+    if (req.user.role === 'docente') {
+      return res.json({
+        success: true,
+        data: {
+          quiz: { maxUnlockedLevel: 1, correctAnswersPerLevel: {}, answeredCount: 0, totalAvailable: 0, progressByLevel: {} },
+          memory: { maxUnlockedLevel: 1, correctAnswersPerLevel: {}, answeredCount: 0, totalAvailable: 0, progressByLevel: {} },
+          matching: { maxUnlockedLevel: 1, correctAnswersPerLevel: {}, answeredCount: 0, totalAvailable: 0, progressByLevel: {} },
+          sorting: { maxUnlockedLevel: 1, correctAnswersPerLevel: {}, answeredCount: 0, totalAvailable: 0, progressByLevel: {} }
+        }
+      });
+    }
+    
     const gameTypes = ['quiz', 'memory', 'matching', 'sorting'];
     const detailedProgress = {};
 
@@ -170,7 +202,6 @@ exports.getDetailedProgress = async (req, res) => {
         };
 
         // Calcola progresso per ogni livello
-        const { GAME_CONSTRAINTS } = require('../../../shared/constraints');
         for (let level = 1; level <= progressData.maxUnlockedLevel; level++) {
           const correctForLevel = progressData.correctAnswersPerLevel[level] || 0;
           const threshold = GAME_CONSTRAINTS.LEVEL_UNLOCK.MIN_CORRECT_ANSWERS; // Soglia per sbloccare il livello successivo
@@ -181,11 +212,9 @@ exports.getDetailedProgress = async (req, res) => {
           let displayCorrect;
           
           if (level === progressData.maxUnlockedLevel) {
-            // Livello corrente: mostra progresso reale (es. 3/5)
             displayCorrect = correctForLevel;
             progress = Math.min(100, (correctForLevel / threshold) * 100);
           } else {
-            // Livelli completati: mostra 5/5 (100%)
             displayCorrect = threshold;
             progress = 100;
           }

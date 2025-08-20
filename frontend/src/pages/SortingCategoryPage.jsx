@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { fetchQuestions } from '../core/api';
 import Sorting from '../games/Sorting';
 import '../styles/main.css';
 
 const SortingCategoryPage = () => {
   const { category } = useParams();
+  const [searchParams] = useSearchParams();
   const [questions, setQuestions] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -13,11 +14,17 @@ const SortingCategoryPage = () => {
   useEffect(() => {
     fetchQuestions().then(allQuestions => {
       const filtered = allQuestions.filter(q => q.type === 'sorting' && q.category === category);
+      const qid = searchParams.get('questionId');
+      let startIdx = 0;
+      if (qid) {
+        const idx = filtered.findIndex(q => String(q.id || q._id) === String(qid));
+        if (idx >= 0) startIdx = idx;
+      }
       setQuestions(filtered);
-      setCurrentIdx(0);
+      setCurrentIdx(startIdx);
       setLoading(false);
     });
-  }, [category]);
+  }, [category, searchParams]);
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '3rem' }}>Caricamento domande...</div>;

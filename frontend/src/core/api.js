@@ -1,100 +1,79 @@
 import axios from 'axios';
-import { apiCall, handleError } from '../utils/errorHandler';
+
+// Configurazione axios per il backend
+axios.defaults.baseURL = process.env.REACT_APP_API_URL;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+// Configurazione per inviare i cookie con le richieste
+axios.defaults.withCredentials = true;
+
+// Interceptor per gestire gli errori di risposta
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token scaduto o non valido - lascia che AuthContext gestisca il logout
+      console.log('401 Unauthorized - token scaduto o non valido');
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Funzioni di utilità per chiamate API al backend
 export const fetchGames = async () => {
-  const res = await fetch('/api/games', {
-    credentials: 'include'
-  });
-  return res.json();
+  const response = await axios.get('/api/games');
+  return response.data;
 };
 
 export const fetchQuestions = async () => {
-  const res = await fetch('/api/questions/filtered', {
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel recupero delle domande');
-  return res.json();
+  const response = await axios.get('/api/games/questions/filtered');
+  return response.data;
 };
 
-export const deleteUser = async (id, token) => {
-  const res = await fetch(`/api/users/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-  if (!res.ok) throw new Error('Errore durante l\'eliminazione dell\'utente');
-  return res.json();
+export const deleteUser = async (id) => {
+  const response = await axios.delete(`/api/users/${id}`);
+  return response.data;
 };
 
 // API per trofei e obiettivi
 export const fetchUserTrophies = async () => {
-  const res = await fetch('/api/trophy/trophies', {
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel recupero trofei');
-  return res.json();
+  const response = await axios.get('/api/trophy/trophies');
+  return response.data;
 };
 
 export const fetchUserObjectives = async () => {
-  const res = await fetch('/api/trophy/objectives', {
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel recupero obiettivi');
-  return res.json();
+  const response = await axios.get('/api/trophy/objectives');
+  return response.data;
 };
 
 export const fetchUserStats = async () => {
-  const res = await fetch('/api/trophy/stats', {
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel recupero statistiche');
-  return res.json();
+  const response = await axios.get('/api/trophy/stats');
+  return response.data;
 };
 
 export const checkTrophies = async () => {
-  const res = await fetch('/api/trophy/check-trophies', {
-    method: 'POST',
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel controllo trofei');
-  return res.json();
+  const response = await axios.post('/api/trophy/check-trophies');
+  return response.data;
 };
 
 export const updateObjectiveProgress = async (gameType, score, completed) => {
-  const res = await fetch('/api/trophy/update-progress', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include',
-    body: JSON.stringify({ gameType, score, completed })
+  const response = await axios.post('/api/trophy/update-progress', {
+    gameType,
+    score,
+    completed
   });
-  if (!res.ok) throw new Error('Errore nell\'aggiornamento progresso');
-  return res.json();
+  return response.data;
 };
 
 export const fetchLeaderboard = async (type = 'points', limit = 10) => {
-  const res = await fetch(`/api/trophy/leaderboard?type=${type}&limit=${limit}`, {
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel recupero leaderboard');
-  return res.json();
+  const response = await axios.get(`/api/trophy/leaderboard?type=${type}&limit=${limit}`);
+  return response.data;
 };
 
 // API per progresso
 export const saveProgress = async (gameData) => {
-  const res = await fetch('/api/progress', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include',
-    body: JSON.stringify(gameData)
-  });
-  if (!res.ok) throw new Error('Errore nel salvataggio progresso');
-  return res.json();
+  const response = await axios.post('/api/progress', gameData);
+  return response.data;
 };
 
 export const fetchUserProgress = async (limit = 50, gameType = null) => {
@@ -102,57 +81,42 @@ export const fetchUserProgress = async (limit = 50, gameType = null) => {
   if (limit) params.append('limit', limit);
   if (gameType) params.append('gameType', gameType);
   
-  const res = await fetch(`/api/progress?${params}`, {
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel recupero progresso');
-  return res.json();
+  const response = await axios.get(`/api/progress?${params}`);
+  return response.data;
 };
 
 export const fetchProgressStats = async () => {
-  const res = await fetch('/api/progress/stats', {
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel recupero statistiche progresso');
-  return res.json();
+  const response = await axios.get('/api/progress/stats');
+  return response.data;
 };
 
 export const fetchProgressLeaderboard = async (type = 'points', limit = 10) => {
-  const res = await fetch(`/api/progress/leaderboard?type=${type}&limit=${limit}`, {
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel recupero leaderboard progresso');
-  return res.json();
+  const response = await axios.get(`/api/progress/leaderboard?type=${type}&limit=${limit}`);
+  return response.data;
 };
 
 // Ottieni domande fatte/non fatte e suggerimenti per un gioco
 export const fetchQuestionProgressAndSuggestions = async (gameType) => {
   const params = new URLSearchParams();
   params.append('gameType', gameType);
-  const res = await fetch(`/api/progress/questions?${params.toString()}`, {
-    credentials: 'include'
-  });
-  if (!res.ok) throw new Error('Errore nel recupero stato domande e suggerimenti');
-  return res.json();
+  const response = await axios.get(`/api/progress/questions?${params.toString()}`);
+  return response.data;
 };
 
 // Aggiorna le domande risposte per una sessione
-export const answerQuestion = async (sessionId, questionId) => {
-  const res = await fetch('/api/progress/answer', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include',
-    body: JSON.stringify({ sessionId, questionId })
+export const answerQuestion = async (sessionId, questionId, isCorrect, questionDifficulty) => {
+  const response = await axios.post('/api/progress/answer', {
+    sessionId,
+    questionId,
+    isCorrect,
+    questionDifficulty
   });
-  if (!res.ok) throw new Error('Errore nell\'aggiornamento delle domande risposte');
-  return res.json();
+  return response.data;
 };
 
 export const fetchDetailedProgress = async () => {
   try {
-    const response = await axios.get('/api/progress/detailed', { withCredentials: true });
+    const response = await axios.get('/api/progress/detailed');
     return response.data;
   } catch (error) {
     console.error('Errore nel recupero progressi dettagliati:', error);

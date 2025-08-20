@@ -17,7 +17,7 @@ export default function Stepper({
   nextButtonText = "Continue",
   disableStepIndicators = false,
   renderStepIndicator,
-  onStepNext, // nuova prop
+  onStepNext, 
   ...rest
 }) {
   const [currentStep, setCurrentStep] = useState(initialStep);
@@ -44,7 +44,6 @@ export default function Stepper({
   };
 
   const handleNext = () => {
-    // Se c'è una funzione di validazione, la chiamo prima di avanzare
     if (typeof onStepNext === 'function') {
       const valid = onStepNext(currentStep);
       if (valid === false) return;

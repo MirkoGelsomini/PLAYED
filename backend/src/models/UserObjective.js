@@ -7,8 +7,15 @@ const userObjectiveSchema = new mongoose.Schema({
     required: true
   },
   objectiveId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Objective',
+    type: String, // ID statico definito in shared/constraints
+    required: true
+  },
+  type: {
+    type: String,
+    required: true
+  },
+  periodKey: {
+    type: String,
     required: true
   },
   progress: {
@@ -35,7 +42,7 @@ const userObjectiveSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indice composto per evitare duplicati
-userObjectiveSchema.index({ userId: 1, objectiveId: 1 }, { unique: true });
+// Indice composto per evitare duplicati nello stesso periodo
+userObjectiveSchema.index({ userId: 1, objectiveId: 1, periodKey: 1 }, { unique: true });
 
 module.exports = mongoose.model('UserObjective', userObjectiveSchema); 

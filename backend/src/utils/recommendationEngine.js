@@ -1,15 +1,11 @@
-// Motore di raccomandazione per suggerire domande
-
 /**
- * Suggerisce domande non fatte del livello corrente per aiutare l'utente a completarlo.
- * @param {Array} allQuestions - tutte le domande della materia
- * @param {Set} answeredIds - set di id domanda già fatte
- * @param {number} maxDiff - difficoltà massima raggiunta (livello corrente)
- * @returns {Array} domande suggerite
+ * Motore di raccomandazione per suggerire domande
  */
+
+// Suggerisce domande non fatte del livello corrente per aiutare l'utente a completarlo.
 function suggestQuestions(allQuestions, answeredIds, maxDiff) {
   // Filtra domande non fatte
-  const unanswered = allQuestions.filter(q => !answeredIds.has(q.id.toString()));
+  const unanswered = allQuestions.filter(q => !answeredIds.has(q._id.toString()));
   if (unanswered.length === 0) return [];
   
   // Suggerisci PRIMA le domande del livello corrente (maxDiff)

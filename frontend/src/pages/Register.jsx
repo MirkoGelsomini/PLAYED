@@ -7,14 +7,13 @@ import { useAuth } from '../core/AuthContext';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import Stepper, { Step } from '../components/Stepper';
 import { defaultAvatars, getAvatarUrl } from '../utils/avatarUtils';
-import { USER_CONSTRAINTS, validatePasswordStrength, validateEmail } from '../shared/constraints';
+import { USER_CONSTRAINTS, validatePasswordStrength, validateEmail, getSchoolLevelDisplayName } from '../shared/constraints';
 
 const initialState = {
   name: '',
   email: '',
   password: '',
   role: 'allievo',
-  age: '',
   schoolLevel: '',
   class: '',
   subjects: '',
@@ -82,13 +81,15 @@ export default function Register() {
     }
     // Step 3: Dati personali
     if (step === 3) {
-      if (form.role === USER_CONSTRAINTS.AGE.REQUIRED_FOR_ROLE) {
-        if (!form.age || !form.schoolLevel || !form.class) {
+      if (form.role === USER_CONSTRAINTS.SCHOOL_LEVEL.REQUIRED_FOR_ROLE) {
+        if (!form.schoolLevel || !form.class) {
           setError('Compila tutti i campi richiesti.');
           return false;
         }
-        if (isNaN(Number(form.age)) || Number(form.age) < USER_CONSTRAINTS.AGE.MIN) {
-          setError(`L'età deve essere almeno ${USER_CONSTRAINTS.AGE.MIN} anni.`);
+        // Validazione classe per school level
+        const validClasses = USER_CONSTRAINTS.CLASS.VALID_VALUES[form.schoolLevel];
+        if (!validClasses || !validClasses.includes(form.class)) {
+          setError('Classe non valida per il livello scolastico selezionato.');
           return false;
         }
       } else {
@@ -134,7 +135,6 @@ export default function Register() {
       let data = { ...form };
       if (form.role === 'docente') {
         data.subjects = form.subjects.split(',').map(s => s.trim()).filter(Boolean);
-        delete data.age;
         delete data.schoolLevel;
         delete data.class;
       } else {
@@ -247,14 +247,40 @@ export default function Register() {
           <Step>
             {/* Step 3: Dati personali */}
             {form.role === 'allievo' && <>
-              <input name="age" type="number" placeholder="Età" value={form.age} onChange={handleChange} min={USER_CONSTRAINTS.AGE.MIN} max={USER_CONSTRAINTS.AGE.MAX} className="form-input" />
               <select name="schoolLevel" value={form.schoolLevel} onChange={handleChange} className="form-input" required>
                 <option value="">Seleziona il livello scolastico</option>
-                <option value="scuola primaria">Scuola primaria</option>
-                <option value="scuola secondaria di primo grado">Scuola secondaria di primo grado</option>
-                <option value="scuola secondaria di secondo grado">Scuola secondaria di secondo grado</option>
+                <option value="prim">Scuola primaria</option>
+                <option value="sec1">Scuola secondaria di primo grado</option>
+                <option value="sec2">Scuola secondaria di secondo grado</option>
               </select>
-              <input name="class" placeholder="Classe" value={form.class} onChange={handleChange} className="form-input" />
+              <select name="class" value={form.class} onChange={handleChange} className="form-input" required>
+                <option value="">Seleziona la classe</option>
+                {form.schoolLevel === 'prim' && (
+                  <>
+                    <option value="1">Prima</option>
+                    <option value="2">Seconda</option>
+                    <option value="3">Terza</option>
+                    <option value="4">Quarta</option>
+                    <option value="5">Quinta</option>
+                  </>
+                )}
+                {form.schoolLevel === 'sec1' && (
+                  <>
+                    <option value="1">Prima</option>
+                    <option value="2">Seconda</option>
+                    <option value="3">Terza</option>
+                  </>
+                )}
+                {form.schoolLevel === 'sec2' && (
+                  <>
+                    <option value="1">Prima</option>
+                    <option value="2">Seconda</option>
+                    <option value="3">Terza</option>
+                    <option value="4">Quarta</option>
+                    <option value="5">Quinta</option>
+                  </>
+                )}
+              </select>
             </>}
             {form.role === 'docente' && <>
               <input name="subjects" placeholder="Materie insegnate (separate da virgola)" value={form.subjects} onChange={handleChange} className="form-input" />
@@ -272,8 +298,7 @@ export default function Register() {
                 <li><b>Ruolo:</b> {form.role}</li>
                 {form.avatar && <li><b>Avatar:</b> <img src={getAvatarUrl(form.avatar)} alt="Avatar" style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid var(--green-leaf)' }} /></li>}
                 {form.role === 'allievo' && <>
-                  <li><b>Età:</b> {form.age}</li>
-                  <li><b>Livello scolastico:</b> {form.schoolLevel}</li>
+                  <li><b>Livello scolastico:</b> {getSchoolLevelDisplayName(form.schoolLevel)}</li>
                   <li><b>Classe:</b> {form.class}</li>
                 </>}
                 {form.role === 'docente' && <>

@@ -3,16 +3,20 @@ const router = express.Router();
 const TrophyController = require('../controllers/trophyController');
 const { authenticateToken } = require('../utils/authMiddleware');
 
+/**
+ * Rotte per i trofei
+ */
+
 // Endpoint di test per verificare lo stato dei modelli
 router.get('/test', authenticateToken, (req, res) => {
   try {
     const models = {
       Trophy: require('../models/Trophy'),
       UserTrophy: require('../models/UserTrophy'),
-      Objective: require('../models/Objective'),
+      // Objective rimosso: obiettivi statici centralizzati
       UserObjective: require('../models/UserObjective'),
       Progress: require('../models/Progress'),
-      User: require('../models/user')
+      User: require('../models/User')
     };
 
     const modelStatus = {};

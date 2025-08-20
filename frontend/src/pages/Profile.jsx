@@ -7,10 +7,10 @@ import { deleteUser as deleteUserApi } from '../core/api';
 import Button from '../components/Button';
 import Avatar from '../components/Avatar';
 import { defaultAvatars } from '../utils/avatarUtils';
-import { USER_CONSTRAINTS } from '../shared/constraints';
+import { USER_CONSTRAINTS, validatePasswordStrength, validateEmail, getSchoolLevelDisplayName } from '../shared/constraints';
 
 export default function Profile() {
-  const { user, token, login, logout } = useAuth();
+  const { user, login, logout } = useAuth();
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -19,8 +19,6 @@ export default function Profile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
-
-
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -36,16 +34,21 @@ export default function Profile() {
       
       setFetching(true);
       try {
-        const res = await axios.get(`/api/users/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(`/api/users/${userId}`);
         setForm(res.data);
       } catch (err) {
         if (err.response?.status === 401) {
           logout();
           window.location.href = '/login';
         } else {
-          setError('Errore nel recupero dati profilo');
+          // Assicurati che l'errore sia sempre una stringa
+          let errorMessage = 'Errore nel recupero dati profilo';
+          if (err.response?.data?.error) {
+            errorMessage = typeof err.response.data.error === 'string' 
+              ? err.response.data.error 
+              : JSON.stringify(err.response.data.error);
+          }
+          setError(errorMessage);
         }
       } finally {
         setFetching(false);
@@ -77,7 +80,7 @@ export default function Profile() {
         if (typeof data.subjects === 'string') {
           data.subjects = data.subjects.split(',').map(s => s.trim()).filter(Boolean);
         }
-        delete data.age;
+
         delete data.schoolLevel;
         delete data.class;
       } else {
@@ -85,9 +88,7 @@ export default function Profile() {
         delete data.school;
         delete data.teachingLevel;
       }
-      const res = await axios.put(`/api/users/${form.id || form._id}`, data, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.put(`/api/users/${form.id || form._id}`, data);
       setSuccess('Profilo aggiornato!');
       login(res.data); // aggiorna context
     } catch (err) {
@@ -95,7 +96,14 @@ export default function Profile() {
         logout();
         window.location.href = '/login';
       } else {
-        setError(err.response?.data?.error || 'Errore durante il salvataggio');
+        // Assicurati che l'errore sia sempre una stringa
+        let errorMessage = 'Errore durante il salvataggio';
+        if (err.response?.data?.error) {
+          errorMessage = typeof err.response.data.error === 'string' 
+            ? err.response.data.error 
+            : JSON.stringify(err.response.data.error);
+        }
+        setError(errorMessage);
       }
     } finally {
       setLoading(false);
@@ -106,11 +114,18 @@ export default function Profile() {
     setDeleting(true);
     setDeleteError('');
     try {
-      await deleteUserApi(form.id || form._id, token);
+      await deleteUserApi(form.id || form._id);
       logout();
       window.location.href = '/login';
     } catch (err) {
-      setDeleteError('Errore durante l\'eliminazione dell\'account');
+      // Assicurati che l'errore sia sempre una stringa
+      let errorMessage = 'Errore durante l\'eliminazione dell\'account';
+      if (err.response?.data?.error) {
+        errorMessage = typeof err.response.data.error === 'string' 
+          ? err.response.data.error 
+          : JSON.stringify(err.response.data.error);
+      }
+      setDeleteError(errorMessage);
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
@@ -137,17 +152,65 @@ export default function Profile() {
     <div className="auth-container">
       <img src={logo} alt="Logo PLAYED" className="auth-logo" />
       <h2>Modifica il tuo profilo</h2>
+      
+      {/* Sezione informazioni attuali */}
+      <div className="current-info" style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+        <h3>Informazioni attuali</h3>
+        <p><strong>Nome:</strong> {form.name}</p>
+        <p><strong>Email:</strong> {form.email}</p>
+        <p><strong>Ruolo:</strong> {form.role === 'allievo' ? 'Allievo' : 'Docente'}</p>
+        {form.role === 'allievo' && (
+          <>
+            <p><strong>Livello scolastico:</strong> {getSchoolLevelDisplayName(form.schoolLevel)}</p>
+            <p><strong>Classe:</strong> {form.class}</p>
+          </>
+        )}
+        {form.role === 'docente' && (
+          <>
+            <p><strong>Materie:</strong> {Array.isArray(form.subjects) ? form.subjects.join(', ') : (form.subjects || 'Nessuna')}</p>
+            <p><strong>Scuola:</strong> {form.school || 'Non specificata'}</p>
+            <p><strong>Livello insegnato:</strong> {form.teachingLevel || 'Non specificato'}</p>
+          </>
+        )}
+      </div>
+      
       <form className="auth-form" onSubmit={handleSubmit}>
         <input name="name" placeholder="Nome" value={form.name || ''} onChange={handleChange} required className="form-input" />
         {form.role === 'allievo' && <>
-          <input name="age" type="number" placeholder="Età" value={form.age || ''} onChange={handleChange} min={USER_CONSTRAINTS.AGE.MIN} max={USER_CONSTRAINTS.AGE.MAX} className="form-input" />
           <select name="schoolLevel" value={form.schoolLevel || ''} onChange={handleChange} className="form-input" required>
             <option value="">Seleziona il livello scolastico</option>
-            <option value="scuola primaria">Scuola primaria</option>
-            <option value="scuola secondaria di primo grado">Scuola secondaria di primo grado</option>
-            <option value="scuola secondaria di secondo grado">Scuola secondaria di secondo grado</option>
+            <option value="prim">Scuola primaria</option>
+            <option value="sec1">Scuola secondaria di primo grado</option>
+            <option value="sec2">Scuola secondaria di secondo grado</option>
           </select>
-          <input name="class" placeholder="Classe" value={form.class || ''} onChange={handleChange} className="form-input" />
+          <select name="class" value={form.class || ''} onChange={handleChange} className="form-input" required>
+            <option value="">Seleziona la classe</option>
+            {form.schoolLevel === 'prim' && (
+              <>
+                <option value="1">Prima</option>
+                <option value="2">Seconda</option>
+                <option value="3">Terza</option>
+                <option value="4">Quarta</option>
+                <option value="5">Quinta</option>
+              </>
+            )}
+            {form.schoolLevel === 'sec1' && (
+              <>
+                <option value="1">Prima</option>
+                <option value="2">Seconda</option>
+                <option value="3">Terza</option>
+              </>
+            )}
+            {form.schoolLevel === 'sec2' && (
+              <>
+                <option value="1">Prima</option>
+                <option value="2">Seconda</option>
+                <option value="3">Terza</option>
+                <option value="4">Quarta</option>
+                <option value="5">Quinta</option>
+              </>
+            )}
+          </select>
         </>}
         {form.role === 'docente' && <>
           <input name="subjects" placeholder="Materie insegnate (separate da virgola)" value={Array.isArray(form.subjects) ? form.subjects.join(', ') : (form.subjects || '')} onChange={handleChange} className="form-input" />
@@ -185,6 +248,7 @@ export default function Profile() {
         {success && <div className="auth-success">{success}</div>}
       </form>
       <Button
+        variant="danger"
         className="danger-button small"
         onClick={() => setShowDeleteModal(true)}
       >
@@ -197,7 +261,7 @@ export default function Profile() {
             <p>Questa azione è irreversibile.</p>
             {deleteError && <div className="auth-error">{deleteError}</div>}
             <div className="modal-actions">
-              <Button onClick={handleDelete} className="danger-button small" disabled={deleting}>
+              <Button variant="danger" onClick={handleDelete} className="danger-button small" disabled={deleting}>
                 <span role="img" aria-label="cestino">🗑️</span> {deleting ? 'Eliminazione...' : 'Conferma'}
               </Button>
               <Button onClick={() => setShowDeleteModal(false)} className="neutral-button small" disabled={deleting}>

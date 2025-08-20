@@ -1,10 +1,13 @@
 const Trophy = require('../models/Trophy');
 const UserTrophy = require('../models/UserTrophy');
-const Objective = require('../models/Objective');
 const UserObjective = require('../models/UserObjective');
 const Progress = require('../models/Progress');
-const User = require('../models/user');
-const { TROPHY_CONSTRAINTS, OBJECTIVE_CONSTRAINTS, SCORE_CONSTRAINTS } = require('../../../shared/constraints');
+const User = require('../models/User');
+const { TROPHY_CONSTRAINTS, OBJECTIVE_DEFINITIONS, calculateLevel, LEVEL_CONSTRAINTS, SCORE_CONSTRAINTS } = require('../../../shared/constraints');
+
+/**
+ * Servizio per gestire i trofei degli utenti
+ */
 
 // Genera i trofei basati sui livelli dai constraint
 const levelBasedTrophies = TROPHY_CONSTRAINTS.LEVEL_TROPHIES.map(trophy => ({
@@ -17,36 +20,15 @@ const levelBasedTrophies = TROPHY_CONSTRAINTS.LEVEL_TROPHIES.map(trophy => ({
   requirements: { level: trophy.level }
 }));
 
-// Genera gli obiettivi giornalieri dai constraint
-const dailyObjectives = [
-  {
-    title: "Giocatore del Giorno",
-    description: "Completa 3 partite oggi",
-    type: OBJECTIVE_CONSTRAINTS.TYPES.VALUES[0], // "daily"
-    category: OBJECTIVE_CONSTRAINTS.CATEGORIES.VALUES[0], // "games"
-    target: 3,
-    reward: { type: OBJECTIVE_CONSTRAINTS.REWARD_TYPES.VALUES[0], value: 25 }, // "points"
-    difficulty: OBJECTIVE_CONSTRAINTS.DIFFICULTY.VALUES[0] // "easy"
-  },
-  {
-    title: "Punteggio Alto",
-    description: `Ottieni almeno ${Math.round(SCORE_CONSTRAINTS.MAX_SCORE_PER_GAME * 0.8)} punti in una singola partita`,
-    type: OBJECTIVE_CONSTRAINTS.TYPES.VALUES[0], // "daily"
-    category: OBJECTIVE_CONSTRAINTS.CATEGORIES.VALUES[1], // "score"
-    target: 5,
-    reward: { type: OBJECTIVE_CONSTRAINTS.REWARD_TYPES.VALUES[0], value: 100 }, // "points"
-    difficulty: OBJECTIVE_CONSTRAINTS.DIFFICULTY.VALUES[1] // "medium"
-  },
-  {
-    title: "Varietà di Giochi",
-    description: "Gioca 2 tipi diversi di giochi",
-    type: OBJECTIVE_CONSTRAINTS.TYPES.VALUES[0], // "daily"
-    category: OBJECTIVE_CONSTRAINTS.CATEGORIES.VALUES[3], // "variety"
-    target: 2,
-    reward: { type: OBJECTIVE_CONSTRAINTS.REWARD_TYPES.VALUES[0], value: 30 }, // "points"
-    difficulty: OBJECTIVE_CONSTRAINTS.DIFFICULTY.VALUES[0] // "easy"
-  }
-];
+// Helper: chiave periodo giornaliero
+function getDailyPeriodKey(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 class TrophyService {
   // Trofei basati sui livelli dell'utente
@@ -91,9 +73,17 @@ class TrophyService {
         });
         await userTrophy.save();
 
-        // Aggiorna i punti dell'utente
+        // Aggiorna i punti dell'utente e ricalcola il livello
         user.totalPoints = (user.totalPoints || 0) + trophy.points;
-        await user.save();
+        const newLevel = calculateLevel(user.totalPoints);
+        if (newLevel !== user.level) {
+          user.level = newLevel;
+          user.experienceToNextLevel = (newLevel + 1) * LEVEL_CONSTRAINTS.EXPERIENCE.DEFAULT_TO_NEXT_LEVEL;
+          await user.save();
+          // Dopo un cambio livello, potrebbero esserci altri trofei a cascata; continua il loop
+        } else {
+          await user.save();
+        }
 
         newlyUnlocked.push(trophy);
       }
@@ -115,20 +105,17 @@ class TrophyService {
     };
 
     for (const p of progress) {
-      if (p.completed) {
-        stats.gamesCompleted++;
-        stats.totalScore += p.score || 0;
-        stats.maxScore = Math.max(stats.maxScore, p.score || 0);
-        stats.gameTypes.add(p.game);
-        
-        const { SCORE_CONSTRAINTS } = require('../../../shared/constraints');
-        if (p.score >= SCORE_CONSTRAINTS.MAX_SCORE_PER_GAME) stats.perfectGames++;
-        
-        if (!stats.scoresByGameType[p.game]) {
-          stats.scoresByGameType[p.game] = [];
-        }
-        stats.scoresByGameType[p.game].push(p.score || 0);
+      stats.gamesCompleted++;
+      stats.totalScore += p.score || 0;
+      stats.maxScore = Math.max(stats.maxScore, p.score || 0);
+      stats.gameTypes.add(p.game);
+
+      if ((p.score || 0) >= SCORE_CONSTRAINTS.MAX_SCORE_PER_GAME) stats.perfectGames++;
+
+      if (!stats.scoresByGameType[p.game]) {
+        stats.scoresByGameType[p.game] = [];
       }
+      stats.scoresByGameType[p.game].push(p.score || 0);
     }
 
     return stats;
@@ -138,10 +125,7 @@ class TrophyService {
   static checkTrophyRequirements(trophy, stats) {
     const req = trophy.requirements;
 
-    // Per i trofei basati sui livelli
     if (req.level && stats.level < req.level) return false;
-    
-    // Per i trofei legacy (se esistono ancora)
     if (req.gamesCompleted && stats.gamesCompleted < req.gamesCompleted) return false;
     if (req.maxScore && stats.maxScore < req.maxScore) return false;
     if (req.totalScore && stats.totalScore < req.totalScore) return false;
@@ -200,91 +184,51 @@ class TrophyService {
   // Ottieni obiettivi attivi per un utente
   static async getUserObjectives(userId) {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const periodKey = getDailyPeriodKey(now);
+    const activeObjectives = OBJECTIVE_DEFINITIONS.DAILY;
 
-    // Crea obiettivi giornalieri se non esistono
-    await this.createDailyObjectives(today, tomorrow);
+    const userObjectives = await UserObjective.find({ userId, type: 'daily', periodKey });
 
-    const activeObjectives = await Objective.find({
-      isActive: true,
-      startDate: { $lte: now },
-      endDate: { $gt: now }
-    });
-
-    const userObjectives = await UserObjective.find({ userId })
-      .populate('objectiveId');
-
-    const objectivesWithProgress = activeObjectives.map(obj => {
-      const userObj = userObjectives.find(uo => 
-        uo.objectiveId._id.toString() === obj._id.toString()
-      );
-
+    return activeObjectives.map(obj => {
+      const userObj = userObjectives.find(uo => uo.objectiveId === obj.id);
       return {
-        ...obj.toObject(),
+        _id: obj.id,
+        ...obj,
         progress: userObj ? userObj.progress : 0,
         isCompleted: userObj ? userObj.isCompleted : false,
         rewardClaimed: userObj ? userObj.rewardClaimed : false
       };
     });
-
-    return objectivesWithProgress;
-  }
-
-  // Crea obiettivi giornalieri
-  static async createDailyObjectives(startDate, endDate) {
-    const existingObjectives = await Objective.find({
-      startDate: startDate,
-      type: "daily"
-    });
-
-    if (existingObjectives.length > 0) {
-      return; // Gli obiettivi per oggi esistono già
-    }
-
-    // Usa la configurazione centralizzata
-    for (const baseObj of dailyObjectives) {
-      const objective = {
-        ...baseObj,
-        startDate: startDate,
-        endDate: endDate,
-        isActive: true
-      };
-      await Objective.findOneAndUpdate(
-        { title: objective.title, type: "daily", startDate: startDate },
-        objective,
-        { upsert: true, new: true }
-      );
-    }
   }
 
   // Aggiorna progresso obiettivi
   static async updateObjectiveProgress(userId, gameType, score, completed) {
     try {
       // Ottieni tutti gli obiettivi attivi per oggi
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      const now = new Date();
+      const periodKey = getDailyPeriodKey(now);
+      const startOfDay = new Date(now);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setDate(endOfDay.getDate() + 1);
 
-      const activeObjectives = await Objective.find({
-        isActive: true,
-        startDate: { $lte: today },
-        endDate: { $gt: today }
-      });
+      const activeObjectives = OBJECTIVE_DEFINITIONS.DAILY;
 
       // Ottieni o crea UserObjective per ogni obiettivo attivo
       for (const objective of activeObjectives) {
         let userObjective = await UserObjective.findOne({
           userId,
-          objectiveId: objective._id
+          objectiveId: objective.id,
+          type: 'daily',
+          periodKey
         });
 
         if (!userObjective) {
           userObjective = new UserObjective({
             userId,
-            objectiveId: objective._id,
+            objectiveId: objective.id,
+            type: 'daily',
+            periodKey,
             progress: 0,
             isCompleted: false,
             rewardClaimed: false
@@ -301,25 +245,26 @@ class TrophyService {
               shouldUpdate = true;
             }
             break;
-          case 'score':
-            if (score >= objective.target && userObjective.progress < objective.target) {
-              newProgress = objective.target;
-              shouldUpdate = true;
-            }
+          case 'score': {
+            const todayGames = await Progress.find({
+              user: userId,
+              date: { $gte: startOfDay, $lt: endOfDay }
+            });
+            const totalDailyScore = todayGames.reduce((sum, g) => sum + (g.score || 0), 0);
+            newProgress = Math.min(objective.target, totalDailyScore);
+            shouldUpdate = newProgress !== userObjective.progress;
             break;
+          }
           case 'variety':
-            // Per la varietà, dobbiamo tracciare i tipi di giochi giocati oggi
-            if (completed) {
-              // Ottieni tutti i giochi completati oggi dall'utente
+            {
               const todayGames = await Progress.find({
                 user: userId,
-                completed: true,
-                date: { $gte: today, $lt: tomorrow }
+                date: { $gte: startOfDay, $lt: endOfDay },
+                completed: true
               });
-
               const uniqueGameTypes = new Set(todayGames.map(g => g.game));
               newProgress = uniqueGameTypes.size;
-              shouldUpdate = true;
+              shouldUpdate = newProgress !== userObjective.progress;
             }
             break;
         }
@@ -341,19 +286,17 @@ class TrophyService {
   // Riscatta ricompensa obiettivo
   static async claimObjectiveReward(userId, objectiveId) {
     try {
-      // Trova l'obiettivo e il progresso dell'utente
-      const objective = await Objective.findById(objectiveId);
-      
-      // Trova il progresso dell'utente per questo obiettivo
+      // Trova definizione obiettivo
+      const objective = [...OBJECTIVE_DEFINITIONS.DAILY].find(o => o.id === objectiveId);
+      if (!objective) throw new Error('Obiettivo non trovato');
+
+      const periodKey = getDailyPeriodKey(new Date());
       const userObjective = await UserObjective.findOne({
         userId,
-        objectiveId
+        objectiveId,
+        type: 'daily',
+        periodKey
       });
-      
-      // Verifica che l'obiettivo esista e sia completato ma non ancora riscattato
-      if (!objective) {
-        throw new Error('Obiettivo non trovato');
-      }
       
       if (!userObjective) {
         throw new Error('Progresso obiettivo non trovato');
@@ -378,6 +321,12 @@ class TrophyService {
       
       const oldPoints = user.totalPoints || 0;
       user.totalPoints = oldPoints + pointsEarned;
+      // Ricalcola il livello dopo l'aumento punti da ricompensa
+      const newLevel = calculateLevel(user.totalPoints);
+      if (newLevel !== user.level) {
+        user.level = newLevel;
+        user.experienceToNextLevel = (newLevel + 1) * LEVEL_CONSTRAINTS.EXPERIENCE.DEFAULT_TO_NEXT_LEVEL;
+      }
       await user.save();
       
       // Marca la ricompensa come riscattata

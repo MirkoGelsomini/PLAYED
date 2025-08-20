@@ -28,6 +28,10 @@ const Button = ({ children, variant = 'primary', ...props }) => {
     buttonStyles.background = 'var(--gradient-sun)';
     buttonStyles.color = 'var(--gray-charcoal)';
     buttonStyles.boxShadow = 'var(--shadow-soft)';
+  } else if (variant === 'danger') {
+    buttonStyles.background = 'var(--gradient-danger)';
+    buttonStyles.color = 'var(--white-cloud)';
+    buttonStyles.boxShadow = 'var(--shadow-soft)';
   }
 
   return (

@@ -68,10 +68,7 @@ const navLinkStyle = {
   background: 'none',
 };
 
-const navLinkActiveStyle = {
-  background: 'var(--gradient-primary)',
-  color: 'var(--white-cloud)',
-};
+
 
 const buttonSeparatorStyle = {
   height: '28px',
@@ -91,15 +88,6 @@ const navSeparatorStyle = {
   alignSelf: 'center',
 };
 
-const avatarStyle = {
-  width: '32px',
-  height: '32px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-  marginRight: 'var(--spacing-s)',
-  border: '2px solid var(--secondary-color)',
-  background: 'var(--gradient-primary)',
-};
 
 const profileBtnStyle = {
   display: 'flex',
@@ -121,14 +109,7 @@ const dropdownStyle = {
   display: 'inline-block',
 };
 
-const dropdownBtnStyle = {
-  ...navLinkStyle,
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--spacing-s)',
-  cursor: 'pointer',
-  userSelect: 'none',
-};
+
 
 const dropdownMenuStyle = {
   position: 'absolute',
@@ -229,7 +210,9 @@ const Header = () => {
           {/* Desktop nav */}
           {screenSize === 'desktop' && (
             <nav style={navStyle} className="header-desktop-nav">
-              <Link to="/" className="nav-link">Home</Link>
+              {isAuthenticated && <Link to="/" className="nav-link">Home</Link>}
+            {isAuthenticated && user?.role !== 'docente' && (
+              <>    
               <span style={navSeparatorStyle}></span>
               <div style={dropdownStyle} ref={dropdownRef}>
                 <button
@@ -250,38 +233,59 @@ const Header = () => {
                   </div>
                 )}
               </div>
-              <span style={navSeparatorStyle}></span>
-              <Link to="/results" className="nav-link">Risultati</Link>
+              </>
+            )}
+              {isAuthenticated && user?.role !== 'docente' && (
+                <>
+                  <span style={navSeparatorStyle}></span>
+                  <Link to="/results" className="nav-link">Risultati</Link>
+                </>
+              )}
+              {isAuthenticated && user?.role === 'docente' && (
+                <>
+                  <span style={navSeparatorStyle}></span>
+                  <Link to="/teacher-panel" className="nav-link">Pannello Docente</Link>
+                </>
+              )}
             </nav>
           )}
           {/* Tablet nav */}
           {screenSize === 'tablet' && (
             <nav style={{...navStyle, fontSize: '0.98rem', gap: '1.2rem'}} className="header-tablet-nav">
-              <Link to="/" className="nav-link">Home</Link>
-              <div style={dropdownStyle} ref={dropdownRef}>
-                <button
-                  className="dropdown-btn"
-                  aria-haspopup="true"
-                  aria-expanded={dropdownOpen}
-                  onClick={() => setDropdownOpen((open) => !open)}
-                  style={{ fontSize: '1rem', padding: '6px 12px' }}
-                >
-                  Giochi <span style={{fontSize: '1.1em'}}>▼</span>
-                </button>
-                {dropdownOpen && (
-                  <div style={dropdownMenuStyle} role="menu">
-                    <Link to="/memory-selection" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Memory</Link>
-                    <Link to="/quiz-selection" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Quiz</Link>
-                    <Link to="/matching-selection" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Matching</Link>
-                    <Link to="/sorting" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Ordinamento</Link>
+              {isAuthenticated && <Link to="/" className="nav-link">Home</Link>}
+              {isAuthenticated && (
+                <>
+                  <div style={dropdownStyle} ref={dropdownRef}>
+                    <button
+                      className="dropdown-btn"
+                      aria-haspopup="true"
+                      aria-expanded={dropdownOpen}
+                      onClick={() => setDropdownOpen((open) => !open)}
+                      style={{ fontSize: '1rem', padding: '6px 12px' }}
+                    >
+                      Giochi <span style={{fontSize: '1.1em'}}>▼</span>
+                    </button>
+                    {dropdownOpen && (
+                      <div style={dropdownMenuStyle} role="menu">
+                        <Link to="/memory-selection" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Memory</Link>
+                        <Link to="/quiz-selection" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Quiz</Link>
+                        <Link to="/matching-selection" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Matching</Link>
+                        <Link to="/sorting" className="nav-link" style={dropdownItemStyle} onClick={() => setDropdownOpen(false)} role="menuitem">Ordinamento</Link>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <Link to="/results" className="nav-link">Risultati</Link>
+                  {user?.role !== 'docente' && (
+                    <Link to="/results" className="nav-link">Risultati</Link>
+                  )}
+                  {user?.role === 'docente' && (
+                    <Link to="/teacher-panel" className="nav-link">Pannello Docente</Link>
+                  )}
+                </>
+              )}
             </nav>
           )}
           {/* Mobile nav hamburger */}
-          {screenSize === 'mobile' && (
+          {screenSize === 'mobile' && isAuthenticated && (
             <button className="header-hamburger" style={{ marginLeft: 16, background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', alignItems: 'center', color: 'var(--primary-color)' }} onClick={() => setNavMobileOpen(o => !o)} aria-label="Menu principale">
               <FaBars />
             </button>
@@ -350,21 +354,30 @@ const Header = () => {
           {renderOverlay(() => setNavMobileOpen(false))}
           <nav className="header-mobile-nav" style={{ position: 'fixed', top: 0, left: 0, width: 320, maxWidth: '90vw', height: '100vh', background: 'var(--white-cloud)', zIndex: 2001, boxShadow: 'var(--shadow-medium)', padding: 'var(--spacing-xl) 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, transition: 'left 0.2s' }}>
             <button style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', fontSize: 28, color: 'var(--primary-color)', cursor: 'pointer' }} onClick={() => setNavMobileOpen(false)} aria-label="Chiudi menu"><FaTimes /></button>
-            <Link to="/" className="nav-link" onClick={() => setNavMobileOpen(false)}>Home</Link>
-            <div style={{ position: 'relative', width: '100%', textAlign: 'center' }}>
-              <button className="dropdown-btn" style={{ width: '100%', background: 'none', border: 'none', color: 'var(--primary-color)', fontWeight: 700, fontSize: '1.1rem', padding: 'var(--spacing-s) var(--spacing-l)', borderRadius: 'var(--border-radius-small)', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} onClick={() => setDropdownOpen(o => !o)}>
-                Giochi <span style={{fontSize: '1.1em'}}>▼</span>
-              </button>
-              {dropdownOpen && (
-                <div style={{ ...dropdownMenuStyle, position: 'static', boxShadow: 'none', marginTop: 0, background: 'var(--gray-stone)' }} role="menu">
-                  <Link to="/memory-selection" className="nav-link" style={dropdownItemStyle} onClick={() => { setDropdownOpen(false); setNavMobileOpen(false); }} role="menuitem">Memory</Link>
-                  <Link to="/quiz-selection" className="nav-link" style={dropdownItemStyle} onClick={() => { setDropdownOpen(false); setNavMobileOpen(false); }} role="menuitem">Quiz</Link>
-                  <Link to="/matching-selection" className="nav-link" style={dropdownItemStyle} onClick={() => { setDropdownOpen(false); setNavMobileOpen(false); }} role="menuitem">Matching</Link>
-                  <Link to="/sorting" className="nav-link" style={dropdownItemStyle} onClick={() => { setDropdownOpen(false); setNavMobileOpen(false); }} role="menuitem">Ordinamento</Link>
+            {isAuthenticated && (
+              <>
+                <Link to="/" className="nav-link" onClick={() => setNavMobileOpen(false)}>Home</Link>
+                <div style={{ position: 'relative', width: '100%', textAlign: 'center' }}>
+                  <button className="dropdown-btn" style={{ width: '100%', background: 'none', border: 'none', color: 'var(--primary-color)', fontWeight: 700, fontSize: '1.1rem', padding: 'var(--spacing-s) var(--spacing-l)', borderRadius: 'var(--border-radius-small)', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} onClick={() => setDropdownOpen(o => !o)}>
+                    Giochi <span style={{fontSize: '1.1em'}}>▼</span>
+                  </button>
+                  {dropdownOpen && (
+                    <div style={{ ...dropdownMenuStyle, position: 'static', boxShadow: 'none', marginTop: 0, background: 'var(--gray-stone)' }} role="menu">
+                      <Link to="/memory-selection" className="nav-link" style={dropdownItemStyle} onClick={() => { setDropdownOpen(false); setNavMobileOpen(false); }} role="menuitem">Memory</Link>
+                      <Link to="/quiz-selection" className="nav-link" style={dropdownItemStyle} onClick={() => { setDropdownOpen(false); setNavMobileOpen(false); }} role="menuitem">Quiz</Link>
+                      <Link to="/matching-selection" className="nav-link" style={dropdownItemStyle} onClick={() => { setDropdownOpen(false); setNavMobileOpen(false); }} role="menuitem">Matching</Link>
+                      <Link to="/sorting" className="nav-link" style={dropdownItemStyle} onClick={() => { setDropdownOpen(false); setNavMobileOpen(false); }} role="menuitem">Ordinamento</Link>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <Link to="/results" className="nav-link" onClick={() => setNavMobileOpen(false)}>Risultati</Link>
+                {user?.role !== 'docente' && (
+                  <Link to="/results" className="nav-link" onClick={() => setNavMobileOpen(false)}>Risultati</Link>
+                )}
+                {user?.role === 'docente' && (
+                  <Link to="/teacher-panel" className="nav-link" onClick={() => setNavMobileOpen(false)}>Pannello Docente</Link>
+                )}
+              </>
+            )}
           </nav>
         </>
       )}

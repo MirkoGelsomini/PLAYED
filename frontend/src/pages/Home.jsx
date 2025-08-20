@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import { fetchGames, fetchQuestions, fetchDetailedProgress } from '../core/api';
 import { Link } from 'react-router-dom';
 import GameBadge from '../components/GameBadge';
@@ -7,6 +7,8 @@ import '../styles/main.css';
 import RotatingText from '../components/RotatingText'
 import { useAuth } from '../core/AuthContext';
 import SidebarSuggerimenti from '../components/SidebarSuggerimenti';
+import axios from 'axios';
+import { SidebarRefreshContext } from '../core/SidebarRefreshContext';
 
 
 const heroStyle = {
@@ -33,35 +35,31 @@ const Home = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
-  const [showPublic, setShowPublic] = useState(false);
   const [detailedProgress, setDetailedProgress] = useState({});
   const [progressLoading, setProgressLoading] = useState(true);
-  const { isAuthenticated, handle401 } = useAuth();
+  const { isAuthenticated, handle401, user } = useAuth();
+  const { refreshToken } = useContext(SidebarRefreshContext);
   const mainRef = useRef();
-  const [sidebarHidden, setSidebarHidden] = useState(true); // Sidebar nascosta di default
+  const [sidebarHidden, setSidebarHidden] = useState(true); 
 
   useEffect(() => {
     fetchGames().then(data => {
       let filteredGames = [];
       if (Array.isArray(data)) {
         filteredGames = data.filter(game => 
-          game.type === 'memory_selection' || game.type === 'quiz_selection' || game.type === 'matching_selection'
+          game.type === 'quiz_selection' || game.type === 'memory_selection' || game.type === 'matching_selection' || game.type === 'sorting_selection'
         );
       } else if (data && Array.isArray(data.games)) {
         filteredGames = data.games.filter(game => 
-          game.type === 'memory_selection' || game.type === 'quiz_selection' || game.type === 'matching_selection'
+          game.type === 'quiz_selection' || game.type === 'memory_selection' ||  game.type === 'matching_selection' || game.type === 'sorting_selection'
         );
       }
       setGames(filteredGames);
       setLoading(false);
     }).catch(err => {
-      // Se errore 401, mostra Home pubblica
-      if (err.message && err.message.toLowerCase().includes('401')) {
-        setShowPublic(true);
-        if (handle401) handle401();
-      } else {
-        setShowPublic(true);
-      }
+      console.error('Errore nel caricamento giochi:', err);
+      setGames([]);
+      setLoading(false);
     });
     
     // Carica domande filtrate per età
@@ -84,14 +82,20 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated && !showPublic) {
+    if (isAuthenticated && user?.role !== 'docente') {
       loadDetailedProgress();
       
       // Refresh automatico ogni 30 secondi
       const interval = setInterval(loadDetailedProgress, 30000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, showPublic]);
+  }, [isAuthenticated, user?.role]);
+
+  // Ricarica progressi quando arriva un refresh globale (es. domanda risolta)
+  useEffect(() => {
+    if (!isAuthenticated || user?.role === 'docente') return;
+    loadDetailedProgress();
+  }, [refreshToken, isAuthenticated, user?.role]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -107,8 +111,13 @@ const Home = () => {
     return () => window.removeEventListener('sidebar-width', handler);
   }, []);
 
-  if (!isAuthenticated || showPublic) {
+  if (!isAuthenticated) {
     return <PublicHome />;
+  }
+
+  // Se l'utente è un docente, mostra la TeacherHome
+  if (user?.role === 'docente') {
+    return <TeacherHome user={user} />;
   }
 
   return (
@@ -173,14 +182,6 @@ const Home = () => {
                 />
               ))
             )}
-            {/* Card per il nuovo gioco di ordinamento */}
-            <GameBadge
-              name="Ordinamento"
-              description="Trascina per mettere in ordine!"
-              to="/sorting"
-              type="sorting"
-              category="sorting"
-            />
           </div>
         )}
       </div>
@@ -194,6 +195,203 @@ const Home = () => {
           setSidebarHidden(true);
           if (mainRef.current) mainRef.current.style.marginRight = '0px';
         }} />
+      )}
+    </div>
+  );
+};
+
+// Home dedicata per i docenti
+const TeacherHome = ({ user }) => {
+  const [teacherStats, setTeacherStats] = useState({
+    totalQuestions: 0,
+    approvedQuestions: 0,
+    pendingQuestions: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [recentQuestions, setRecentQuestions] = useState([]);
+
+  useEffect(() => {
+    loadTeacherData();
+  }, []);
+
+  const loadTeacherData = async () => {
+    try {
+      const response = await axios.get('/api/questions/teacher');
+      const questions = response.data.data || [];
+      
+      setTeacherStats({
+        totalQuestions: questions.length,
+        approvedQuestions: questions.filter(q => q.approved).length,
+        pendingQuestions: questions.filter(q => !q.approved).length
+      });
+      
+      // Mostra le ultime 5 domande create
+      setRecentQuestions(questions.slice(0, 5));
+      setLoading(false);
+    } catch (error) {
+      console.error('Errore nel caricamento dati docente:', error);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+      {/* Hero Section per Docenti */}
+      <section style={{
+        ...heroStyle,
+        background: 'var(--gradient-primary)',
+        textAlign: 'center',
+      }}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>
+          Benvenuto, Prof. {user.name}! 👨‍🏫
+        </h1>
+      </section>
+
+      {/* Statistiche Rapide */}
+      <section style={{ margin: '2rem 0' }}>
+        <h2 style={{ textAlign: 'center', margin: '2rem 0 1.5rem 0', fontWeight: 700, color: '#1f2937' }}>
+          Le tue Statistiche
+        </h2>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <p>Caricamento statistiche...</p>
+          </div>
+        ) : (
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+            gap: '1.5rem', 
+            marginBottom: '2rem' 
+          }}>
+            <div style={{
+              background: 'var(--gradient-sky)',
+              color: 'var(--gray-charcoal)',
+              padding: '1.5rem',
+              borderRadius: 'var(--border-radius-large)',
+              textAlign: 'center',
+              boxShadow: 'var(--shadow-medium)'
+            }}>
+              <h3 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>📝</h3>
+              <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{teacherStats.totalQuestions}</p>
+              <p style={{ margin: '0.5rem 0 0 0' }}>Domande Totali</p>
+            </div>
+            
+            <div style={{
+              background: 'var(--gradient-success)',
+              color: 'var(--gray-charcoal)',
+              padding: '1.5rem',
+              borderRadius: 'var(--border-radius-large)',
+              textAlign: 'center',
+              boxShadow: 'var(--shadow-medium)'
+            }}>
+              <h3 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>✅</h3>
+              <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{teacherStats.approvedQuestions}</p>
+              <p style={{ margin: '0.5rem 0 0 0' }}>Domande Approvate</p>
+            </div>
+            
+            <div style={{
+              background: 'var(--gradient-warning)',
+              color: 'var(--gray-charcoal)',
+              padding: '1.5rem',
+              borderRadius: 'var(--border-radius-large)',
+              textAlign: 'center',
+              boxShadow: 'var(--shadow-medium)'
+            }}>
+              <h3 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>⏳</h3>
+              <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{teacherStats.pendingQuestions}</p>
+              <p style={{ margin: '0.5rem 0 0 0' }}>In Attesa di Approvazione</p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Azioni Rapide */}
+      <section style={{ margin: '3rem 0' }}>
+        <h2 style={{ textAlign: 'center', margin: '2rem 0 1.5rem 0', fontWeight: 700, color: '#1f2937' }}>
+          Azioni Rapide
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '1.5rem'
+        }}>
+          <Link to="/teacher-panel" style={{ textDecoration: 'none' }}>
+            <div style={{
+              background: 'var(--white-cloud)',
+              border: '3px solid var(--primary-color)',
+              borderRadius: 'var(--border-radius-large)',
+              padding: '2rem',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'var(--transition-fast)',
+              boxShadow: 'var(--shadow-soft)'
+            }}
+            onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
+            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            >
+              <h3 style={{ fontSize: '3rem', margin: '0 0 1rem 0' }}>🎯</h3>
+              <h4 style={{ color: 'var(--primary-color)', margin: '0 0 1rem 0', fontSize: '1.3rem' }}>
+                Pannello Docente
+              </h4>
+              <p style={{ color: 'var(--text-color)', margin: 0 }}>
+                Crea nuove domande con SAGE e gestisci quelle esistenti
+              </p>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* Domande Recenti */}
+      {recentQuestions.length > 0 && (
+        <section style={{ margin: '3rem 0' }}>
+          <h2 style={{ textAlign: 'center', margin: '2rem 0 1.5rem 0', fontWeight: 700, color: '#1f2937' }}>
+            Ultime Domande Create
+          </h2>
+          <div style={{
+            background: 'var(--white-cloud)',
+            border: '2px solid var(--gray-light)',
+            borderRadius: 'var(--border-radius-large)',
+            padding: '1.5rem'
+          }}>
+            {recentQuestions.map((question, index) => (
+              <div key={question._id || index} style={{
+                padding: '1rem',
+                borderBottom: index < recentQuestions.length - 1 ? '1px solid var(--gray-light)' : 'none',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div>
+                  <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--primary-color)' }}>
+                    {question.type} - {question.category}
+                  </h4>
+                  <p style={{ margin: 0, color: 'var(--text-color)', fontSize: '0.9rem' }}>
+                    {question.question?.substring(0, 100)}...
+                  </p>
+                </div>
+                <div style={{
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: 'var(--border-radius-small)',
+                  background: question.approved ? 'var(--success-color)' : 'var(--warning-color)',
+                  color: 'var(--white-cloud)',
+                  fontSize: '0.8rem',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {question.approved ? '✓ Approvata' : '⏳ In attesa'}
+                </div>
+              </div>
+            ))}
+            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+              <Link to="/teacher-panel" style={{
+                color: 'var(--primary-color)',
+                textDecoration: 'none',
+                fontWeight: 'bold'
+              }}>
+                Vedi tutte le domande →
+              </Link>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );

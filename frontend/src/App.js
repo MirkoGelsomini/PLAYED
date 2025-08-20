@@ -1,6 +1,6 @@
 import './App.css';
 import './styles/design-system.css';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import Home from './pages/Home';
@@ -12,18 +12,23 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Results from './pages/Results';
-import Sorting from './games/Sorting';
 import SortingSelectionPage from './pages/SortingSelectionPage';
 import SortingCategoryPage from './pages/SortingCategoryPage';
+import TeacherPanel from './pages/TeacherPanel';
 import { AuthProvider, useAuth } from './core/AuthContext';
 import { SidebarRefreshProvider } from './core/SidebarRefreshContext';
 
 function ProtectedRoute({ element }) {
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) {
-    window.location.href = '/login';
-    return null;
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Caricamento...</div>;
   }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
   return element;
 }
 
@@ -45,6 +50,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/results" element={<ProtectedRoute element={<Results />} />} />
+            <Route path="/teacher-panel" element={<ProtectedRoute element={<TeacherPanel />} />} />
           </Routes>
           <Footer />
         </SidebarRefreshProvider>

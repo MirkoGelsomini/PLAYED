@@ -1,10 +1,13 @@
 const userService = require('../services/userService');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const { createError, assert } = require('../utils/errorHandler');
-
 const JWT_SECRET = process.env.JWT_SECRET;
+
+/**
+ * Controller per gestire gli utenti
+ */
 
 // Crea un nuovo utente
 async function createUser(req, res) {
@@ -38,42 +41,37 @@ async function getAllUsers(req, res) {
 // Aggiorna utente
 async function updateUser(req, res) {
   try {
-    // Recupera l'utente attuale per confrontare l'età
+    // Recupera l'utente attuale per confrontare i dati scolastici
     const currentUser = await User.findById(req.params.id);
     if (!currentUser) {
       return res.status(404).json({ error: 'Utente non trovato' });
     }
 
-    const oldAge = currentUser.age;
+    const oldSchoolLevel = currentUser.schoolLevel;
+    const oldClass = currentUser.class;
     const user = await userService.updateUser(req.params.id, req.body);
     assert.found(user, 'Utente non trovato');
     
-    // Se l'età è cambiata, pulisci i progressi per forzare il ricaricamento delle domande
-    if (oldAge !== user.age) {
-      console.log(`Età utente cambiata da ${oldAge} a ${user.age}, pulendo progressi...`);
+    // Se i dati scolastici sono cambiati, pulisci i progressi per forzare il ricaricamento delle domande
+    if (oldSchoolLevel !== user.schoolLevel || oldClass !== user.class) {
       
-      // Opzionale: puoi decidere se cancellare tutti i progressi o solo quelli dei quiz
-      // Per ora, lasciamo i progressi ma forziamo il ricaricamento delle domande
-      // Se vuoi cancellare i progressi, decommenta la riga seguente:
-      // await Progress.deleteMany({ user: req.params.id });
-      
-      // Aggiorna il token JWT con la nuova età
-      const { SESSION_CONSTRAINTS } = require('../../../shared/constraints');
+      // Aggiorna il token JWT con i nuovi dati scolastici
       const newToken = jwt.sign({ 
         id: user._id.toString(), 
         role: user.role, 
-        age: user.age, 
+        schoolLevel: user.schoolLevel, 
+        class: user.class,
         name: user.name 
       }, JWT_SECRET, { 
-        expiresIn: `${SESSION_CONSTRAINTS.JWT_EXPIRY.HOURS}h` 
+        expiresIn: '24h' 
       });
       
       // Imposta il nuovo token nel cookie
       res.cookie('token', newToken, {
-        httpOnly: SESSION_CONSTRAINTS.COOKIE.HTTP_ONLY,
-        secure: SESSION_CONSTRAINTS.COOKIE.SECURE,
-        sameSite: SESSION_CONSTRAINTS.COOKIE.SAME_SITE,
-        maxAge: SESSION_CONSTRAINTS.JWT_EXPIRY.MILLISECONDS,
+        httpOnly: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        maxAge: 24 * 60 * 60 * 1000, // 24 ore
         path: '/',
       });
     }
@@ -109,29 +107,35 @@ async function login(req, res) {
   // Assicurati che l'ID sia una stringa valida
   const userId = user._id.toString();
   
-  // Includi anche age e name nel payload del token
-  const { SESSION_CONSTRAINTS } = require('../../../shared/constraints');
-  const token = jwt.sign({ id: userId, role: user.role, age: user.age, name: user.name }, JWT_SECRET, { expiresIn: `${SESSION_CONSTRAINTS.JWT_EXPIRY.HOURS}h` });
+  // Includi anche schoolLevel, class e name nel payload del token
+  const token = jwt.sign({ 
+    id: userId, 
+    role: user.role, 
+    schoolLevel: user.schoolLevel, 
+    class: user.class,
+    name: user.name 
+  }, JWT_SECRET, { 
+    expiresIn: '24h' 
+  });
   
   // Imposta il token in un cookie httpOnly e secure
   res.cookie('token', token, {
-    httpOnly: SESSION_CONSTRAINTS.COOKIE.HTTP_ONLY,
-    secure: SESSION_CONSTRAINTS.COOKIE.SECURE,
-    sameSite: SESSION_CONSTRAINTS.COOKIE.SAME_SITE,
-    maxAge: SESSION_CONSTRAINTS.JWT_EXPIRY.MILLISECONDS,
+    httpOnly: true, // Sempre true per sicurezza
+    secure: process.env.NODE_ENV === 'production', // Solo in produzione
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000, // 24 ore
     path: '/',
   });
   
-  res.json({ user: { id: userId, name: user.name, role: user.role, age: user.age } });
+  res.json({ user: { id: userId, name: user.name, role: user.role, schoolLevel: user.schoolLevel, class: user.class } });
 }
 
 // Logout: cancella il cookie JWT
 function logout(req, res) {
-  const { SESSION_CONSTRAINTS } = require('../../../shared/constraints');
   res.clearCookie('token', {
-    httpOnly: SESSION_CONSTRAINTS.COOKIE.HTTP_ONLY,
-    secure: SESSION_CONSTRAINTS.COOKIE.SECURE,
-    sameSite: SESSION_CONSTRAINTS.COOKIE.SAME_SITE,
+    httpOnly: true, // Sempre true per sicurezza
+    secure: process.env.NODE_ENV === 'production', // Solo in produzione
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     path: '/',
   });
   res.json({ message: 'Logout effettuato' });

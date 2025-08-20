@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import './Matching.css';
 import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
 import { useLocation } from 'react-router-dom';
+import { SidebarRefreshContext } from '../../core/SidebarRefreshContext';
 
 const LEVEL_THRESHOLD = 5;
 
@@ -31,6 +32,7 @@ const MatchingGame = ({ pairs: propPairs = [], config = {}, category, onQuestion
   const [completed, setCompleted] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [progressSaved, setProgressSaved] = useState(false);
+  const { refresh } = useContext(SidebarRefreshContext);
 
   // Array di colori per le diverse coppie (stesso sistema del Memory)
   const pairColors = [
@@ -59,7 +61,7 @@ const MatchingGame = ({ pairs: propPairs = [], config = {}, category, onQuestion
         
         // Se c'è un questionId specifico, trova quella domanda
         if (questionIdParam) {
-          const specificQuestion = allQuestions.find(q => q.id.toString() === questionIdParam);
+          const specificQuestion = allQuestions.find(q => (q.id || q._id)?.toString() === questionIdParam);
           if (specificQuestion) {
             allQuestions = [specificQuestion];
           } else {
@@ -74,15 +76,15 @@ const MatchingGame = ({ pairs: propPairs = [], config = {}, category, onQuestion
             selectedQuestion = allQuestions[0];
           } else {
             // Preferisci domande non risposte
-            selectedQuestion = allQuestions.find(q => !answeredQuestions.find(aq => aq.id === q.id)) || allQuestions[0];
+            selectedQuestion = allQuestions.find(q => !answeredQuestions.find(aq => (aq.id || aq._id) === (q.id || q._id))) || allQuestions[0];
           }
         }
         
         if (selectedQuestion && Array.isArray(selectedQuestion.pairs)) {
-          // Usa solo le coppie della domanda selezionata
-          const questionPairs = selectedQuestion.pairs.map((p, idx) => ({ 
+           // Usa solo le coppie della domanda selezionata
+           const questionPairs = selectedQuestion.pairs.map((p, idx) => ({ 
             ...p, 
-            id: selectedQuestion.id, 
+             id: selectedQuestion.id || selectedQuestion._id, 
             difficulty: selectedQuestion.difficulty,
             colorIndex: idx // Aggiungi l'indice del colore per ogni coppia
           }));
@@ -146,6 +148,8 @@ const MatchingGame = ({ pairs: propPairs = [], config = {}, category, onQuestion
           const currentLevelProgress = correctPerLevel[maxUnlockedLevel?.toString()] || 0;
           setLevelProgress(currentLevelProgress);
         }
+        // Notifica global refresh (Sidebar e schermate collegate)
+        if (typeof refresh === 'function') refresh();
       })
       .catch(err => {
         console.error('Errore salvataggio progressi Matching:', err);

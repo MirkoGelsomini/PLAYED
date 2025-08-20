@@ -77,22 +77,6 @@ const MatchingSelectionPage = () => {
     margin: '2rem 0',
   };
 
-  const backButtonStyle = {
-    background: 'none',
-    color: '#4A90E2',
-    border: '2px solid #4A90E2',
-    borderRadius: '999px',
-    padding: '0.35em 1.1em',
-    fontWeight: 700,
-    fontSize: '0.98rem',
-    cursor: 'pointer',
-    textDecoration: 'none',
-    display: 'inline-block',
-    marginBottom: '2rem',
-    transition: 'background 0.18s, color 0.18s, border 0.18s',
-    outline: 'none',
-  };
-
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem' }}>

@@ -7,7 +7,8 @@ import { SidebarRefreshContext } from '../core/SidebarRefreshContext';
 const MATERIE = [
   { key: 'quiz', label: 'Quiz' },
   { key: 'memory', label: 'Memory' },
-  { key: 'matching', label: 'Matching' }
+  { key: 'matching', label: 'Matching' },
+  { key: 'sorting', label: 'Sorting' }
 ];
 
 const MIN_WIDTH = 260;
@@ -30,15 +31,18 @@ const SidebarSuggerimenti = ({ onHide }) => {
     const load = async () => {
       setLoading(true);
       setError(null);
-      let allSuggestions = [];
       try {
-        for (const materia of MATERIE) {
-          const res = await fetchQuestionProgressAndSuggestions(materia.key);
-          if (res.suggestions && res.suggestions.length > 0) {
-            allSuggestions.push(...res.suggestions.map(q => ({ ...q, materia: materia.label, gameType: materia.key }))); 
-          }
-        }
-        setSuggestions(allSuggestions);
+        const results = await Promise.all(
+          MATERIE.map(async (materia) => {
+            try {
+              const res = await fetchQuestionProgressAndSuggestions(materia.key);
+              return (res.suggestions || []).map(q => ({ ...q, materia: materia.label, gameType: materia.key }));
+            } catch (err) {
+              return [];
+            }
+          })
+        );
+        setSuggestions(results.flat());
       } catch (e) {
         setError(e.message);
       }
@@ -110,8 +114,13 @@ const SidebarSuggerimenti = ({ onHide }) => {
         <ul className="ss-sugg-list-beauty">
           {suggestions.length === 0 && <li className="ss-sugg-empty">Nessun suggerimento al momento.</li>}
           {suggestions.map((q, idx) => (
-            <li key={q.id + '-' + idx} className="ss-sugg-badge">
-              <Link to={`/game/${q.gameType}_${q.category}?questionId=${q.id}`} className="ss-sugg-link-beauty">
+            <li key={(q.id || q._id) + '-' + idx} className="ss-sugg-badge">
+              <Link 
+                to={q.gameType === 'sorting' 
+                  ? `/sorting/category/${encodeURIComponent(q.category)}?questionId=${q.id || q._id}` 
+                  : `/game/${q.gameType}_${q.category}?questionId=${q.id || q._id}`}
+                className="ss-sugg-link-beauty"
+              >
                 <div className="ss-sugg-header">
                   <span className="ss-sugg-materia-badge">{q.materia}</span>
                   <span className="ss-sugg-level-badge">Livello {q.difficulty}</span>

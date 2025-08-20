@@ -56,7 +56,7 @@ const MemorySelectionPage = () => {
         console.error('Errore nel caricamento dei giochi memory:', error);
         setLoading(false);
         // Se non ci sono domande disponibili, mostra un messaggio
-        if (error.message && error.message.includes('età non disponibile')) {
+        if (error.message && error.message.includes('dati scolastici non disponibili')) {
           setMemoryGames([]);
         }
       }
@@ -113,7 +113,7 @@ const MemorySelectionPage = () => {
       <div className="container">
         <div className="no-games">
           <h2>Nessun gioco Memory disponibile</h2>
-          <p>Non ci sono domande disponibili per la tua età. Prova a modificare la tua età nel profilo per vedere più contenuti.</p>
+          <p>Non ci sono domande disponibili per il tuo livello scolastico e classe. Prova a modificare i tuoi dati scolastici nel profilo per vedere più contenuti.</p>
         </div>
       </div>
     );

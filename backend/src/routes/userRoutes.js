@@ -1,9 +1,14 @@
-// Definizione delle rotte per gli utenti
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { authenticateToken } = require('../utils/authMiddleware');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+
+
+/**
+ * Rotte per gli utenti
+ */
 
 // Middleware per validare ObjectId
 const validateObjectId = (req, res, next) => {
@@ -38,14 +43,22 @@ router.get('/auth/status', (req, res) => {
   }
   
   try {
-    const jwt = require('jsonwebtoken');
     const JWT_SECRET = process.env.JWT_SECRET;
     const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Verifica che il token contenga i dati necessari
+    if (!decoded.id) {
+      console.error('Token non contiene ID utente');
+      return res.json({ isAuthenticated: false, user: null });
+    }
+    
     res.json({ isAuthenticated: true, user: decoded });
   } catch (error) {
+    console.error('Errore nella verifica del token:', error.message);
     res.json({ isAuthenticated: false, user: null });
   }
 });
+
 
 // CRUD - con validazione ObjectId
 router.post('/', userController.createUser); // Crea utente

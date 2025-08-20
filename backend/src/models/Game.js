@@ -1,4 +1,6 @@
-// Modello dati per i giochi
+/**
+ * Modello per generare dinamicamente i giochi
+ */
 
 const { GAME_CONFIGS } = require('../../../shared/constraints');
 
@@ -39,7 +41,7 @@ const generateMemoryGames = (questions) => {
       category: category,
       questionId: categoryQuestions[0].id, // Usa la prima domanda come riferimento
       config: {
-        pairs: categoryQuestions[0].pairs.length,
+        pairs: (categoryQuestions[0].memoryPairs?.length || categoryQuestions[0].pairs?.length || 6),
         timer: false,
         theme: category,
       },
@@ -174,6 +176,21 @@ const matchingSelectionGame = {
   ],
 };
 
+// Sorting generico per la selezione
+const sortingSelectionGame = {
+  id: 'sorting_selection',
+  name: 'SORTING',
+  description: 'Scegli la categoria e ordina gli elementi nel modo corretto.',
+  type: 'sorting_selection',
+  category: 'sorting',
+  config: {
+    theme: 'sorting',
+  },
+  assets: [
+    { id: 1, image: 'sorting.png', label: 'Sorting' }
+  ],
+};
+
 // In futuro: esporta una classe o schema per DB
 module.exports = { 
   generateMemoryGames,
@@ -181,5 +198,6 @@ module.exports = {
   generateMatchingGames,
   memorySelectionGame,
   quizSelectionGame,
-  matchingSelectionGame
+  matchingSelectionGame,
+  sortingSelectionGame
 }; 

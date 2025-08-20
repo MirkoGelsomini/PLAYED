@@ -1,0 +1,31 @@
+/* Toastify overrides aligned with our Natural Design Language */
+.toastify-played {
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-medium);
+  font-family: var(--font-family);
+  color: var(--white-cloud);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.toastify-played.toast-success {
+  background: var(--gradient-green) !important;
+}
+
+.toastify-played.toast-error {
+  background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%) !important;
+}
+
+.toastify-played.toast-info {
+  background: var(--gradient-sky) !important;
+}
+
+.toastify.toastify-right {
+  border-radius: var(--border-radius-large);
+}
+
+.toastify .toast-close {
+  color: var(--white-cloud);
+  opacity: 0.9;
+}
+
+

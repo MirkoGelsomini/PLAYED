@@ -1,13 +1,11 @@
-// Assicurati di installare la dipendenza:
-// npm install @hello-pangea/dnd
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import './Sorting.css';
 import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
-import { fetchQuestions } from '../../core/api';
+import { SidebarRefreshContext } from '../../core/SidebarRefreshContext';
 
 const LEVEL_THRESHOLD = 5;
 
@@ -34,6 +32,7 @@ function SortableItem({ id, children }) {
 
 const Sorting = ({ question }) => {
   const { user } = useAuth();
+  const { refresh } = useContext(SidebarRefreshContext);
   const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(1);
   const [levelProgress, setLevelProgress] = useState(0);
   const [showLevelUp, setShowLevelUp] = useState(false);
@@ -97,7 +96,7 @@ const Sorting = ({ question }) => {
       
       axios.post('/api/progress/answer', {
         sessionId: responseSessionId,
-        questionId: questionData.id || 'sorting',
+        questionId: questionData.id || questionData._id || 'sorting',
         isCorrect: true,
         questionDifficulty: difficulty
       }, { withCredentials: true })
@@ -113,6 +112,8 @@ const Sorting = ({ question }) => {
           const currentLevelProgress = correctPerLevel[maxUnlockedLevel?.toString()] || 0;
           setLevelProgress(currentLevelProgress);
         }
+        // Notifica global refresh (Sidebar e schermate collegate)
+        if (typeof refresh === 'function') refresh();
       })
       .catch(err => {
         console.error('Errore salvataggio progressi Sorting:', err);

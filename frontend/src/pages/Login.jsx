@@ -28,7 +28,8 @@ export default function Login() {
       loginContext(res.data.user);
       setEmail('');
       setPassword('');
-      setTimeout(() => navigate('/'), 500);
+      // Naviga immediatamente dopo il login
+      navigate('/');
     } catch (err) {
       handleComponentError(err, setError, setLoading);
     }

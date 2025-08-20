@@ -6,9 +6,11 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['allievo', 'docente'], required: true },
   // Campi specifici per Allievo
-  age: { type: Number },
-  schoolLevel: { type: String }, // es: primaria, secondaria di primo grado, ecc.
-  class: { type: String }, // es: 3A, 2B, ecc.
+  schoolLevel: { 
+    type: String, 
+    enum: ['prim', 'sec1', 'sec2']
+  },
+  class: { type: String }, // es: 1, 2, 3, 4, 5
   // Campi specifici per Docente
   subjects: [{ type: String }], // es: ['Matematica', 'Scienze']
   school: { type: String },
@@ -22,7 +24,7 @@ const userSchema = new mongoose.Schema({
   trophyCount: { type: Number, default: 0 },
   level: { type: Number, default: 1 },
   experience: { type: Number, default: 0 },
-  experienceToNextLevel: { type: Number, default: 100 }
+  experienceToNextLevel: { type: Number, default: 100 } // Questo sarà aggiornato dinamicamente
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema); 

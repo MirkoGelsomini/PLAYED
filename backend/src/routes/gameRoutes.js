@@ -1,66 +1,51 @@
-// Definizione delle rotte per i giochi
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
 const { 
   generateMemoryGames,
   generateQuizGames,
   generateMatchingGames,
   memorySelectionGame,
   quizSelectionGame,
-  matchingSelectionGame
+  matchingSelectionGame,
+  sortingSelectionGame
 } = require('../models/Game');
 const { authenticateToken } = require('../utils/authMiddleware');
+const questionService = require('../services/questionService');
 
-// Funzione per leggere le domande dal file JSON
-const getQuestions = () => {
-  try {
-    const questionsPath = path.join(__dirname, '../data/questions.json');
-    const data = fs.readFileSync(questionsPath, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Errore nella lettura delle domande:', error);
-    return [];
-  }
-};
-
-// Funzione di filtro domande per età e difficoltà
-function filterQuestions(questions, userAge, minDifficulty = 1, maxDifficulty = 10) {
-  return questions.filter(q => {
-    // Controlla difficoltà
-    const difficultyMatch = q.difficulty >= minDifficulty && q.difficulty <= maxDifficulty;
-    
-    // Controlla età se la domanda ha un ageRange
-    let ageMatch = true;
-    if (q.ageRange && Array.isArray(q.ageRange) && q.ageRange.length === 2) {
-      const [minAge, maxAge] = q.ageRange;
-      ageMatch = userAge >= minAge && userAge <= maxAge;
-    }
-    
-    return difficultyMatch && ageMatch;
-  });
-}
+/**
+ * Rotte per i giochi
+ */
 
 // Rotta per ottenere tutti i giochi (inclusi quiz e memory generati dinamicamente)
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const user = req.user;
-    if (!user || user.age === undefined || user.age === null) {
-      return res.status(401).json({ error: 'Utente non autenticato o età non disponibile' });
+    if (!user || !user.schoolLevel || !user.class) {
+      return res.status(401).json({ error: 'Utente non autenticato o dati scolastici non disponibili' });
     }
+    
     // Permetti di specificare difficoltà tramite query param
     const minDifficulty = req.query.minDifficulty ? parseInt(req.query.minDifficulty) : 1;
     const maxDifficulty = req.query.maxDifficulty ? parseInt(req.query.maxDifficulty) : 10;
-    const questions = getQuestions();
-    const filteredQuestions = filterQuestions(questions, user.age, minDifficulty, maxDifficulty);
-    const memoryGames = generateMemoryGames(filteredQuestions);
-    const quizGames = generateQuizGames(filteredQuestions);
-    const matchingGames = generateMatchingGames(filteredQuestions);
+    
+    // Recupera le domande dal database
+    const questions = await questionService.getQuestionsBySchoolLevel(
+      user.schoolLevel,
+      user.class,
+      null, // tipo (null = tutti)
+      null, // categoria (null = tutte)
+      minDifficulty,
+      maxDifficulty
+    );
+    
+    const memoryGames = generateMemoryGames(questions);
+    const quizGames = generateQuizGames(questions);
+    const matchingGames = generateMatchingGames(questions);
     const allGames = [
       memorySelectionGame,
       quizSelectionGame,
       matchingSelectionGame,
+      sortingSelectionGame,
       ...memoryGames,
       ...quizGames,
       ...matchingGames
@@ -72,65 +57,35 @@ router.get('/', authenticateToken, (req, res) => {
   }
 });
 
-// Rotta per ottenere domande filtrate per età
-router.get('/questions/filtered', authenticateToken, (req, res) => {
+// Rotta per ottenere domande filtrate per school level e classe
+router.get('/questions/filtered', authenticateToken, async (req, res) => {
   try {
     const user = req.user;
-    if (!user || user.age === undefined || user.age === null) {
-      return res.status(401).json({ error: 'Utente non autenticato o età non disponibile' });
+    if (!user || !user.schoolLevel || !user.class) {
+      return res.status(401).json({ error: 'Utente non autenticato o dati scolastici non disponibili' });
     }
     
     const minDifficulty = req.query.minDifficulty ? parseInt(req.query.minDifficulty) : 1;
     const maxDifficulty = req.query.maxDifficulty ? parseInt(req.query.maxDifficulty) : 10;
     const gameType = req.query.gameType; // opzionale: filtra per tipo di gioco
     
-    const questions = getQuestions();
-    let filteredQuestions = filterQuestions(questions, user.age, minDifficulty, maxDifficulty);
+    // Recupera le domande dal database
+    const questions = await questionService.getQuestionsBySchoolLevel(
+      user.schoolLevel,
+      user.class,
+      gameType, // tipo di gioco
+      null, // categoria (null = tutte)
+      minDifficulty,
+      maxDifficulty
+    );
     
-    // Filtra per tipo di gioco se specificato
-    if (gameType) {
-      filteredQuestions = filteredQuestions.filter(q => q.type === gameType);
-    }
-    
-    res.json(filteredQuestions);
+    res.json(questions);
   } catch (error) {
     console.error('Errore nel recupero delle domande filtrate:', error);
     res.status(500).json({ error: 'Errore interno del server' });
   }
 });
 
-// Rotta per ottenere un gioco specifico
-router.get('/:id', authenticateToken, (req, res) => {
-  try {
-    const user = req.user;
-    if (!user || user.age === undefined || user.age === null) {
-      return res.status(401).json({ error: 'Utente non autenticato o età non disponibile' });
-    }
-    const minDifficulty = req.query.minDifficulty ? parseInt(req.query.minDifficulty) : 1;
-    const maxDifficulty = req.query.maxDifficulty ? parseInt(req.query.maxDifficulty) : 10;
-    const { id } = req.params;
-    const questions = getQuestions();
-    const filteredQuestions = filterQuestions(questions, user.age, minDifficulty, maxDifficulty);
-    const memoryGames = generateMemoryGames(filteredQuestions);
-    const quizGames = generateQuizGames(filteredQuestions);
-    const matchingGames = generateMatchingGames(filteredQuestions);
-    const allGames = [
-      memorySelectionGame,
-      quizSelectionGame,
-      matchingSelectionGame,
-      ...memoryGames,
-      ...quizGames,
-      ...matchingGames
-    ];
-    const game = allGames.find(g => g.id === id);
-    if (!game) {
-      return res.status(404).json({ error: 'Gioco non trovato' });
-    }
-    res.json(game);
-  } catch (error) {
-    console.error('Errore nel recupero del gioco:', error);
-    res.status(500).json({ error: 'Errore interno del server' });
-  }
-});
+// Nota: la rotta "/:id" è stata rimossa perché non utilizzata e conteneva riferimenti a funzioni non definite
 
 module.exports = router; 

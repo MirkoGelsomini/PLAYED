@@ -1,13 +1,21 @@
 const Progress = require('../models/Progress');
-const User = require('../models/user');
+const User = require('../models/User');
 const TrophyService = require('./trophyService');
 const { suggestQuestions } = require('../utils/recommendationEngine');
+const { calculateLevel, LEVEL_CONSTRAINTS, GAME_CONSTRAINTS } = require('../../../shared/constraints');
+const questionService = require('./questionService');
+
+
+
+/**
+ * Servizio per gestire i progressi degli utenti
+ */
 
 class ProgressService {
+
   // Salva il progresso di una partita
   static async saveProgress(userId, gameData) {
     try {
-      // Genera un sessionId unico
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       const progress = new Progress({
@@ -82,12 +90,9 @@ class ProgressService {
 
       user.lastPlayedDate = new Date();
 
-      // Calcola livello secondo la nuova regola: 1% dei punti totali, arrotondato verso il basso, minimo 1
-      const { calculateLevel } = require('../../../shared/constraints');
       const newLevel = calculateLevel(user.totalPoints);
       if (newLevel !== user.level) {
         user.level = newLevel;
-        const { LEVEL_CONSTRAINTS } = require('../../../shared/constraints');
         user.experienceToNextLevel = (newLevel + 1) * LEVEL_CONSTRAINTS.EXPERIENCE.DEFAULT_TO_NEXT_LEVEL;
         // Controlla se ci sono nuovi trofei da sbloccare
         await TrophyService.checkAndAwardTrophies(userId);
@@ -256,7 +261,6 @@ class ProgressService {
     try {
       let progress = await Progress.findOne({ user: userId, sessionId });
       
-      // Se non esiste una sessione, creane una nuova
       if (!progress) {
         // Determina il tipo di gioco dal sessionId
         let gameType = 'quiz'; // default
@@ -286,46 +290,53 @@ class ProgressService {
       if (!progress.answeredQuestions) progress.answeredQuestions = [];
       if (!progress.wrongAnsweredQuestions) progress.wrongAnsweredQuestions = [];
       
+      // Normalizza questionId per gestire sia ObjectId che stringhe
+      const normalizedQuestionId = questionId.toString();
+      
       // Gestisci la domanda in base alla correttezza della risposta
       if (isCorrect) {
         // Aggiungi la domanda alle risposte corrette se non è già presente
-        if (!progress.answeredQuestions.includes(questionId)) {
-          progress.answeredQuestions.push(questionId);
+        const isAlreadyAnswered = progress.answeredQuestions.some(id => id.toString() === normalizedQuestionId);
+        if (!isAlreadyAnswered) {
+          progress.answeredQuestions.push(normalizedQuestionId);
           
           // Aggiorna i punti dell'utente solo se la risposta è corretta e nuova
           const user = await User.findById(userId);
           if (user) {
             // Calcola punti basati sulla difficoltà della domanda
-            const pointsToAdd = questionDifficulty; // 5 punti per livello di difficoltà
+            const pointsToAdd = questionDifficulty; // punti per livello di difficoltà
             user.totalPoints = (user.totalPoints || 0) + pointsToAdd;
             
             // Aggiorna ultima data di gioco
             user.lastPlayedDate = new Date();
             
             // Calcola nuovo livello
-            const { calculateLevel } = require('../../../shared/constraints');
             const newLevel = calculateLevel(user.totalPoints);
             if (newLevel !== user.level) {
               user.level = newLevel;
-              const { LEVEL_CONSTRAINTS } = require('../../../shared/constraints');
               user.experienceToNextLevel = (newLevel + 1) * LEVEL_CONSTRAINTS.EXPERIENCE.DEFAULT_TO_NEXT_LEVEL;
             }
             
             await user.save();
+            // Dopo un possibile cambio livello, assegna eventuali nuovi trofei
+            await TrophyService.checkAndAwardTrophies(userId);
             
             // Aggiorna progresso obiettivi
             await TrophyService.updateObjectiveProgress(userId, progress.game, pointsToAdd, true);
           }
+          // Aggiungi punteggio alla sessione/risposta per riflettere l'attività nelle statistiche
+          progress.score = (progress.score || 0) + (typeof questionDifficulty === 'number' ? questionDifficulty : 0);
         }
         // Rimuovi dalla lista delle sbagliate se era presente
-        progress.wrongAnsweredQuestions = progress.wrongAnsweredQuestions.filter(id => id !== questionId);
+        progress.wrongAnsweredQuestions = progress.wrongAnsweredQuestions.filter(id => id.toString() !== normalizedQuestionId);
       } else {
         // Aggiungi la domanda alle risposte sbagliate se non è già presente
-        if (!progress.wrongAnsweredQuestions.includes(questionId)) {
-          progress.wrongAnsweredQuestions.push(questionId);
+        const isAlreadyWrong = progress.wrongAnsweredQuestions.some(id => id.toString() === normalizedQuestionId);
+        if (!isAlreadyWrong) {
+          progress.wrongAnsweredQuestions.push(normalizedQuestionId);
         }
         // Rimuovi dalla lista delle corrette se era presente (per permettere di riprovare)
-        progress.answeredQuestions = progress.answeredQuestions.filter(id => id !== questionId);
+        progress.answeredQuestions = progress.answeredQuestions.filter(id => id.toString() !== normalizedQuestionId);
       }
       
       // Aggiorna la progressione a livelli solo se la risposta è corretta
@@ -338,10 +349,20 @@ class ProgressService {
         progress.correctAnswersPerLevel[level] = prev + 1;
         
         // Sblocca il livello successivo se raggiunta la soglia
-        const { GAME_CONSTRAINTS } = require('../../../shared/constraints');
         const threshold = GAME_CONSTRAINTS.LEVEL_UNLOCK.MIN_CORRECT_ANSWERS;
         if ((prev + 1) >= threshold && progress.maxUnlockedLevel <= level) {
           progress.maxUnlockedLevel = level + 1;
+        }
+      }
+      
+      // Marca il gioco come completato per i tipi che lo richiedono
+      if (isCorrect) {
+        if (progress.game === 'matching' || progress.game === 'memory' || progress.game === 'sorting') {
+          // Per i giochi matching/memory/sorting, marca come completato quando si risponde correttamente
+          progress.completed = true;
+        } else if (progress.game === 'quiz') {
+          // Per i quiz, marca come completato quando si risponde a una domanda (ogni domanda è una sessione)
+          progress.completed = true;
         }
       }
       
@@ -362,13 +383,26 @@ class ProgressService {
 
   // Restituisce domande fatte/non fatte e suggerimenti SOLO per il livello sbloccato
   static async getQuestionProgressAndSuggestions(userId, gameType) {
-    const fs = require('fs');
-    const path = require('path');
     try {
-      // Recupera l'utente per ottenere l'età
+      // Recupera l'utente per ottenere school level e classe
       const user = await User.findById(userId);
       if (!user) {
         throw new Error('Utente non trovato');
+      }
+
+      // I docenti non hanno schoolLevel e class, quindi restituiamo dati vuoti per loro
+      if (user.role === 'docente') {
+        return {
+          answeredQuestions: [],
+          unansweredQuestions: [],
+          maxUnlockedLevel: 1,
+          correctAnswersPerLevel: {},
+          suggestions: []
+        };
+      }
+
+      if (!user.schoolLevel || !user.class) {
+        throw new Error('Dati scolastici dell\'utente non disponibili');
       }
 
       // Recupera tutte le sessioni dell'utente per quel gioco
@@ -380,9 +414,6 @@ class ProgressService {
       progresses.forEach(p => {
         // Considera solo le domande risposte correttamente
         (p.answeredQuestions || []).forEach(qid => answered.add(qid.toString()));
-        
-        // Le domande sbagliate non vengono considerate come risposte
-        // così possono essere suggerite di nuovo
         
         if (p.maxUnlockedLevel && p.maxUnlockedLevel > maxUnlockedLevel) {
           maxUnlockedLevel = p.maxUnlockedLevel;
@@ -401,27 +432,24 @@ class ProgressService {
         }
       });
       
-      // Carica tutte le domande dal file
-      const questionsPath = path.join(__dirname, '../data/questions.json');
-      const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
+      // Recupera le domande dal database filtrate per school level e classe
+      const questions = await questionService.getQuestionsBySchoolLevel(
+        user.schoolLevel,
+        user.class,
+        gameType, // tipo di gioco
+        null, // categoria (null = tutte)
+        1, // minDifficulty
+        maxUnlockedLevel // maxDifficulty = livello sbloccato
+      );
       
-      // Filtra per tipo di gioco, livello sbloccato E età dell'utente
+      // Filtra per tipo di gioco e livello sbloccato
       const filtered = questions.filter(q => {
-        // Controlla tipo di gioco e livello
-        const gameAndLevelMatch = q.type === gameType && q.difficulty <= maxUnlockedLevel;
-        
-        // Controlla età se la domanda ha un ageRange
-        let ageMatch = true;
-        if (q.ageRange && Array.isArray(q.ageRange) && q.ageRange.length === 2) {
-          const [minAge, maxAge] = q.ageRange;
-          ageMatch = user.age >= minAge && user.age <= maxAge;
-        }
-        
-        return gameAndLevelMatch && ageMatch;
+        return q.type === gameType && q.difficulty <= maxUnlockedLevel;
       });
       
-      const answeredQuestions = filtered.filter(q => answered.has(q.id.toString()));
-      const unansweredQuestions = filtered.filter(q => !answered.has(q.id.toString()));
+      // Usa toString() per normalizzare gli ID per il confronto
+      const answeredQuestions = filtered.filter(q => answered.has(q._id.toString()));
+      const unansweredQuestions = filtered.filter(q => !answered.has(q._id.toString()));
       
       // Usa recommendationEngine per suggerimenti
       let maxDiff = 1;

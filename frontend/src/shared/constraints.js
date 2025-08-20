@@ -43,10 +43,9 @@ const USER_CONSTRAINTS = {
     REQUIRED: true
   },
 
-  // Validazione età (solo per allievi)
-  AGE: {
-    MIN: 3,
-    MAX: 100,
+  // Validazione school level (solo per allievi)
+  SCHOOL_LEVEL: {
+    VALID_VALUES: ['prim', 'sec1', 'sec2'],
     REQUIRED_FOR_ROLE: 'allievo'
   },
 
@@ -56,13 +55,14 @@ const USER_CONSTRAINTS = {
     ALLOW_EMPTY: true
   },
 
-  // Validazione campi scuola (per allievi)
-  SCHOOL_LEVEL: {
-    REQUIRED_FOR_ROLE: 'allievo'
-  },
-
+  // Validazione classe (per allievi)
   CLASS: {
-    REQUIRED_FOR_ROLE: 'allievo'
+    REQUIRED_FOR_ROLE: 'allievo',
+    VALID_VALUES: {
+      'prim': ['1', '2', '3', '4', '5'],
+      'sec1': ['1', '2', '3'],
+      'sec2': ['1', '2', '3', '4', '5']
+    }
   },
 
   // Validazione campi docente
@@ -112,12 +112,12 @@ const GAME_CONSTRAINTS = {
   // Sblocco livelli
   LEVEL_UNLOCK: {
     THRESHOLD_PERCENTAGE: 0.8, // 80% di correttezza per sbloccare il livello successivo
-    MIN_CORRECT_ANSWERS: 3, // Minimo 3 risposte corrette per considerare il livello
+    MIN_CORRECT_ANSWERS: 5, // Minimo 5 risposte corrette per considerare il livello
     MAX_UNLOCKED_LEVEL: 10
   },
 
-  // Filtro domande per età
-  AGE_FILTER: {
+  // Filtro domande per school level e classe
+  SCHOOL_FILTER: {
     MIN_DIFFICULTY: 1,
     MAX_DIFFICULTY: 10
   }
@@ -240,34 +240,29 @@ const GAME_CONFIGS = {
 
   // Categorie Quiz
   QUIZ_CATEGORIES: {
-    'scienze': 'Scienze',
-    'geografia': 'Geografia',
-    'storia': 'Storia',
     'matematica': 'Matematica',
-    'lingua': 'Lingua Italiana',
-    'arte': 'Arte',
-    'musica': 'Musica',
-    'sport': 'Sport'
+    'italiano': 'Italiano',
+    'storia': 'Storia',
+    'scienze': 'Scienze',
+    'geografia': 'Geografia'
   },
 
   // Limiti di tempo per Quiz (in secondi)
   QUIZ_TIME_LIMITS: {
-    'scienze': 30,
-    'geografia': 25,
-    'storia': 35,
     'matematica': 20,
-    'lingua': 30,
-    'arte': 25,
-    'musica': 30,
-    'sport': 20
+    'italiano': 30,
+    'storia': 35,
+    'scienze': 30,
+    'geografia': 25
   },
 
   // Categorie Matching
   MATCHING_CATEGORIES: {
-    'lingua': 'Lingua Italiana',
-    'animali': 'Animali',
-    'strumenti': 'Strumenti e Mestieri',
-    'colori': 'Colori'
+    'italiano': 'Italiano',
+    'matematica': 'Matematica',
+    'storia': 'Storia',
+    'scienze': 'Scienze',
+    'geografia': 'Geografia'
   }
 };
 
@@ -327,6 +322,34 @@ function getQuizTimeLimit(category) {
   return GAME_CONFIGS.QUIZ_TIME_LIMITS[category] || 30;
 }
 
+/**
+ * Converte un codice school level in nome leggibile
+ * @param {string} schoolLevel - Codice school level (prim, sec1, sec2)
+ * @returns {string} - Nome leggibile
+ */
+function getSchoolLevelDisplayName(schoolLevel) {
+  const displayNames = {
+    'prim': 'Scuola primaria',
+    'sec1': 'Scuola secondaria di primo grado',
+    'sec2': 'Scuola secondaria di secondo grado'
+  };
+  return displayNames[schoolLevel] || schoolLevel;
+}
+
+/**
+ * Converte un nome leggibile in codice school level
+ * @param {string} displayName - Nome leggibile
+ * @returns {string} - Codice school level
+ */
+function getSchoolLevelCode(displayName) {
+  const codeMap = {
+    'Scuola primaria': 'prim',
+    'Scuola secondaria di primo grado': 'sec1',
+    'Scuola secondaria di secondo grado': 'sec2'
+  };
+  return codeMap[displayName] || displayName;
+}
+
 // ============================================================================
 // EXPORTS
 // ============================================================================
@@ -343,5 +366,7 @@ export {
   validatePasswordStrength,
   calculateLevel,
   validateEmail,
-  getQuizTimeLimit
+  getQuizTimeLimit,
+  getSchoolLevelDisplayName,
+  getSchoolLevelCode
 }; 

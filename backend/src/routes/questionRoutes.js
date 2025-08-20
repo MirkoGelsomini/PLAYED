@@ -1,63 +1,54 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
+const questionController = require('../controllers/questionController');
 const { authenticateToken } = require('../utils/authMiddleware');
 
-// Funzione di filtro domande per età e difficoltà
-function filterQuestions(questions, userAge, minDifficulty = 1, maxDifficulty = 10) {
-  return questions.filter(q => {
-    // Controlla difficoltà
-    const difficultyMatch = q.difficulty >= minDifficulty && q.difficulty <= maxDifficulty;
-    
-    // Controlla età se la domanda ha un ageRange
-    let ageMatch = true;
-    if (q.ageRange && Array.isArray(q.ageRange) && q.ageRange.length === 2) {
-      const [minAge, maxAge] = q.ageRange;
-      ageMatch = userAge >= minAge && userAge <= maxAge;
-    }
-    
-    return difficultyMatch && ageMatch;
-  });
-}
-
-// Rotta per ottenere tutte le domande (senza filtro)
-router.get('/', (req, res) => {
-  const questionsPath = path.join(__dirname, '../data/questions.json');
-  fs.readFile(questionsPath, 'utf8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Errore lettura domande' });
-    res.json(JSON.parse(data));
-  });
-});
-
-// Rotta per ottenere domande filtrate per età
-router.get('/filtered', authenticateToken, (req, res) => {
-  try {
-    const user = req.user;
-    if (!user || user.age === undefined || user.age === null) {
-      return res.status(401).json({ error: 'Utente non autenticato o età non disponibile' });
-    }
-    
-    const minDifficulty = req.query.minDifficulty ? parseInt(req.query.minDifficulty) : 1;
-    const maxDifficulty = req.query.maxDifficulty ? parseInt(req.query.maxDifficulty) : 10;
-    const gameType = req.query.gameType; // opzionale: filtra per tipo di gioco
-    
-    const questionsPath = path.join(__dirname, '../data/questions.json');
-    const data = fs.readFileSync(questionsPath, 'utf8');
-    const questions = JSON.parse(data);
-    
-    let filteredQuestions = filterQuestions(questions, user.age, minDifficulty, maxDifficulty);
-    
-    // Filtra per tipo di gioco se specificato
-    if (gameType) {
-      filteredQuestions = filteredQuestions.filter(q => q.type === gameType);
-    }
-    
-    res.json(filteredQuestions);
-  } catch (error) {
-    console.error('Errore nel recupero delle domande filtrate:', error);
-    res.status(500).json({ error: 'Errore interno del server' });
+// Middleware per verificare che l'utente sia un docente
+const requireTeacher = (req, res, next) => {
+  if (req.user.role !== 'docente') {
+    return res.status(403).json({ error: 'Accesso negato. Solo i docenti possono accedere a questa funzionalità.' });
   }
-});
+  next();
+};
+
+/**
+ * Rotte per le domande
+ */
+
+// Richiedi una domanda al sistema SAGE
+// POST /api/questions/request
+router.post('/request', authenticateToken, requireTeacher, questionController.requestFromSage);
+
+// Salva una domanda nel database
+// POST /api/questions
+router.post('/', authenticateToken, requireTeacher, questionController.saveQuestion);
+
+// Approva una domanda
+// PUT /api/questions/:id/approve
+router.put('/:id/approve', authenticateToken, requireTeacher, questionController.approveQuestion);
+
+// Approva tutte le domande in sospeso
+// PUT /api/questions/approve-all
+router.put('/approve-all', authenticateToken, requireTeacher, questionController.approveAllPendingQuestions);
+
+// Ottieni le domande di un docente
+// GET /api/questions/teacher
+router.get('/teacher', authenticateToken, requireTeacher, questionController.getQuestionsByTeacher);
+
+// Elimina una domanda
+// DELETE /api/questions/:id
+router.delete('/:id', authenticateToken, requireTeacher, questionController.deleteQuestion);
+
+// ============================================================================
+// ROTTE PER ALLIEVI (richiedono solo autenticazione)
+// ============================================================================
+
+// Ottieni le domande per school level e classe (DEVE VENIRE PRIMA DI /:id)
+// GET /api/questions/school-level?schoolLevel=prim&class=1&type=quiz&category=storia&minDifficulty=1&maxDifficulty=5
+router.get('/school-level', authenticateToken, questionController.getQuestionsBySchoolLevel);
+
+// Ottieni una domanda specifica per ID (DEVE VENIRE DOPO LE ROTTE SPECIFICHE)
+// GET /api/questions/:id
+router.get('/:id', authenticateToken, questionController.getQuestionById);
 
 module.exports = router; 

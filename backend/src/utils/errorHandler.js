@@ -1,4 +1,6 @@
-// Sistema centralizzato per la gestione degli errori - Backend
+/**
+ * Sistema centralizzato per la gestione degli errori - Backend
+ */
 
 // Classi di errore personalizzate
 class AppError extends Error {

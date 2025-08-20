@@ -29,6 +29,11 @@
   --gradient-orange: linear-gradient(135deg, #E67E22 0%, #D35400 100%);
   --gradient-pink: linear-gradient(135deg, #E91E63 0%, #F06292 100%);
   --gradient-teal: linear-gradient(135deg, #1A5F7A 0%, #2C3E50 100%);
+  /* DANGER */
+  --red-danger: #D32F2F;
+  --red-danger-light: #FF5252;
+  --gradient-danger: linear-gradient(135deg, #D32F2F 0%, #FF5252 100%);
+  --gradient-danger-hover: linear-gradient(135deg, #B71C1C 0%, #FF1744 100%);
   
   /* TIPOGRAFIA */
   --font-family: 'Comic Sans MS', 'Fredoka One', 'Arial Rounded MT Bold', cursive;

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import './Memory.css';
 import axios from 'axios';
 import { useAuth } from '../../core/AuthContext';
 import { useLocation } from 'react-router-dom';
+import { SidebarRefreshContext } from '../../core/SidebarRefreshContext';
 
 const LEVEL_THRESHOLD = 5;
 
@@ -38,7 +39,7 @@ const generateCards = (pairs) => {
   return shuffle(cards);
 };
 
-const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswered }) => {
+const MemoryGame = ({ config = {}, pairs: propPairs, category, questionText, onQuestionAnswered }) => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const questionIdParam = params.get('questionId');
@@ -55,6 +56,7 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
   const [lock, setLock] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
   const [gridColumns, setGridColumns] = useState(4);
+  const { refresh } = useContext(SidebarRefreshContext);
 
   // Array di colori per le diverse coppie
   const pairColors = [
@@ -68,21 +70,41 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
     'var(--gradient-teal)'
   ];
 
-  // Calcola il numero ottimale di colonne per una distribuzione bilanciata
-  const calculateOptimalColumns = (cardCount) => {
-    if (cardCount <= 4) return 2;
-    if (cardCount <= 6) return 3;
-    if (cardCount <= 8) return 4;
-    if (cardCount <= 10) return 5;
-    if (cardCount <= 12) return 4; // 3 righe di 4
-    if (cardCount <= 16) return 4; // 4 righe di 4
-    return 5; // per più di 16 card
+  // Calcola il layout adattivo in base al numero di card e alla lunghezza media del testo
+  const computeLayout = (cards) => {
+    const cardCount = cards.length;
+    const textLengths = cards.map(c => (c.value || '').length);
+    const avgLen = textLengths.length ? (textLengths.reduce((a,b)=>a+b,0) / textLengths.length) : 0;
+    // Base columns
+    let columns = 4;
+    if (cardCount <= 4) columns = 2; else if (cardCount <= 6) columns = 3; else if (cardCount <= 8) columns = 4; else if (cardCount <= 10) columns = 5; else if (cardCount <= 12) columns = 4; else columns = 5;
+    // Adatta dimensioni e font in base alla lunghezza media
+    let width = 120; let height = 140; let fontSize = 1.2; // default per testi medi
+    if (avgLen <= 10) { width = 100; height = 110; fontSize = 1.4; }
+    else if (avgLen <= 20) { width = 120; height = 140; fontSize = 1.2; }
+    else if (avgLen <= 30) { width = 140; height = 170; fontSize = 1.05; }
+    else if (avgLen <= 45) { width = 160; height = 200; fontSize = 0.95; }
+    else { width = 180; height = 220; fontSize = 0.9; }
+    // Per testi molto lunghi, riduci le colonne per fare spazio
+    if (avgLen > 35 && columns > 3) columns = 3;
+    return { columns, width, height, fontSize };
   };
 
-  // Carica pairs filtrate per livello sbloccato
+  // Carica pairs: preferisci quelle passate da props (question specifica), altrimenti carica dal backend filtrando per livello
   useEffect(() => {
     const loadPairsAndLevel = async () => {
       try {
+        if (Array.isArray(propPairs) && propPairs.length > 0) {
+          setPairs(propPairs.map(p => ({ ...p })));
+          const gen = generateCards(propPairs);
+          setCards(gen);
+          const layout = computeLayout(gen);
+          setGridColumns(layout.columns);
+          document.documentElement.style.setProperty('--card-width', `${layout.width}px`);
+          document.documentElement.style.setProperty('--card-height', `${layout.height}px`);
+          document.documentElement.style.setProperty('--card-font-size', `${layout.fontSize}rem`);
+          return;
+        }
         const res = await axios.get('/api/progress/questions?gameType=memory', { withCredentials: true });
         const { unansweredQuestions, answeredQuestions, maxUnlockedLevel, correctAnswersPerLevel } = res.data;
         setMaxUnlockedLevel(maxUnlockedLevel || 1);
@@ -93,26 +115,38 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
         );
         // Se questionIdParam, filtra per quella domanda
         if (questionIdParam) {
-          allQuestions = allQuestions.filter(q => String(q.id) === String(questionIdParam));
+          allQuestions = allQuestions.filter(q => String(q.id || q._id) === String(questionIdParam));
         }
-        // Ricava tutte le pairs
+        // Ricava tutte le coppie dal campo corretto (memoryPairs). Fallback: mappa pairs {left,right} -> {front,back}
         let allPairs = [];
         allQuestions.forEach(q => {
-          if (Array.isArray(q.pairs)) {
-            allPairs = allPairs.concat(q.pairs.map(p => ({ ...p, id: q.id, difficulty: q.difficulty })));
+          let qPairs = [];
+          if (Array.isArray(q.memoryPairs)) {
+            qPairs = q.memoryPairs;
+          } else if (Array.isArray(q.pairs)) {
+            qPairs = q.pairs.map(p => ({ front: p.front ?? p.left, back: p.back ?? p.right }));
+          }
+          if (qPairs.length > 0) {
+            allPairs = allPairs.concat(qPairs.map(p => ({ ...p, id: q.id || q._id, difficulty: q.difficulty })));
           }
         });
         setPairs(allPairs);
-        setCards(generateCards(allPairs));
-        // Calcola il numero ottimale di colonne
-        const cardCount = allPairs.length * 2;
-        setGridColumns(calculateOptimalColumns(cardCount));
+        const gen = generateCards(allPairs);
+        setCards(gen);
+        const layout = computeLayout(gen);
+        setGridColumns(layout.columns);
+        document.documentElement.style.setProperty('--card-width', `${layout.width}px`);
+        document.documentElement.style.setProperty('--card-height', `${layout.height}px`);
+        document.documentElement.style.setProperty('--card-font-size', `${layout.fontSize}rem`);
       } catch (err) {
-        setPairs(propPairs || []);
-        setCards(generateCards(propPairs || []));
-        // Calcola il numero ottimale di colonne per il fallback
-        const cardCount = (propPairs || []).length * 2;
-        setGridColumns(calculateOptimalColumns(cardCount));
+        setPairs(Array.isArray(propPairs) ? propPairs : []);
+        const gen = generateCards(Array.isArray(propPairs) ? propPairs : []);
+        setCards(gen);
+        const layout = computeLayout(gen);
+        setGridColumns(layout.columns);
+        document.documentElement.style.setProperty('--card-width', `${layout.width}px`);
+        document.documentElement.style.setProperty('--card-height', `${layout.height}px`);
+        document.documentElement.style.setProperty('--card-font-size', `${layout.fontSize}rem`);
       }
     };
     loadPairsAndLevel();
@@ -145,6 +179,8 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
           const currentLevelProgress = correctPerLevel[maxUnlockedLevel?.toString()] || 0;
           setLevelProgress(currentLevelProgress);
         }
+        // Notifica global refresh (Sidebar e schermate collegate)
+        if (typeof refresh === 'function') refresh();
       })
       .catch(err => {
         console.error('Errore salvataggio progressi Memory:', err);
@@ -157,9 +193,11 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
   const resetGame = () => {
     const newCards = generateCards(pairs);
     setCards(newCards);
-    // Ricalcola il numero di colonne
-    const cardCount = newCards.length;
-    setGridColumns(calculateOptimalColumns(cardCount));
+    const layout = computeLayout(newCards);
+    setGridColumns(layout.columns);
+    document.documentElement.style.setProperty('--card-width', `${layout.width}px`);
+    document.documentElement.style.setProperty('--card-height', `${layout.height}px`);
+    document.documentElement.style.setProperty('--card-font-size', `${layout.fontSize}rem`);
     setFlipped([]);
     setMatched([]);
     setAttempts(0);
@@ -221,6 +259,11 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
         </div>
       </div>
       <div className="memory-board-wrapper">
+        {questionText && (
+          <div className="memory-question-text" style={{ maxWidth: '860px', width: '100%' }}>
+            {questionText}
+          </div>
+        )}
         <div 
           className="memory-board-grid"
           style={{ 
@@ -246,7 +289,20 @@ const MemoryGame = ({ config = {}, pairs: propPairs, category, onQuestionAnswere
                 } : {}}
               >
                 <span className="memory-card-inner">
-                  <span className="memory-card-front">{card.value}</span>
+                  <span className="memory-card-front">
+                    <span style={{
+                      display: 'inline-block',
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'normal',
+                      WebkitLineClamp: 6,
+                      WebkitBoxOrient: 'vertical'
+                    }} className="memory-card-front-text">
+                      {card.value}
+                    </span>
+                  </span>
                   <span className="memory-card-back">?</span>
                 </span>
               </button>

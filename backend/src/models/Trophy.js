@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 
+/**
+ * Modello per gestire i trofei degli utenti
+ */
+
 const trophySchema = new mongoose.Schema({
   name: {
     type: String,

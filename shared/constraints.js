@@ -43,10 +43,9 @@ const USER_CONSTRAINTS = {
     REQUIRED: true
   },
 
-  // Validazione età (solo per allievi)
-  AGE: {
-    MIN: 3,
-    MAX: 100,
+  // Validazione school level (solo per allievi)
+  SCHOOL_LEVEL: {
+    VALID_VALUES: ['prim', 'sec1', 'sec2'],
     REQUIRED_FOR_ROLE: 'allievo'
   },
 
@@ -56,13 +55,14 @@ const USER_CONSTRAINTS = {
     ALLOW_EMPTY: true
   },
 
-  // Validazione campi scuola (per allievi)
-  SCHOOL_LEVEL: {
-    REQUIRED_FOR_ROLE: 'allievo'
-  },
-
+  // Validazione classe (per allievi)
   CLASS: {
-    REQUIRED_FOR_ROLE: 'allievo'
+    REQUIRED_FOR_ROLE: 'allievo',
+    VALID_VALUES: {
+      'prim': ['1', '2', '3', '4', '5'],
+      'sec1': ['1', '2', '3'],
+      'sec2': ['1', '2', '3', '4', '5']
+    }
   },
 
   // Validazione campi docente
@@ -116,8 +116,8 @@ const GAME_CONSTRAINTS = {
     MAX_UNLOCKED_LEVEL: 10
   },
 
-  // Filtro domande per età
-  AGE_FILTER: {
+  // Filtro domande per school level e classe
+  SCHOOL_FILTER: {
     MIN_DIFFICULTY: 1,
     MAX_DIFFICULTY: 10
   }
@@ -185,6 +185,48 @@ const OBJECTIVE_CONSTRAINTS = {
 };
 
 // ============================================================================
+// DEFINIZIONI OBIETTIVI STATICI
+// ============================================================================
+
+// Gli obiettivi non sono persistiti: vengono definiti staticamente qui.
+// Ogni obiettivo deve avere un `id` stabile (stringa) usato per collegare i progressi utente.
+
+const OBJECTIVE_DEFINITIONS = {
+  DAILY: [
+    {
+      id: 'daily_play_3_games',
+      title: 'Giocatore del Giorno',
+      description: 'Completa 3 partite oggi',
+      type: OBJECTIVE_CONSTRAINTS.TYPES.VALUES[0], // 'daily'
+      category: OBJECTIVE_CONSTRAINTS.CATEGORIES.VALUES[0], // 'games'
+      target: 3,
+      reward: { type: OBJECTIVE_CONSTRAINTS.REWARD_TYPES.VALUES[0], value: 25 }, // points
+      difficulty: OBJECTIVE_CONSTRAINTS.DIFFICULTY.VALUES[0] // easy
+    },
+    {
+      id: 'daily_score_15_points',
+      title: 'Quindici Punti',
+      description: 'Fai almeno 15 punti in una partita (≈ 15 risposte corrette di difficoltà 1).',
+      type: OBJECTIVE_CONSTRAINTS.TYPES.VALUES[0], // 'daily'
+      category: OBJECTIVE_CONSTRAINTS.CATEGORIES.VALUES[1], // 'score'
+      target: 15,
+      reward: { type: OBJECTIVE_CONSTRAINTS.REWARD_TYPES.VALUES[0], value: 100 }, // points
+      difficulty: OBJECTIVE_CONSTRAINTS.DIFFICULTY.VALUES[1] // medium
+    },
+    {
+      id: 'daily_variety_two_types',
+      title: 'Varietà di Giochi',
+      description: 'Gioca 2 tipi diversi di giochi',
+      type: OBJECTIVE_CONSTRAINTS.TYPES.VALUES[0], // 'daily'
+      category: OBJECTIVE_CONSTRAINTS.CATEGORIES.VALUES[3], // 'variety'
+      target: 2,
+      reward: { type: OBJECTIVE_CONSTRAINTS.REWARD_TYPES.VALUES[0], value: 30 }, // points
+      difficulty: OBJECTIVE_CONSTRAINTS.DIFFICULTY.VALUES[0] // easy
+    }
+  ]
+};
+
+// ============================================================================
 // SISTEMA DI PUNTEGGIO
 // ============================================================================
 
@@ -240,34 +282,77 @@ const GAME_CONFIGS = {
 
   // Categorie Quiz
   QUIZ_CATEGORIES: {
-    'scienze': 'Scienze',
-    'geografia': 'Geografia',
-    'storia': 'Storia',
     'matematica': 'Matematica',
-    'lingua': 'Lingua Italiana',
-    'arte': 'Arte',
-    'musica': 'Musica',
-    'sport': 'Sport'
+    'italiano': 'Italiano',
+    'storia': 'Storia',
+    'scienze': 'Scienze',
+    'geografia': 'Geografia'
   },
 
   // Limiti di tempo per Quiz (in secondi)
   QUIZ_TIME_LIMITS: {
-    'scienze': 30,
-    'geografia': 25,
-    'storia': 35,
     'matematica': 20,
-    'lingua': 30,
-    'arte': 25,
-    'musica': 30,
-    'sport': 20
+    'italiano': 30,
+    'storia': 35,
+    'scienze': 30,
+    'geografia': 25
   },
 
   // Categorie Matching
   MATCHING_CATEGORIES: {
-    'lingua': 'Lingua Italiana',
-    'animali': 'Animali',
-    'strumenti': 'Strumenti e Mestieri',
-    'colori': 'Colori'
+    'italiano': 'Italiano',
+    'matematica': 'Matematica',
+    'storia': 'Storia',
+    'scienze': 'Scienze',
+    'geografia': 'Geografia'
+  }
+};
+
+// ============================================================================
+// VALIDAZIONE DOMANDE
+// ============================================================================
+
+const QUESTION_CONSTRAINTS = {
+  // Tipi di domande validi
+  TYPES: {
+    VALID_VALUES: ['quiz', 'sorting', 'matching', 'memory'],
+    REQUIRED: true
+  },
+
+  // Categorie di domande valide
+  CATEGORIES: {
+    VALID_VALUES: ['matematica', 'italiano', 'storia', 'scienze', 'geografia'],
+    REQUIRED: true
+  },
+
+  // Validazione school level per domande
+  SCHOOL_LEVEL: {
+    VALID_VALUES: ['prim', 'sec1', 'sec2'],
+    REQUIRED: true
+  },
+
+  // Validazione classe per domande
+  CLASS: {
+    REQUIRED: true,
+    VALID_VALUES: {
+      'prim': [1, 2, 3, 4, 5],
+      'sec1': [1, 2, 3],
+      'sec2': [1, 2, 3, 4, 5]
+    }
+  },
+
+  // Validazione difficoltà
+  DIFFICULTY: {
+    MIN: 1,
+    MAX: 10,
+    REQUIRED: true
+  },
+
+  // Validazione contenuto domanda
+  QUESTION_TEXT: {
+    MIN_LENGTH: 1,
+    MAX_LENGTH: 1000,
+    REQUIRED: true
   }
 };
 
@@ -327,6 +412,142 @@ function getQuizTimeLimit(category) {
   return GAME_CONFIGS.QUIZ_TIME_LIMITS[category] || 30;
 }
 
+/**
+ * Converte un codice school level in nome leggibile
+ * @param {string} schoolLevel - Codice school level (prim, sec1, sec2)
+ * @returns {string} - Nome leggibile
+ */
+function getSchoolLevelDisplayName(schoolLevel) {
+  const displayNames = {
+    'prim': 'Scuola primaria',
+    'sec1': 'Scuola secondaria di primo grado',
+    'sec2': 'Scuola secondaria di secondo grado'
+  };
+  return displayNames[schoolLevel] || schoolLevel;
+}
+
+/**
+ * Converte un nome leggibile in codice school level
+ * @param {string} displayName - Nome leggibile
+ * @returns {string} - Codice school level
+ */
+function getSchoolLevelCode(displayName) {
+  const codeMap = {
+    'Scuola primaria': 'prim',
+    'Scuola secondaria di primo grado': 'sec1',
+    'Scuola secondaria di secondo grado': 'sec2'
+  };
+  return codeMap[displayName] || displayName;
+}
+
+/**
+ * Valida il tipo di una domanda
+ * @param {string} type - Tipo della domanda
+ * @returns {boolean} - True se valido
+ */
+function validateQuestionType(type) {
+  return QUESTION_CONSTRAINTS.TYPES.VALID_VALUES.includes(type);
+}
+
+/**
+ * Valida la categoria di una domanda
+ * @param {string} category - Categoria della domanda
+ * @returns {boolean} - True se valido
+ */
+function validateQuestionCategory(category) {
+  return QUESTION_CONSTRAINTS.CATEGORIES.VALID_VALUES.includes(category);
+}
+
+/**
+ * Valida il school level di una domanda
+ * @param {string} schoolLevel - School level della domanda
+ * @returns {boolean} - True se valido
+ */
+function validateQuestionSchoolLevel(schoolLevel) {
+  return QUESTION_CONSTRAINTS.SCHOOL_LEVEL.VALID_VALUES.includes(schoolLevel);
+}
+
+/**
+ * Valida la classe per un determinato school level
+ * @param {string} schoolLevel - School level
+ * @param {string|number} classLevel - Classe
+ * @returns {boolean} - True se valido
+ */
+function validateQuestionClass(schoolLevel, classLevel) {
+  const validClasses = QUESTION_CONSTRAINTS.CLASS.VALID_VALUES[schoolLevel];
+  if (!validClasses) return false;
+  return validClasses.includes(parseInt(classLevel));
+}
+
+/**
+ * Valida la difficoltà di una domanda
+ * @param {number} difficulty - Difficoltà della domanda
+ * @returns {boolean} - True se valido
+ */
+function validateQuestionDifficulty(difficulty) {
+  const diff = parseInt(difficulty);
+  return diff >= QUESTION_CONSTRAINTS.DIFFICULTY.MIN && diff <= QUESTION_CONSTRAINTS.DIFFICULTY.MAX;
+}
+
+/**
+ * Valida tutti i parametri di una domanda
+ * @param {Object} questionData - Dati della domanda
+ * @returns {Object} - Risultato della validazione con eventuali errori
+ */
+function validateQuestionData(questionData) {
+  const errors = [];
+  
+  // Validazione tipo
+  if (!questionData.type) {
+    errors.push('Il campo type è obbligatorio');
+  } else if (!validateQuestionType(questionData.type)) {
+    errors.push(`Tipo non valido. Valori ammessi: ${QUESTION_CONSTRAINTS.TYPES.VALID_VALUES.join(', ')}`);
+  }
+  
+  // Validazione categoria
+  if (!questionData.category) {
+    errors.push('Il campo category è obbligatorio');
+  } else if (!validateQuestionCategory(questionData.category)) {
+    errors.push(`Categoria non valida. Valori ammessi: ${QUESTION_CONSTRAINTS.CATEGORIES.VALID_VALUES.join(', ')}`);
+  }
+  
+  // Validazione school level
+  if (!questionData.schoolLevel) {
+    errors.push('Il campo schoolLevel è obbligatorio');
+  } else if (!validateQuestionSchoolLevel(questionData.schoolLevel)) {
+    errors.push(`School level non valido. Valori ammessi: ${QUESTION_CONSTRAINTS.SCHOOL_LEVEL.VALID_VALUES.join(', ')}`);
+  }
+  
+  // Validazione classe
+  if (!questionData.class) {
+    errors.push('Il campo class è obbligatorio');
+  } else if (questionData.schoolLevel && !validateQuestionClass(questionData.schoolLevel, questionData.class)) {
+    const validClasses = QUESTION_CONSTRAINTS.CLASS.VALID_VALUES[questionData.schoolLevel];
+    errors.push(`Classe ${questionData.class} non valida per il livello scolastico ${questionData.schoolLevel}. Valori ammessi: ${validClasses ? validClasses.join(', ') : 'nessuno'}`);
+  }
+  
+  // Validazione difficoltà
+  if (questionData.difficulty === undefined || questionData.difficulty === null) {
+    errors.push('Il campo difficulty è obbligatorio');
+  } else if (!validateQuestionDifficulty(questionData.difficulty)) {
+    errors.push(`Difficoltà deve essere tra ${QUESTION_CONSTRAINTS.DIFFICULTY.MIN} e ${QUESTION_CONSTRAINTS.DIFFICULTY.MAX}`);
+  }
+  
+  // Validazione contenuto domanda
+  if (!questionData.question) {
+    errors.push('Il campo question è obbligatorio');
+  } else if (questionData.question.length < QUESTION_CONSTRAINTS.QUESTION_TEXT.MIN_LENGTH) {
+    errors.push(`La domanda deve contenere almeno ${QUESTION_CONSTRAINTS.QUESTION_TEXT.MIN_LENGTH} carattere`);
+  } else if (questionData.question.length > QUESTION_CONSTRAINTS.QUESTION_TEXT.MAX_LENGTH) {
+    errors.push(`La domanda non può superare ${QUESTION_CONSTRAINTS.QUESTION_TEXT.MAX_LENGTH} caratteri`);
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
 // ============================================================================
 // EXPORTS
 // ============================================================================
@@ -340,8 +561,18 @@ module.exports = {
   SCORE_CONSTRAINTS,
   SESSION_CONSTRAINTS,
   GAME_CONFIGS,
+  QUESTION_CONSTRAINTS,
+  OBJECTIVE_DEFINITIONS,
   validatePasswordStrength,
   calculateLevel,
   validateEmail,
-  getQuizTimeLimit
+  getQuizTimeLimit,
+  getSchoolLevelDisplayName,
+  getSchoolLevelCode,
+  validateQuestionType,
+  validateQuestionCategory,
+  validateQuestionSchoolLevel,
+  validateQuestionClass,
+  validateQuestionDifficulty,
+  validateQuestionData
 }; 

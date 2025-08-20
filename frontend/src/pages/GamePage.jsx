@@ -30,7 +30,7 @@ const GamePage = () => {
       // Per i giochi memory o matching, recupera la domanda collegata
       if (found && (found.type === 'memory' || found.type === 'matching') && found.questionId) {
         fetchQuestions().then(questions => {
-          const q = questions.find(q => String(q.id) === String(found.questionId));
+          const q = questions.find(q => String(q.id || q._id) === String(found.questionId));
           setQuestion(q);
         });
       }
@@ -64,10 +64,11 @@ const GamePage = () => {
         </>
       )}
       {/* Renderizza il gioco appropriato in base al tipo */}
-      {game.type === 'memory' && question && (
+      {game.type === 'memory' && (
         <MemoryGame 
           config={game.config} 
-          pairs={question.pairs} 
+          pairs={question?.memoryPairs}
+          questionText={question?.question}
           category={game.category}
           onQuestionAnswered={handleQuestionAnswered} 
         />

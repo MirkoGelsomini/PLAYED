@@ -1,6 +1,11 @@
 const TrophyService = require('../services/trophyService');
 const Progress = require('../models/Progress');
-const User = require('../models/user');
+const User = require('../models/User');
+const { calculateLevel, LEVEL_CONSTRAINTS } = require('../../../shared/constraints');
+
+/**
+ * Controller per gestire i trofei degli utenti
+ */
 
 class TrophyController {
   // Ottieni tutti i trofei dell'utente
@@ -51,6 +56,18 @@ class TrophyController {
       const userId = req.user.id;
       const progress = await Progress.find({ user: userId }).sort({ date: -1 });
       const user = await User.findById(userId);
+
+      // Safety: riallinea il livello in base ai punti totali se necessario
+      if (user) {
+        const newLevel = calculateLevel(user.totalPoints || 0);
+        if (newLevel !== (user.level || 1)) {
+          user.level = newLevel;
+          user.experienceToNextLevel = (newLevel + 1) * LEVEL_CONSTRAINTS.EXPERIENCE.DEFAULT_TO_NEXT_LEVEL;
+          await user.save();
+          // Se il livello è cambiato durante questa richiesta, assegna eventuali trofei di livello mancanti
+          await TrophyService.checkAndAwardTrophies(userId);
+        }
+      }
       const stats = TrophyService.calculateUserStats(progress);
       const trophyStats = await TrophyService.getTrophyStats(userId);
       const objectives = await TrophyService.getUserObjectives(userId);
@@ -99,7 +116,8 @@ class TrophyController {
         recentPerformance: TrophyController.calculateRecentPerformance(progress.slice(0, 10)),
         weeklyProgress: TrophyController.calculateWeeklyProgress(progress),
         monthlyProgress: TrophyController.calculateMonthlyProgress(progress),
-        level: user.level || 1 
+        level: user.level || 1,
+        maxScore: stats.maxScore
       };
 
       res.json({

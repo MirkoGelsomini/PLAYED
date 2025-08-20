@@ -1,8 +1,11 @@
-// Definizione delle rotte per i progressi
 const express = require('express');
 const router = express.Router();
 const progressController = require('../controllers/progressController');
 const auth = require('../utils/authMiddleware');
+
+/**
+ * Rotte per i progressi
+ */
 
 // Salva il progresso di una partita
 router.post('/', auth.authenticateToken, progressController.saveProgress);
