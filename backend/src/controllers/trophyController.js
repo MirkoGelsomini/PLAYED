@@ -8,6 +8,7 @@ const { calculateLevel, LEVEL_CONSTRAINTS } = require('../../../shared/constrain
  */
 
 class TrophyController {
+
   // Ottieni tutti i trofei dell'utente
   static async getUserTrophies(req, res) {
     try {
@@ -57,14 +58,12 @@ class TrophyController {
       const progress = await Progress.find({ user: userId }).sort({ date: -1 });
       const user = await User.findById(userId);
 
-      // Safety: riallinea il livello in base ai punti totali se necessario
       if (user) {
-        const newLevel = calculateLevel(user.totalPoints || 0);
-        if (newLevel !== (user.level || 1)) {
+        const newLevel = calculateLevel(user.totalPoints);
+        if (newLevel !== (user.level)) {
           user.level = newLevel;
           user.experienceToNextLevel = (newLevel + 1) * LEVEL_CONSTRAINTS.EXPERIENCE.DEFAULT_TO_NEXT_LEVEL;
           await user.save();
-          // Se il livello è cambiato durante questa richiesta, assegna eventuali trofei di livello mancanti
           await TrophyService.checkAndAwardTrophies(userId);
         }
       }
@@ -106,7 +105,7 @@ class TrophyController {
       
       user.lastPlayedDate = new Date();
       await user.save();
-      // Statistiche avanzate
+      
       const advancedStats = {
         ...stats,
         dailyStreak: user.dailyStreak || 0,

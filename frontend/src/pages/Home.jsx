@@ -37,7 +37,7 @@ const Home = () => {
   const [questions, setQuestions] = useState([]);
   const [detailedProgress, setDetailedProgress] = useState({});
   const [progressLoading, setProgressLoading] = useState(true);
-  const { isAuthenticated, handle401, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { refreshToken } = useContext(SidebarRefreshContext);
   const mainRef = useRef();
   const [sidebarHidden, setSidebarHidden] = useState(true); 
@@ -121,7 +121,7 @@ const Home = () => {
   }
 
   return (
-    <div ref={mainRef} className="with-sidebar-right" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', transition: 'margin-right 0.2s' }}>
+    <div ref={mainRef} className="with-sidebar-right" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', transition: 'margin-right 0.2s', padding: '0.5rem 1rem 2rem' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <section style={heroStyle}>
           <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>        
@@ -431,4 +431,4 @@ const PublicHome = () => (
   </div>
 );
 
-export default Home; 
+export default Home;

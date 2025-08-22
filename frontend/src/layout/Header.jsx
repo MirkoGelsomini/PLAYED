@@ -57,16 +57,6 @@ const navStyle = {
   gap: 'var(--spacing-xl)',
 };
 
-const navLinkStyle = {
-  color: 'var(--primary-color)',
-  textDecoration: 'none',
-  fontWeight: 700,
-  fontSize: '1.1rem',
-  padding: 'var(--spacing-s) var(--spacing-l)',
-  borderRadius: 'var(--border-radius-small)',
-  transition: 'var(--transition-fast)',
-  background: 'none',
-};
 
 
 

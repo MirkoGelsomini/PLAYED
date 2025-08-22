@@ -14,15 +14,12 @@ const {
  */
 
 class QuestionController {
-  /**
-   * Richiede una domanda al sistema SAGE
-   * POST /api/questions/request
-   */
+  
+  // Richiede una domanda al sistema SAGE
   async requestFromSage(req, res) {
     try {
       const { type, category, schoolLevel, class: classLevel, difficulty } = req.body;
 
-      // Validazione input usando le costanti centralizzate
       const requestData = {
         type,
         category,
@@ -107,10 +104,7 @@ class QuestionController {
     }
   }
 
-  /**
-   * Salva una domanda nel database
-   * POST /api/questions
-   */
+  // Salva una domanda nel database
   async saveQuestion(req, res) {
     try {
       const questionData = req.body;
@@ -141,10 +135,7 @@ class QuestionController {
     }
   }
 
-  /**
-   * Approva una domanda
-   * PUT /api/questions/:id/approve
-   */
+  // Approva una domanda
   async approveQuestion(req, res) {
     try {
       const { id } = req.params;
@@ -179,10 +170,7 @@ class QuestionController {
     }
   }
 
-  /**
-   * Ottiene le domande per school level e classe
-   * GET /api/questions/school-level
-   */
+  // Ottiene le domande per school level e classe
   async getQuestionsBySchoolLevel(req, res) {
     try {
       const { schoolLevel, class: classLevel, type, category, minDifficulty, maxDifficulty } = req.query;
@@ -268,10 +256,7 @@ class QuestionController {
     }
   }
 
-  /**
-   * Ottiene le domande di un docente
-   * GET /api/questions/teacher
-   */
+  // Ottiene le domande di un docente
   async getQuestionsByTeacher(req, res) {
     try {
       const userId = req.user.id;
@@ -296,10 +281,7 @@ class QuestionController {
     }
   }
 
-  /**
-   * Ottiene una domanda per ID
-   * GET /api/questions/:id
-   */
+  // Ottiene una domanda per ID
   async getQuestionById(req, res) {
     try {
       const { id } = req.params;
@@ -332,10 +314,7 @@ class QuestionController {
     }
   }
 
-  /**
-   * Elimina una domanda
-   * DELETE /api/questions/:id
-   */
+  // Elimina una domanda
   async deleteQuestion(req, res) {
     try {
       const { id } = req.params;
@@ -369,10 +348,7 @@ class QuestionController {
     }
   }
 
-  /**
-   * Approva tutte le domande in sospeso
-   * PUT /api/questions/approve-all
-   */
+  // Approva tutte le domande in sospeso
   async approveAllPendingQuestions(req, res) {
     try {
       const userId = req.user.id;

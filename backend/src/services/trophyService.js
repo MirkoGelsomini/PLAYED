@@ -223,26 +223,17 @@ class TrophyService {
           periodKey
         });
 
-        if (!userObjective) {
-          userObjective = new UserObjective({
-            userId,
-            objectiveId: objective.id,
-            type: 'daily',
-            periodKey,
-            progress: 0,
-            isCompleted: false,
-            rewardClaimed: false
-          });
-        }
-
         let shouldUpdate = false;
-        let newProgress = userObjective.progress;
-
+        let newProgress = 0;
+        
+        // Calcola il progresso in base al tipo di obiettivo
         switch (objective.category) {
           case 'games':
             if (completed) {
-              newProgress++;
+              newProgress = userObjective ? userObjective.progress + 1 : 1;
               shouldUpdate = true;
+            } else {
+              newProgress = userObjective ? userObjective.progress : 0;
             }
             break;
           case 'score': {
@@ -252,7 +243,7 @@ class TrophyService {
             });
             const totalDailyScore = todayGames.reduce((sum, g) => sum + (g.score || 0), 0);
             newProgress = Math.min(objective.target, totalDailyScore);
-            shouldUpdate = newProgress !== userObjective.progress;
+            shouldUpdate = !userObjective || newProgress !== userObjective.progress;
             break;
           }
           case 'variety':
@@ -264,18 +255,39 @@ class TrophyService {
               });
               const uniqueGameTypes = new Set(todayGames.map(g => g.game));
               newProgress = uniqueGameTypes.size;
-              shouldUpdate = newProgress !== userObjective.progress;
+              shouldUpdate = !userObjective || newProgress !== userObjective.progress;
             }
             break;
         }
 
-        if (shouldUpdate) {
-          userObjective.progress = newProgress;
-          userObjective.isCompleted = newProgress >= objective.target;
-          if (userObjective.isCompleted && !userObjective.completedAt) {
-            userObjective.completedAt = new Date();
+        // Usa findOneAndUpdate con upsert per evitare errori di duplicazione
+        if (shouldUpdate || !userObjective) {
+          const isCompleted = newProgress >= objective.target;
+          const updateData = {
+            userId,
+            objectiveId: objective.id,
+            type: 'daily',
+            periodKey,
+            progress: newProgress,
+            isCompleted,
+            rewardClaimed: userObjective ? userObjective.rewardClaimed : false
+          };
+
+          // Aggiungi completedAt solo se l'obiettivo è appena stato completato
+          if (isCompleted && (!userObjective || !userObjective.completedAt)) {
+            updateData.completedAt = new Date();
           }
-          await userObjective.save();
+
+          await UserObjective.findOneAndUpdate(
+            {
+              userId,
+              objectiveId: objective.id,
+              type: 'daily',
+              periodKey
+            },
+            updateData,
+            { upsert: true, new: true }
+          );
         }
       }
     } catch (error) {

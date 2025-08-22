@@ -6,6 +6,7 @@ import MatchingGame from '../games/Matching';
 import QuizSelectionPage from './QuizSelectionPage';
 import MemorySelectionPage from './MemorySelectionPage';
 import MatchingSelectionPage from './MatchingSelectionPage';
+import SortingSelectionPage from './SortingSelectionPage';
 import { useParams } from 'react-router-dom';
 import { SidebarRefreshContext } from '../core/SidebarRefreshContext';
 import { useContext } from 'react';
@@ -48,6 +49,9 @@ const GamePage = () => {
   }
   if (game.type === 'matching_selection') {
     return <MatchingSelectionPage />;
+  }
+  if (game.type === 'sorting_selection') {
+    return <SortingSelectionPage />;
   }
 
   return (
