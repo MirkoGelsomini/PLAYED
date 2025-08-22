@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MemoryQuiz",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "category", "question", "difficulty", "pairs"],
+  "properties": {
+    "type": {
+      "const": "memory"
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1
+    },
+    "difficulty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "pairs": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["front", "back"],
+        "properties": {
+          "front": { "type": "string", "minLength": 1 },
+          "back": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

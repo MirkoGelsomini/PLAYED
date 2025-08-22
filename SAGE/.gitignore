@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+*.ipynb_checkpoints
+data/raw/
+data/cleaned/
+data/chunks/
+data/chroma_db/
+.venv/
+data/.DS_Store
